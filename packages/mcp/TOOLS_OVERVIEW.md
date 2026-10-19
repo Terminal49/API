@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **31 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 28 of them.
+The Terminal49 MCP Server provides **33 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve all of them.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `operations` toolset, which is not in the default toolsets yet. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `set_party_role` and `set_custom_field` are in the `operations` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -634,6 +634,46 @@ cancel_tracking_request({
 
 ---
 
+### 25. `set_party_role`
+**Purpose**: Attach a party to containers or shipments in a role, replace the party in that role, or detach it. Tier C: a call that detaches a party needs the user's approval; a call that only attaches runs at once.
+
+**Usage**:
+```typescript
+set_party_role({
+  container_ids: ["<container-id>"], // or shipment_ids; 1-50, not both
+  role: "pickup_dray_carrier", // containers support only this role
+  party_id: "<party-id-from-list_parties>",
+  action: "replace" // or "add" (beside others) or "remove"
+})
+```
+
+**Returns**:
+- `updated`, `unchanged` (already matched), `failed` (`id`, `error`), and `not_attempted` (the call ran out of time before reaching them; nothing changed on them)
+- A record still being saved when time ran out, or whose save failed without a clear answer (for example a dropped connection), is in `failed` with an error saying the change may or may not have been applied; check it before calling again
+
+**When to Use**: Only when the user asks to change these records. Resolve the company with `list_parties` first. `pickup_dray_carrier` and `customer` hold one party per record: `add` fails where a different party holds one, and `replace` swaps it (except a shipment `customer`, which must be removed, then added).
+
+---
+
+### 26. `set_custom_field`
+**Purpose**: Set or clear one of the account's custom fields on containers or shipments (destructive writes: overwrites or clears the previous value)
+
+**Usage**:
+```typescript
+set_custom_field({
+  entity: "container", // or "shipment"
+  ids: ["<container-id>"], // 1-50
+  api_slug: "sales_rep",
+  value: "Sofia Cortina" // an array of option values for a multi-select field; null clears
+})
+```
+
+**Returns**: the same `updated`, `unchanged`, `failed`, and `not_attempted` lists as `set_party_role`
+
+**When to Use**: Only when the user asks to change these records. Read the field's `api_slug` from `get_container` or `get_shipment_details` with custom fields first.
+
+---
+
 ### Trade intelligence tools
 
 `search_importers`, `get_importer_profile`, `search_commodities`, `rank_importers`, `get_trade_trends`, `get_trade_breakdown`, and `get_trade_data_coverage` answer US ocean import market questions from US Customs bill-of-lading records (January 2022 onward). They are read-only and enabled per account. See `docs/mcp/home.mdx` for parameters and the caveats agents must apply.
@@ -876,7 +916,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 31 tools and 4 resources, the LLM can:
+With these 33 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

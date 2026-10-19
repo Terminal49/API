@@ -54,6 +54,15 @@ import {
   listPartiesInputSchema,
 } from './tools/list-parties.js';
 import {
+  executeSetCustomField,
+  executeSetPartyRole,
+  recordWriteOutputSchema,
+  setCustomFieldInputSchema,
+  setPartyRoleInputSchema,
+  type SetCustomFieldArgs,
+  type SetPartyRoleArgs,
+} from './tools/record-writes.js';
+import {
   executeGetTrackingRequest,
   getTrackingRequestInputSchema,
   getTrackingRequestOutputSchema,
@@ -268,7 +277,16 @@ const NON_FILTER_LIST_ARGS = new Set([
  */
 const PLAUSIBLE_TOTAL_THRESHOLD = 1000;
 
-function buildContentPayload(result: unknown): ToolContent[] {
+// Record writes report per-record outcomes (failed IDs, records not reached, a
+// write that may have applied) that a summary line would hide from text-only
+// clients, so their text content is the whole result.
+const FULL_RESULT_TEXT_TOOLS = new Set(['set_party_role', 'set_custom_field']);
+
+function buildContentPayload(toolName: string, result: unknown): ToolContent[] {
+  if (FULL_RESULT_TEXT_TOOLS.has(toolName)) {
+    return [{ type: 'text', text: formatAsText(result) }];
+  }
+
   if (result && typeof result === 'object' && (result as any).summary) {
     return [{ type: 'text', text: formatAsText((result as any).summary) }];
   }
@@ -954,7 +972,10 @@ function wrapTool<TArgs>(
         [],
         toolName,
       );
-      const content: ToolContent[] = buildContentPayload(structuredContent);
+      const content: ToolContent[] = buildContentPayload(
+        toolName,
+        structuredContent,
+      );
 
       if (buildResourceLinks) {
         content.push(...buildResourceLinks(structuredContent, args));
@@ -1103,6 +1124,14 @@ function formatToolError(
     return 'Invalid or unsupported list filter. Use the names, values, and operators documented in the tool schema.';
   }
 
+  if (err.name === 'AuthenticationError' || err.status === 401) {
+    return 'Terminal49 rejected the credentials for this request (HTTP 401). Check that the API key or connection is valid and has API access.';
+  }
+
+  if (err.name === 'AuthorizationError' || err.status === 403) {
+    return 'This Terminal49 account is not permitted to make this request (HTTP 403).';
+  }
+
   return 'The Terminal49 request could not be completed. Contact support if the problem persists.';
 }
 
@@ -1155,6 +1184,13 @@ export interface Terminal49McpServerOptions {
    * tier C tools refuse to write.
    */
   confirmationSecret?: string;
+  /**
+   * Epoch ms by which set_party_role and set_custom_field stop waiting on
+   * records. The HTTP gateway sets it from the request start so auth time
+   * counts against the function limit; without it each call gets
+   * CALL_BUDGET_MS from when it starts.
+   */
+  writeDeadlineAt?: number;
 }
 
 export function createTerminal49McpServer(
@@ -1697,6 +1733,32 @@ export function createTerminal49McpServer(
       },
       async (args) => executeListParties(args, client),
     ),
+    set_party_role: tool(
+      {
+        description:
+          'Attach a party to containers or shipments in a role, replace the party in that role, or detach it, for example "set the drayage carrier to Manzo Transport on these containers" (action replace). ' +
+          'Resolve the company to a party ID and the records to container or shipment IDs first. Up to 50 records per call. ' +
+          'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
+          'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
+        inputSchema: z.preprocess(stripLegacyIntent, setPartyRoleInputSchema),
+        outputSchema: recordWriteOutputSchema,
+      },
+      async (args: SetPartyRoleArgs) =>
+        executeSetPartyRole(args, client, options.writeDeadlineAt),
+    ),
+    set_custom_field: tool(
+      {
+        description:
+          "Set or clear one of the account's custom fields (for example a sales rep or PO number) on containers or shipments. " +
+          "Read the field's api_slug and expected values from the record's custom fields first; never guess the slug. Up to 50 records per call; a multi-select field takes an array of option values, and value null clears the field. " +
+          'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
+          'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
+        inputSchema: z.preprocess(stripLegacyIntent, setCustomFieldInputSchema),
+        outputSchema: recordWriteOutputSchema,
+      },
+      async (args: SetCustomFieldArgs) =>
+        executeSetCustomField(args, client, options.writeDeadlineAt),
+    ),
     list_custom_field_definitions: tool(
       {
         description:
@@ -1897,6 +1959,8 @@ export function createTerminal49McpServer(
               .object({
                 limit: z.number(),
                 used: z.number(),
+                active_containers: z.number().optional(),
+                pending_tracking_requests: z.number().optional(),
                 remaining: z.number(),
               })
               .nullable(),

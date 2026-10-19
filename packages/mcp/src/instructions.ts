@@ -25,6 +25,10 @@ const WRITE_EFFECTS = {
   resume_shipment_tracking: 'starts tracking a stopped shipment again',
   cancel_tracking_request:
     'cancels a tracking request that is still pending, which cannot be undone',
+  set_party_role:
+    'attaches, replaces or detaches a party (such as the drayage carrier) on up to 50 containers or shipments',
+  set_custom_field:
+    'sets or clears an account custom field on up to 50 containers or shipments',
 } satisfies Record<WriteTool['name'], string>;
 
 const TIER_RULES = {
@@ -86,6 +90,18 @@ const PARAGRAPHS: readonly Paragraph[] = [
       },
       {
         text: ' Use list_containers / list_shipments / list_tracking_requests for fleet-level worklists.',
+      },
+      {
+        text: ' Before set_party_role, resolve the company to a party_id with list_parties and the records to IDs with search_container or list_containers.',
+      },
+      {
+        text: " Before set_custom_field, read the field's api_slug and expected values from list_custom_field_definitions, or from get_container or get_shipment_details with custom_fields.",
+      },
+      {
+        text: ' Before set_party_role, resolve the company to a party_id with list_parties and the records to IDs with search_container or list_containers.',
+      },
+      {
+        text: " Before set_custom_field, read the field's api_slug and expected values from get_container or get_shipment_details with custom_fields.",
       },
       {
         text: ' Use get_location for a terminal address and FIRMS code, or the time zone of a port or terminal.',

@@ -34,6 +34,52 @@ describe('Terminal49Client.me', () => {
   const apiKeyDoc = loadFixture('me.get.api-key');
   const userDoc = loadFixture('me.get.user');
 
+  it('maps only the documented tracking-slot fields and drops unknown ones', async () => {
+    // The backend adds fields to tracking_slots over time; strict downstream schemas
+    // (the MCP whoami tool) must never see them.
+    const doc = structuredClone(apiKeyDoc);
+    const account = doc.included.find((r: any) => r.type === 'account');
+    account.attributes.tracking_slots.some_future_field = 'ignored';
+    const { client } = clientFor(doc);
+
+    const me = await client.me({ format: 'mapped' });
+
+    expect(me.account.trackingSlots).toEqual({
+      limit: 10,
+      used: 4,
+      activeContainers: 3,
+      pendingTrackingRequests: 1,
+      remaining: 6,
+    });
+  });
+
+  it('omits a missing breakdown count instead of failing', async () => {
+    const doc = structuredClone(apiKeyDoc);
+    const account = doc.included.find((r: any) => r.type === 'account');
+    delete account.attributes.tracking_slots.active_containers;
+    const { client } = clientFor(doc);
+
+    const me = await client.me({ format: 'mapped' });
+
+    expect(me.account.trackingSlots).toEqual({
+      limit: 10,
+      used: 4,
+      pendingTrackingRequests: 1,
+      remaining: 6,
+    });
+  });
+
+  it('maps malformed tracking slots to null instead of failing', async () => {
+    const doc = structuredClone(apiKeyDoc);
+    const account = doc.included.find((r: any) => r.type === 'account');
+    account.attributes.tracking_slots.limit = 'ten';
+    const { client } = clientFor(doc);
+
+    const me = await client.me({ format: 'mapped' });
+
+    expect(me.account.trackingSlots).toBeNull();
+  });
+
   it('returns the raw JSON:API document by default', async () => {
     const { client, calls } = clientFor(apiKeyDoc);
 
@@ -61,7 +107,13 @@ describe('Terminal49Client.me', () => {
         companyName: 'Acme Logistics',
         companyType: 'shipper',
         plan: 'free_plan',
-        trackingSlots: { limit: 10, used: 4, remaining: 6 },
+        trackingSlots: {
+          limit: 10,
+          used: 4,
+          activeContainers: 3,
+          pendingTrackingRequests: 1,
+          remaining: 6,
+        },
       },
     });
     expect(me.account.scac).toBeUndefined();

@@ -108,9 +108,9 @@ describe('server instructions', () => {
     expect(all).toMatch(stale);
     expect(operations).toMatch(rule);
     expect(operations).toMatch(stale);
+    expect(buildServerInstructions(defaultTools())).toMatch(rule);
 
     const withoutTierC = [
-      buildServerInstructions(defaultTools()),
       buildServerInstructions(
         selectTools({ toolsets: TOOLSETS, readOnly: true }),
       ),

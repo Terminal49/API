@@ -41,13 +41,7 @@ Prioritize accurate metadata, clear structure, and search-friendly wording that 
 
 ## Repo-specific standards
 
-- Follow AGENTS.md and WRITING_GUIDE.md
-- Audience: integration engineers at shippers, BCOs, exporters, and logistics teams
-- Use active voice and second person
-- Define acronyms on first use when helpful
-- Use consistent product terms: "Terminal49", "tracking request", "shipment", "container", "webhook"
-- Auth examples must use `Authorization: Token YOUR_API_KEY`
-- Base API URL is `https://api.terminal49.com/v2`
+- Read AGENTS.md and skills/terminal49-docs-writing/SKILL.md first. They own the audience, voice, terminology, auth examples, and safety rules.
 
 ## Working method
 

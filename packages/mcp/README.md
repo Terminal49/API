@@ -15,9 +15,9 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (28 by default, 31 in all)
+### 🛠️ Tools (33 Available)
 
-The default toolsets, `core`, `documents` and `trade`, serve these 28 tools:
+The default toolsets, `core`, `documents`, `operations` and `trade`, serve all 33 tools:
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -40,8 +40,13 @@ The default toolsets, `core`, `documents` and `trade`, serve these 28 tools:
 | **`get_tracking_request`** | Get one tracking request's status, failure reason, and shipment | Follow-up after tracking |
 | **`list_documents`** | Find documents by file name, reference, or type | Never returns extracted data or file links |
 | **`get_document`** | Get one document, with opt-in extracted data, source email, and download link | Untrusted content is labeled |
+| **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
+| **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
+| **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
+| **`set_party_role`** | Attach, replace, or detach a party (such as the drayage carrier) on containers or shipments | Destructive write, only on request |
+| **`set_custom_field`** | Set or clear one of the account's custom fields on containers or shipments | Destructive write, only on request |
 | **`search_importers`** | Find US importers by name, by what they import, or both | Trade intelligence, per account |
 | **`get_importer_profile`** | One importer's totals, monthly series, ports, origins, carriers, and products | Trade intelligence, per account |
 | **`search_commodities`** | Turn a product description or HS prefix into four-digit HS codes | Trade intelligence, per account |
@@ -49,14 +54,6 @@ The default toolsets, `core`, `documents` and `trade`, serve these 28 tools:
 | **`get_trade_trends`** | Time series of containers, TEUs, or estimated value | Trade intelligence, per account |
 | **`get_trade_breakdown`** | Nested totals over one to three dimensions | Trade intelligence, per account |
 | **`get_trade_data_coverage`** | Where trade data starts, the latest and last full month | Trade intelligence, per account |
-
-The `operations` toolset adds three write tools. It is not in the default toolsets yet, so a deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`.
-
-| Tool | Description | Tier |
-|------|-------------|------|
-| **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
-| **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
-| **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -397,7 +394,7 @@ npm run lint
 |----------|----------|---------|-------------|
 | `T49_API_TOKEN` | ✅ Yes | - | Terminal49 API token |
 | `T49_API_BASE_URL` | No | `https://api.terminal49.com/v2` | API base URL |
-| `T49_MCP_TOOLSETS` | No | `core,documents,trade` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
+| `T49_MCP_TOOLSETS` | No | `core,documents,operations,trade` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
 | `T49_MCP_READ_ONLY` | No | `false` | Serve only tools whose `readOnlyHint` is true. Accepts `true`, `false`, `1` or `0`, in any case. |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` and `trade` when callers share `T49_API_TOKEN` |
 | `T49_MCP_CONFIRMATION_SECRET` | For tier C writes over HTTP | - | Signs confirmation tokens. At least 32 characters. See [Confirming writes](#confirming-writes). |
@@ -422,7 +419,7 @@ Signed URLs, such as the document download link that `get_document` returns, are
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in `operations`. The trade intelligence tools are in `trade`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core`, `documents` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `set_party_role` and `set_custom_field` are in `operations`. The trade intelligence tools are in `trade`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.

@@ -135,10 +135,46 @@ describe('MCP tool annotations', () => {
       expect(readOnlyHint, `${tool.name} tier ${tool.tier}`).toBe(
         tool.tier === 'read',
       );
-      expect(destructiveHint, `${tool.name} tier ${tool.tier}`).toBe(
-        tool.tier === 'C',
-      );
+      if (tool.tier === 'C') {
+        expect(destructiveHint, `${tool.name} tier C`).toBe(true);
+      }
     }
+  });
+
+  it('advertises only the expected writes, and the record edits as destructive', () => {
+    // MCP: destructiveHint false means the tool only adds. set_party_role
+    // detaches parties (remove, replace) and set_custom_field overwrites or
+    // clears values, so both must say true. track_container only creates.
+    const tools = getRegisteredTools();
+    const writes = Object.entries(tools)
+      .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
+      .map(([name]) => name);
+    const destructiveTools = Object.entries(tools)
+      .filter(([, tool]) => tool.annotations?.destructiveHint === true)
+      .map(([name]) => name);
+
+    expect(writes.sort()).toEqual([
+      'cancel_tracking_request',
+      'resume_shipment_tracking',
+      'set_custom_field',
+      'set_party_role',
+      'stop_shipment_tracking',
+      'track_container',
+    ]);
+    expect(destructiveTools.sort()).toEqual([
+      'cancel_tracking_request',
+      'set_custom_field',
+      'set_party_role',
+      'stop_shipment_tracking',
+    ]);
+  });
+
+  it('marks the record edits as idempotent and track_container as not', () => {
+    const tools = getRegisteredTools();
+
+    expect(tools.set_party_role?.annotations?.idempotentHint).toBe(true);
+    expect(tools.set_custom_field?.annotations?.idempotentHint).toBe(true);
+    expect(tools.track_container?.annotations?.idempotentHint).toBe(false);
   });
 
   it('gives every tier C tool an optional confirmation_token input', () => {
