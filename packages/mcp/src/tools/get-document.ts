@@ -8,7 +8,7 @@
 
 import type { Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
-import { nullableString } from './api-fields.js';
+import { includedList, nullableString } from './api-fields.js';
 import {
   DOCUMENTS_NOT_ENABLED,
   documentSummarySchema,
@@ -141,7 +141,7 @@ type SourceEmail = z.infer<typeof sourceEmailSchema>;
 
 const rawResponseSchema = z.object({
   data: rawDocumentSchema,
-  included: z.array(z.unknown()).catch([]),
+  included: includedList,
 });
 
 const rawDownloadSchema = z.object({ download_url: z.string().url() });

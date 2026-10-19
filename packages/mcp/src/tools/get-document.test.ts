@@ -172,6 +172,29 @@ describe('get_document', () => {
     expect(getDocumentOutputSchema.safeParse(result).success).toBe(true);
   });
 
+  it.each([
+    ['no data', { included: [] }],
+    ['attributes that are not an object', { data: { id: DOCUMENT_ID } }],
+    [
+      'included that is not a list',
+      { ...documentResponse('present'), included: { id: REPRESENTATION_ID } },
+    ],
+  ])(
+    'fails instead of reporting an empty document for a response with %s',
+    async (_case, body) => {
+      const { client } = fakeApiClient({
+        [`GET /documents/${DOCUMENT_ID}`]: { body },
+      });
+
+      await expect(
+        executeGetDocument(
+          { id: DOCUMENT_ID, include_extracted_data: true },
+          client,
+        ),
+      ).rejects.toThrow();
+    },
+  );
+
   it('leaves out whole fields past the size limit and names them', async () => {
     const large = 'x'.repeat(MAX_EXTRACTED_DATA_CHARS);
     const { client } = fakeApiClient({
