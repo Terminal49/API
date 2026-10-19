@@ -80,6 +80,31 @@ describe('scrubSensitiveRequestData', () => {
     });
   });
 
+  it('redacts signed URLs from recorded tool results and breadcrumbs', () => {
+    const url =
+      'https://bucket.s3.amazonaws.com/a.pdf?X-Amz-Expires=3600&X-Amz-Signature=abc';
+    const event = scrubSensitiveRequestData({
+      breadcrumbs: [{ category: 'console', message: `link ${url}` }],
+      spans: [
+        {
+          span_id: 'c',
+          trace_id: 't',
+          start_timestamp: 0,
+          data: {
+            'mcp.tool.name': 'get_document',
+            'mcp.tool.result.1.uri': url,
+          },
+        },
+      ],
+    });
+
+    expect(event.breadcrumbs?.[0]?.message).toBe('link [REDACTED_URL]');
+    expect(event.spans?.[0]?.data).toEqual({
+      'mcp.tool.name': 'get_document',
+      'mcp.tool.result.1.uri': '[REDACTED_URL]',
+    });
+  });
+
   it('leaves events without request or span data untouched', () => {
     expect(scrubSensitiveRequestData({ message: 'no request' })).toEqual({
       message: 'no request',

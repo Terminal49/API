@@ -33,8 +33,10 @@ generation path.
 ## Add an MCP tool
 
 1. Add one executor in `packages/mcp/src/tools/<tool-name>.ts`.
-2. Register its name, schemas, annotations, and handler once in
-   `packages/mcp/src/server.ts`.
+2. Add its literal name, title, toolset, tier, and annotations to
+   `TOOL_REGISTRY` in `packages/mcp/src/tools/registry.ts`. Then add a
+   `<name>: tool(spec, handler)` entry, with its schemas and a handler that
+   calls the executor, to the handler map in `packages/mcp/src/server.ts`.
 3. Add behavior and contract coverage in
    `packages/mcp/src/tools/contracts.test.ts`; these tests call executors
    directly. Use `npm run test:protocol --workspace @terminal49/mcp` for

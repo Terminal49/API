@@ -391,6 +391,8 @@ describe('MCP server wiring', () => {
     expect(tools).toContain('list_tracking_requests');
     expect(tools).toContain('search_docs');
     expect(tools).toContain('whoami');
+    expect(tools).toContain('set_party_role');
+    expect(tools).toContain('set_custom_field');
     for (const name of TRADE_INTEL_TOOL_NAMES) expect(tools).toContain(name);
 
     expect(prompts).toHaveLength(3);
@@ -416,16 +418,35 @@ describe('MCP server wiring', () => {
     const legacyArgs: Record<string, Record<string, unknown>> = {
       search_container: { query: 'CAIU1234567' },
       track_container: { number: 'CAIU1234567' },
+      identify_tracking_number: { number: 'CAIU1234567' },
       get_container: { id },
       get_shipment_details: { id },
       get_container_transport_events: { id },
       get_supported_shipping_lines: { search: 'Maersk' },
       get_container_route: { id },
+      get_location: { kind: 'port', id: 'USLAX' },
+      get_vessel: { id },
       list_shipments: {},
       list_containers: {},
       summarize_containers: { group_by: 'pod_terminal' },
       list_parties: { search: 'Acme' },
+      set_party_role: {
+        container_ids: [id],
+        role: 'pickup_dray_carrier',
+        party_id: id,
+        action: 'add',
+      },
+      set_custom_field: {
+        entity: 'container',
+        ids: [id],
+        api_slug: 'sales_rep',
+        value: 'X',
+      },
+      list_custom_field_definitions: {},
       list_tracking_requests: {},
+      get_tracking_request: { id },
+      list_documents: {},
+      get_document: { id },
       search_docs: { query: 'webhooks' },
       whoami: {},
       search_importers: { name: 'acme' },

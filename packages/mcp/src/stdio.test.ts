@@ -56,7 +56,10 @@ describe('runStdioServer', () => {
   it('serves only the toolsets named in T49_MCP_TOOLSETS', async () => {
     vi.stubEnv('T49_MCP_TOOLSETS', 'documents');
 
-    expect(toolNames(await startStdio())).toEqual([]);
+    expect(toolNames(await startStdio())).toEqual([
+      'list_documents',
+      'get_document',
+    ]);
   });
 
   it('applies T49_MCP_READ_ONLY', async () => {

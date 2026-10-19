@@ -193,9 +193,10 @@ If you need to release without release-please:
    cd sdks/typescript-sdk
    npm version patch   # or minor / major
    ```
+   From a workspace directory, `npm version` updates the root `package-lock.json` and does not create a commit or tag.
 2. Commit and push:
    ```bash
-   git add package.json package-lock.json CHANGELOG.md
+   git add package.json ../../package-lock.json CHANGELOG.md
    git commit -m "chore: release @terminal49/sdk v$(node -p "require('./package.json').version")"
    git push
    ```

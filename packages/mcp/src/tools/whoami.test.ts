@@ -1,13 +1,24 @@
 import type { CurrentCredential } from '@terminal49/sdk';
 import { describe, expect, it, vi } from 'vite-plus/test';
+import type { ToolContext, ToolSession } from './context.js';
 import { executeWhoami } from './whoami.js';
 
 const ACCOUNT_ID = 'b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a';
 const OTHER_ACCOUNT_ID = 'c8f3d0b2-6e4a-4f9c-8d1b-2a3f4e5d6c7b';
 
-function contextReturning(me: CurrentCredential) {
+function contextReturning(
+  me: CurrentCredential,
+  session: Partial<ToolSession> = {},
+) {
   const meFn = vi.fn().mockResolvedValue(me);
-  return { context: { me: meFn }, me: meFn };
+  const context: ToolContext = {
+    credentialType: 'api_key',
+    toolsets: ['core', 'documents'],
+    writeToolsAvailable: true,
+    ...session,
+    me: meFn,
+  };
+  return { context, me: meFn };
 }
 
 describe('executeWhoami', () => {
@@ -63,6 +74,9 @@ describe('executeWhoami', () => {
       user: null,
       other_accounts: [],
       features: { data_out_api: { status: 'requires_paid_plan' } },
+      credential_type: 'api_key',
+      enabled_toolsets: ['core', 'documents'],
+      write_tools_available: true,
     });
   });
 
@@ -109,5 +123,31 @@ describe('executeWhoami', () => {
     expect(result.other_accounts).toEqual([
       { id: OTHER_ACCOUNT_ID, company_name: 'Acme Brokerage' },
     ]);
+  });
+
+  it('reports how the session signed in and what it serves', async () => {
+    const { context } = contextReturning(
+      {
+        id: 'key-1',
+        kind: 'api_key',
+        channel: 'api',
+        features: {},
+        account: { id: ACCOUNT_ID, companyName: 'Acme Logistics' },
+        user: null,
+      },
+      {
+        credentialType: 'shared_token',
+        toolsets: ['core'],
+        writeToolsAvailable: false,
+      },
+    );
+
+    const result = await executeWhoami(context);
+
+    expect(result).toMatchObject({
+      credential_type: 'shared_token',
+      enabled_toolsets: ['core'],
+      write_tools_available: false,
+    });
   });
 });
