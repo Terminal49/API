@@ -6,11 +6,13 @@
  * pair the API cannot project also gets a note, so the vessel is not lost.
  */
 
-import type {
-  Terminal49Client,
-  Vessel,
-  VesselPosition,
-  VesselWithFuturePositions,
+import {
+  mapVessel,
+  mapVesselFuturePositions,
+  type Terminal49Client,
+  type Vessel,
+  type VesselPosition,
+  type VesselWithFuturePositions,
 } from '@terminal49/sdk';
 import { z } from 'zod';
 import {
@@ -155,6 +157,22 @@ function toEta(
   };
 }
 
+// The SDK mappers read a response with no vessel record as a vessel whose
+// fields are all null, so the envelope is checked before mapping.
+const vesselEnvelope = z.object({
+  data: z.object({
+    id: z.string(),
+    attributes: z.record(z.string(), z.unknown()),
+  }),
+});
+
+const projectionEnvelope = z.object({
+  data: z.object({
+    id: z.string(),
+    attributes: z.object({ positions: z.array(z.unknown()) }),
+  }),
+});
+
 async function projectTrack(
   id: string,
   request: NonNullable<GetVesselArgs['eta_to']>,
@@ -165,9 +183,9 @@ async function projectTrack(
     previousPortId: request.previous_port_id,
   };
   try {
-    const projected: VesselWithFuturePositions =
+    const raw =
       request.latitude === undefined || request.longitude === undefined
-        ? await client.vessels.futurePositions(id, ports, { format: 'mapped' })
+        ? await client.vessels.futurePositions(id, ports, { format: 'raw' })
         : await client.vessels.futurePositionsWithCoords(
             id,
             {
@@ -175,9 +193,10 @@ async function projectTrack(
               latitude: request.latitude,
               longitude: request.longitude,
             },
-            { format: 'mapped' },
+            { format: 'raw' },
           );
-    return { eta: toEta(request, projected) };
+    projectionEnvelope.parse(raw);
+    return { eta: toEta(request, mapVesselFuturePositions(raw)) };
   } catch (error) {
     if (isFeatureNotEnabled(error)) {
       return { eta: null, eta_note: ETA_FEATURE_NOTE };
@@ -209,7 +228,10 @@ export async function executeGetVessel(
   let projection: Pick<VesselResult, 'eta' | 'eta_note'> | undefined;
   try {
     [vessel, projection] = await Promise.all([
-      client.vessels.get(id, { format: 'mapped' }),
+      client.vessels.get(id, { format: 'raw' }).then((raw) => {
+        vesselEnvelope.parse(raw);
+        return mapVessel(raw);
+      }),
       eta_to ? projectTrack(id, eta_to, client) : Promise.resolve(undefined),
     ]);
   } catch (error) {

@@ -305,6 +305,21 @@ describe('list_documents', () => {
     });
   });
 
+  it('skips a row whose attributes are not an object instead of listing it empty', async () => {
+    const { client } = fakeApiClient({
+      'GET /documents': {
+        body: {
+          data: [{ id: PARENT_ID, type: 'document' }, documentRecord],
+        },
+      },
+    });
+
+    const result = await executeListDocuments({}, client);
+
+    expect(result).toMatchObject({ items: [{ id: DOCUMENT_ID }] });
+    expect('items' in result && result.items).toHaveLength(1);
+  });
+
   it('keeps the valid document types when one entry is malformed', async () => {
     const { client } = fakeApiClient({
       'GET /documents': { body: { data: [] } },
@@ -342,6 +357,9 @@ describe('list_documents', () => {
   it.each([
     ['no data', { meta: { total: 0 } }],
     ['data that is not a list', { data: { id: DOCUMENT_ID } }],
+    ['included that is not a list', { data: [documentRecord], included: {} }],
+    ['links that are not an object', { data: [], links: 'next' }],
+    ['meta that is not an object', { data: [], meta: 26 }],
   ])(
     'fails instead of reporting no documents for a list with %s',
     async (_case, body) => {

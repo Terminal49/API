@@ -93,12 +93,13 @@ export async function executeListParties(
       pageSize: PAGE_SIZE,
       format: 'raw',
     });
-    for (const item of doc?.data ?? []) {
+    rawPartyPageSchema.parse(doc);
+    for (const item of doc.data) {
       const name = item?.attributes?.company_name ?? item?.attributes?.name;
       if (item?.id && typeof name === 'string' && name.trim())
         parties.push({ id: item.id, name: name.trim() });
     }
-    if (!doc?.links?.next || (doc?.data ?? []).length === 0) break;
+    if (!doc.links?.next || doc.data.length === 0) break;
     if (page === MAX_PAGES) truncated = true;
   }
 
@@ -124,6 +125,12 @@ export async function executeListParties(
 function usage(): string {
   return `Filter containers by a party with list_containers or summarize_containers advanced_filters.parties, keyed by role: { "<role>": "<party id>" }. Roles: ${PARTY_ROLES.join(', ')}. Use @exists for "has any".`;
 }
+
+// An unreadable page fails the load instead of reading as the last one.
+const rawPartyPageSchema = z.object({
+  data: z.array(z.unknown()),
+  links: z.object({ next: z.string().nullish() }).nullish(),
+});
 
 const rawPartySchema = z.object({
   data: z.object({
