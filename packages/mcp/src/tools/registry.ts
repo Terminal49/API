@@ -20,9 +20,16 @@ export type Toolset = (typeof TOOLSETS)[number];
 
 /**
  * `read` tools only fetch data. Tier `A` writes are additive or reversible and
- * run in one call. Tier `C` writes need a confirmation token.
+ * run in one call. Tier `C` writes need the user's approval of a preview.
  */
 export type ToolTier = 'read' | 'A' | 'C';
+
+/**
+ * When a tier C tool asks the user. `always`: every call previews first.
+ * `destructive_only`: a batch tool that asks only when a record in the call
+ * would lose a value or a party, and otherwise writes at once.
+ */
+export type ConfirmationScope = 'always' | 'destructive_only';
 
 export interface ToolAnnotations {
   readOnlyHint: boolean;
@@ -31,13 +38,16 @@ export interface ToolAnnotations {
   openWorldHint: boolean;
 }
 
-export interface ToolDefinition {
+interface ToolBase {
   name: string;
   title: string;
   toolset: Toolset;
-  tier: ToolTier;
   annotations: ToolAnnotations;
 }
+
+export type ToolDefinition =
+  | (ToolBase & { tier: 'read' | 'A' })
+  | (ToolBase & { tier: 'C'; confirms: ConfirmationScope });
 
 function readTool<const Name extends string>(
   name: Name,
@@ -84,6 +94,34 @@ export const TOOL_REGISTRY = [
   readTool('list_containers', 'List Containers'),
   readTool('summarize_containers', 'Summarize Containers'),
   readTool('list_parties', 'List Parties'),
+  // A replace or detach removes the party that held the role, and a set or
+  // clear overwrites the field value, so both are marked destructive.
+  {
+    name: 'set_party_role',
+    title: 'Set Party Role',
+    toolset: 'operations',
+    tier: 'C',
+    confirms: 'destructive_only',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
+    name: 'set_custom_field',
+    title: 'Set Custom Field',
+    toolset: 'operations',
+    tier: 'C',
+    confirms: 'destructive_only',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
   readTool('list_custom_field_definitions', 'List Custom Field Definitions'),
   readTool('list_tracking_requests', 'List Tracking Requests'),
   readTool('get_tracking_request', 'Get Tracking Request'),
@@ -94,6 +132,7 @@ export const TOOL_REGISTRY = [
     title: 'Stop Shipment Tracking',
     toolset: 'operations',
     tier: 'C',
+    confirms: 'always',
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
@@ -118,6 +157,7 @@ export const TOOL_REGISTRY = [
     title: 'Cancel Tracking Request',
     toolset: 'operations',
     tier: 'C',
+    confirms: 'always',
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
@@ -142,54 +182,7 @@ export const TOOL_REGISTRY = [
     title: 'Remove Reference Numbers',
     toolset: 'operations',
     tier: 'C',
-    annotations: {
-      readOnlyHint: false,
-      destructiveHint: true,
-      idempotentHint: true,
-      openWorldHint: false,
-    },
-  },
-  {
-    name: 'assign_party',
-    title: 'Assign Party',
-    toolset: 'operations',
-    tier: 'A',
-    annotations: {
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: false,
-    },
-  },
-  {
-    name: 'unassign_party',
-    title: 'Unassign Party',
-    toolset: 'operations',
-    tier: 'C',
-    annotations: {
-      readOnlyHint: false,
-      destructiveHint: true,
-      idempotentHint: true,
-      openWorldHint: false,
-    },
-  },
-  {
-    name: 'set_custom_field',
-    title: 'Set Custom Field',
-    toolset: 'operations',
-    tier: 'A',
-    annotations: {
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: false,
-    },
-  },
-  {
-    name: 'update_custom_field',
-    title: 'Update Custom Field',
-    toolset: 'operations',
-    tier: 'C',
+    confirms: 'always',
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
@@ -214,6 +207,7 @@ export const TOOL_REGISTRY = [
     title: 'Update Document',
     toolset: 'documents_write',
     tier: 'C',
+    confirms: 'always',
     annotations: {
       readOnlyHint: false,
       destructiveHint: true,
@@ -256,6 +250,7 @@ export type ToolName = RegisteredTool['name'];
 export const DEFAULT_TOOLSETS: readonly Toolset[] = [
   'core',
   'documents',
+  'operations',
   'trade',
 ];
 

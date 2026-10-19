@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **41 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 28 of them.
+The Terminal49 MCP Server provides **39 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 35 of them.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `assign_party`, `unassign_party`, `set_custom_field` and `update_custom_field` are in the `operations` toolset, which is not in the default toolsets yet. `relink_document` and `update_document` are in the opt-in `documents_write` toolset. `list_webhooks` and `list_webhook_notifications` are in the opt-in `developer` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field` are in the `operations` toolset. `relink_document` and `update_document` are in the opt-in `documents_write` toolset. `list_webhooks` and `list_webhook_notifications` are in the opt-in `developer` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -567,7 +567,7 @@ The `operations` and `documents_write` tools change account data. Each has a tie
 
 An approval works only for the same tool, arguments, account and credential, before it expires, and while the record still matches the preview. Otherwise the call changes nothing: a client that asks the user is asked again with the current state, and other clients get `invalid_confirmation` with a `reason` (`malformed`, `mismatch` or `expired`) or `stale_preview` with a new preview and token. On a server with no confirmation secret, tier C tools return `not_permitted`. See [Confirming writes](README.md#confirming-writes).
 
-Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, with `retry_after_s` when Terminal49 sent a `Retry-After` header, and the tool's own codes below. All of them say that nothing was changed. The one exception is `assign_party` after it created a party it could not link: its `noop`, `rate_limited` and `party_not_linked` results then carry `party_created: true` and `created_party` (`id`, `name`), and say the party exists but is not linked.
+Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, with `retry_after_s` when Terminal49 sent a `Retry-After` header, and the tool's own codes below. All of them say that nothing was changed.
 
 ### 22. `stop_shipment_tracking`
 **Purpose**: Stop carrier and terminal updates for a shipment and all its containers. Tier C.
@@ -692,150 +692,55 @@ Each number can be up to 1000 characters, so a long number already on the record
 
 ---
 
-### 27. `assign_party`
-**Purpose**: Link a party, such as a customer, shipper or dray carrier, to a container or shipment in a role. Tier A.
+### 27. `set_party_role`
+**Purpose**: Attach a party to up to 50 containers or shipments in a role, replace the party in that role, or detach it. Tier C: a call that detaches a party asks the user; a call that only attaches runs at once.
 
 **Usage**:
 ```typescript
-assign_party({
-  entity_type: "shipment", // or "container"
-  entity_id: "shipment-uuid",
-  role: "customer",
-  party_name: "Acme Imports" // or party_id: "party-uuid"
+set_party_role({
+  container_ids: ["<container-id>"], // or shipment_ids; 1-50, not both
+  role: "pickup_dray_carrier", // containers support only this role
+  party_id: "<party-id-from-the-record's-party_roles>",
+  action: "replace" // or "add" (beside others) or "remove"
 })
-```
-
-`role` is one of `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, `freight_forwarder` or `pickup_dray_carrier`. A container accepts only `pickup_dray_carrier`; any other role on a container returns a tool error before any request. Pass exactly one of `party_id` or `party_name`. A `party_name` must match one party's company name, name or nickname exactly, ignoring case and punctuation. These are the names `list_parties` searches. With `create_party_if_missing: true`, the tool creates the party when no party has that name as its company name, name or nickname. If the API refuses the create with 422, the tool looks the name up again and reuses the party that another call created. If it still finds none, it returns `party_not_found` and says that the party probably exists already.
-
-**Returns**:
-- `status: "assigned"` with `record`, `party_role` (`id`, `role`, `party_id`, `party_name`), `party_created`, `other_parties_in_role` and `undo: "unassign_party"`
-- `status: "already_present"` with the existing `party_role` when the party already has this role on the record. Nothing is sent, so a repeated call changes nothing.
-- `party_not_found` with up to 5 `candidates` when no party has the name and `create_party_if_missing` is off, or when no party has the `party_id`
-- `ambiguous_party` with `candidates` when more than one party has the name
-- `party_lookup_incomplete` with `candidates` when the account has more than 1000 parties. The tool reads only the first 1000, so it does not use or create a party by name. Call again with `party_id`.
-- When the API refuses the assignment with 422, the tool reads the roles again. It returns `already_present` if the role now exists, or else `status: "noop"` with an `alternative`.
-- When the tool created the party and another request linked it in this role at the same time, the result is `already_present` with `party_created: true` and `created_party`.
-- When the tool created the party and the assignment then fails, the result has `party_created: true` and `created_party`. It is `noop` after a 422, `rate_limited` after a 429, and `party_not_linked` after any other failure.
-
-**When to Use**: Set or add the customer, shipper or dray carrier on a record.
-
----
-
-### 28. `unassign_party`
-**Purpose**: Remove one party role from a container or shipment. Tier C. Only the link is removed; the party and its other assignments stay.
-
-**Usage**:
-```typescript
-unassign_party({
-  entity_type: "shipment",
-  entity_id: "shipment-uuid",
-  party_role_id: "party-role-uuid" // from get_shipment_details include_party_roles
-})
-// After the user approves the preview:
-unassign_party({
-  entity_type: "shipment",
-  entity_id: "shipment-uuid",
-  party_role_id: "party-role-uuid",
-  confirmation_token: "t49ct1...."
-})
+// When a record would lose a party, after the user approves the preview:
+set_party_role({ ...sameArguments, confirmation_token: "t49ct1...." })
 ```
 
 **Returns**:
-- Preview: `current: { party_role }`, `proposed: { party_role: null }` and `reach`. The token covers the role's id, role name and party, so a role that now links another party returns `stale_preview`.
-- `status: "unassigned"` with `record`, the removed `party_role` and `undo: "assign_party"`
-- `status: "not_assigned"` with the record's current `party_roles` when it has no role with that id. No token is issued. A delete that answers 404 because another call removed the role first returns the same result.
+- Preview, when any record loses a party: `reach` (one sentence naming the party and the counts), `changes` with one entry per record that changes (`id`, `current` and `proposed` as lists of `party_id` and `party_name`), `unchanged` (a count), `failed` (records that cannot be changed, with the error) and `not_attempted` (records not read in time). Records that already match are left out. The token covers the party assignments in the role on every record read.
+- `updated`, `unchanged` (already matched), `failed` (`id`, `error`), and `not_attempted` (the call ran out of time before reaching them; nothing changed on them), plus a `summary`. The MCP text content is this same full result.
+- A record still being saved when time ran out, or whose save failed without a clear answer (for example a dropped connection), is in `failed` with an error saying the change may or may not have been applied; check it before calling again.
+- `party_not_found` when Terminal49 has no party with `party_id`. Nothing is read or changed. A `remove` whose `party_id` matches no role on a record that holds another party in that role fails that record with the same guidance: take `party_id` from the record's `party_roles`, not from `list_parties`, which can list a customer under its account id.
 
-**When to Use**: The wrong party is on a record. To replace a party, call `unassign_party`, then `assign_party`.
+**When to Use**: Only when the user asks to change these records. `pickup_dray_carrier` and `customer` hold one party per record: `add` fails where a different party holds one, and `replace` swaps it (except a shipment `customer`, which must be removed, then added).
 
 ---
 
-### 29. `set_custom_field`
-**Purpose**: Fill an empty custom field, such as a PO number or project manager, on a container, shipment, or tracking request. Tier A.
+### 28. `set_custom_field`
+**Purpose**: Set or clear one of the account's custom fields on up to 50 containers or shipments. Tier C: a call that overwrites or clears a value asks the user; a call that only fills empty fields runs at once.
 
 **Usage**:
 ```typescript
 set_custom_field({
-  entity_type: "container", // or "shipment" or "tracking_request"
-  entity_id: "container-uuid",
-  api_slug: "po_number", // from list_custom_field_definitions
-  value: "PO-4500123"
+  entity: "container", // or "shipment"
+  ids: ["<container-id>"], // 1-50
+  api_slug: "sales_rep",
+  value: "Sofia Cortina" // an array of option values for a multi-select field; null clears
 })
+// When a record would lose a value, after the user approves the preview:
+set_custom_field({ ...sameArguments, confirmation_token: "t49ct1...." })
 ```
 
-`api_slug` matches exactly and may contain upper and lower case letters, digits and underscores.
-
-The tool finds the account's active definition for `api_slug` and checks `value` against its `data_type` before it sends anything:
-
-| `data_type` | `value` |
-|---|---|
-| `short_text` | Text of 1 to 1000 characters |
-| `number` | A number whose absolute value is under 1000000000000 |
-| `date` | A date as `YYYY-MM-DD` |
-| `datetime` | An ISO 8601 date and time with a time zone, such as `2026-03-01T14:30:00Z` |
-| `boolean` | `true` or `false` |
-| `enum` | Exactly one option value |
-| `enum_multi` | A list of 1 to 50 option values |
-
-A container field goes on a container and a shipment field on a shipment. A tracking request takes both, and Terminal49 copies the value to the shipment or containers the request creates. Terminal49 copies a value only when it is first set. A later change or clear on the tracking request does not reach the shipment or its containers. So once a tracking request has created its shipment, both tools return `use_shipment_or_container` with `shipment_id` and change nothing. Set the field on that shipment or its containers instead. A tracking request can hold one value per container for a container field. Terminal49 does not say which value belongs to which container, so both tools return `ambiguous_field` for such a field and change nothing.
-
 **Returns**:
-- `status: "set"` with `record` (`entity_type`, `entity_id` and `label`), `field` (`api_slug`, `display_name`, `data_type`), the stored `value` and `display_value`, and `undo: "update_custom_field"`
-- `status: "already_set"` with `current_value` and `current_display_value` when the field already has a value. Nothing is sent. When the values differ, `alternative` points to `update_custom_field`.
-- `ambiguous_field` with `record` and `values` when a tracking request holds more than one value for the field. Nothing is sent.
-- `use_shipment_or_container` with `record` and `shipment_id` when the tracking request already created its shipment. Nothing is sent.
-- `invalid_value` with `data_type`, `expected` and, for `enum` and `enum_multi`, `allowed_values`
-- `unknown_field` when the account has no active field with that `api_slug`
-- `field_not_applicable` with `field_entity_type` when the field belongs on another kind of record
-- `unsupported_field` for a `reference` field, which the tool cannot write
-- `credential_not_supported` when Terminal49 refuses the request and `/me` says custom fields need a signed-in user. `FeatureNotEnabled` when `/me` says the account lacks custom fields.
-- `status: "noop"` with an `alternative` when the API refuses the value with 422
+- Preview, when any record has a value that would be overwritten or cleared: `reach`, `changes` with one entry per record that changes (`id`, `current`, `proposed`), `unchanged`, `failed` and `not_attempted`, as for `set_party_role`. The token covers the field's value on every record read.
+- The same `updated`, `unchanged`, `failed`, `not_attempted` and `summary` as `set_party_role`.
 
-An `enum` value that is not an option would make Terminal49 store an empty value, so the option check matters most there.
-
-The tool reads the field before it writes. Terminal49 has no create-only write, so a value that another call or a dashboard user saves between the read and the POST is replaced. Do not run two `set_custom_field` calls on the same field in parallel.
-
-**When to Use**: Fill in a PO number, project manager or other account field that is empty on a record.
+**When to Use**: Only when the user asks to change these records. Read the field's `api_slug` from `list_custom_field_definitions`, or from `get_container` or `get_shipment_details` with custom fields, first.
 
 ---
 
-### 30. `update_custom_field`
-**Purpose**: Replace or clear a custom field value on a container, shipment, or tracking request. Tier C, because Terminal49 keeps no copy of the old value.
-
-**Usage**:
-```typescript
-update_custom_field({
-  entity_type: "shipment",
-  entity_id: "shipment-uuid",
-  api_slug: "priority",
-  value: "high" // or clear: true
-})
-// After the user approves the preview:
-update_custom_field({
-  entity_type: "shipment",
-  entity_id: "shipment-uuid",
-  api_slug: "priority",
-  value: "high",
-  confirmation_token: "t49ct1...."
-})
-```
-
-Pass exactly one of `value` or `clear: true`; anything else is a tool error. A new value goes through the same checks as in `set_custom_field`.
-
-**Returns**:
-- Preview: `current` (`record`, `field`, `value`, `display_value`), `proposed: { value }` (`null` when clearing), `action` (`overwrite` or `clear`) and `reach`. The token covers the current value, so a value that changed after the preview returns `stale_preview`.
-- `status: "updated"` with `previous_value`, the stored `value` and `display_value`, and `undo: "update_custom_field"`
-- `status: "cleared"` with `previous_value`, `value: null` and `undo: "set_custom_field"`. The tool clears with DELETE.
-- `status: "not_set"` when the field has no value on the record. No token is issued. To fill an empty field, use `set_custom_field`.
-- `status: "unchanged"` when the field already has the new value. No token is issued.
-- `invalid_value`, `unknown_field`, `field_not_applicable`, `unsupported_field`, `ambiguous_field`, `use_shipment_or_container`, `credential_not_supported`, `FeatureNotEnabled` and `noop` as in `set_custom_field`
-
-Terminal49 answers a DELETE on a field that is already empty with success. If another call clears the field after the token is checked, the result is still `cleared`, and `previous_value` is the value the preview showed.
-
-**When to Use**: A custom field has the wrong value, or a value that should be removed.
-
----
-
-### 31. `relink_document`
+### 29. `relink_document`
 **Purpose**: Have Terminal49 match a document to shipments and containers again. Tier A.
 
 **Usage**:
@@ -854,7 +759,7 @@ Calling it again only repeats the matching, so there is no undo tool.
 
 ---
 
-### 32. `update_document`
+### 30. `update_document`
 **Purpose**: Fix a misclassified document. Tier C, because each action can replace the type or the extracted data and Terminal49 keeps no copy of the old one.
 
 **Usage**:
@@ -901,7 +806,7 @@ The actions:
 
 The opt-in `developer` toolset holds reads for checking a webhook integration. Webhook records carry a signing secret, header values the receiver may use as credentials, and a URL whose host, path or query string can hold a key. These tools read only named fields, so the secret, header values and query string never reach tool output, logs, Sentry or PostHog. The URL host and path are cut down by the rules under `list_webhooks`.
 
-### 33. `list_webhooks`
+### 31. `list_webhooks`
 **Purpose**: Show the account's webhooks and the events each one receives
 
 **Usage**:
@@ -927,7 +832,7 @@ If the account does not have webhooks, the tool returns `FeatureNotEnabled` with
 
 ---
 
-### 34. `list_webhook_notifications`
+### 32. `list_webhook_notifications`
 **Purpose**: Show the webhook notifications Terminal49 created and whether each was delivered
 
 **Usage**:
@@ -1053,13 +958,10 @@ The tool never asks the API to include the webhook record, and it returns no pay
 → Use `search_container` for the container UUID, then `add_reference_numbers`
 
 ### User asks: "Make Ray Drayage the dray carrier on this container"
-→ Use `assign_party` with `role: "pickup_dray_carrier"` and `party_name`, or with the `party_id` from `list_parties`
+→ Use `set_party_role` with `role: "pickup_dray_carrier"`, `action: "replace"` and the `party_id` from a record's `party_roles` (or from `list_parties` for a party on no record); a record that loses its current carrier is previewed for the user's approval
 
 ### User asks: "The customer on this shipment is wrong"
-→ Use `get_shipment_details` with `include_party_roles` for the `party_role_id`, then `unassign_party` with the preview and approval steps, then `assign_party` for the right customer
-
-### User asks: "Set the PO number on MSCU1234565 to 4500123"
-→ Use `list_custom_field_definitions` for the `api_slug`, `search_container` for the container UUID, then `set_custom_field`. If it returns `already_set`, show `current_value` and use `update_custom_field` with the preview and approval steps.
+→ Use `get_shipment_details` with `include_party_roles` for the current customer's `party_id`, then `set_party_role` with `action: "remove"` (previewed for the user's approval), then `set_party_role` with `action: "add"` for the right customer
 
 ### User asks: "This arrival notice is marked as an invoice"
 → Use `update_document` with `action: "set_type"` and `document_type: "arrival_notice"`, show the preview, and call again with the token after the user approves
@@ -1212,7 +1114,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 41 tools and 4 resources, the LLM can:
+With these 39 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

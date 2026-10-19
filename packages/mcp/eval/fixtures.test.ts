@@ -28,20 +28,55 @@ describe('fixture discovery', () => {
     ).toThrow('tool error: true');
   });
   it('rejects malformed payloads without exposing their contents', () => {
-    expect(() =>
-      fixtureItems(
-        'list_shipments',
-        result({ payload: { error: 'PRIVATE_VALUE' } }),
-      ),
-    ).toThrow('returned no items array');
+    let message = '';
     try {
       fixtureItems(
         'list_shipments',
-        result({ isError: true, rawText: 'PRIVATE_VALUE' }),
+        result({ payload: { error: 'PRIVATE_VALUE' } }),
       );
     } catch (error) {
-      expect(String(error)).not.toContain('PRIVATE_VALUE');
+      message = String(error);
     }
+    expect(message).toContain('returned no items array');
+    expect(message).not.toContain('PRIVATE_VALUE');
+  });
+  it('reports the server tool error text so CI shows the cause', () => {
+    expect(() =>
+      fixtureItems(
+        'list_shipments',
+        result({
+          isError: true,
+          rawText:
+            'The Terminal49 request could not be completed. Contact support if the problem persists.',
+        }),
+      ),
+    ).toThrow(
+      'Fixture discovery list_shipments failed (HTTP 200, tool error: true): The Terminal49 request could not be completed. Contact support if the problem persists.; check eval credentials and upstream availability.',
+    );
+    expect(() =>
+      fixtureItems(
+        'list_shipments',
+        result({ http: 500, isError: true, errorMessage: 'Internal error' }),
+      ),
+    ).toThrow('(HTTP 500, tool error: true): Internal error;');
+  });
+  it('redacts token-like values and signed URLs from the printed error text', () => {
+    let message = '';
+    try {
+      fixtureItems(
+        'list_shipments',
+        result({
+          isError: true,
+          rawText:
+            'denied for Token abc123 key FAKEKEY0123456789abcdefghijABCDEF at https://files.example/doc.pdf?X-Amz-Signature=deadbeef',
+        }),
+      );
+    } catch (error) {
+      message = String(error);
+    }
+    expect(message).toContain(
+      'denied for Token [REDACTED] key [REDACTED] at [REDACTED_URL];',
+    );
   });
   it('preserves discovered rows', () => {
     const items = [{ id: 'fixture-id' }];

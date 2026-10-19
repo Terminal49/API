@@ -201,7 +201,7 @@ describe('PostHog MCP analytics', () => {
 
       expect(lastInstrumentOptions().eventProperties({})).toEqual({
         mcp_server_name: 'terminal49-mcp',
-        mcp_server_version: '1.2.0',
+        mcp_server_version: '1.2.1',
         mcp_transport: 'http',
         mcp_auth_source: 'workos_mcp',
         $groups: { account: 'acct_123' },
@@ -221,7 +221,7 @@ describe('PostHog MCP analytics', () => {
 
       expect(lastInstrumentOptions().eventProperties({})).toEqual({
         mcp_server_name: 'terminal49-mcp',
-        mcp_server_version: '1.2.0',
+        mcp_server_version: '1.2.1',
         mcp_transport: 'stdio',
       });
     });

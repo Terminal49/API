@@ -435,8 +435,23 @@ describe('MCP protocol compatibility', () => {
 
       for (const tool of tools) {
         expect(tool.annotations).toMatchObject({
-          readOnlyHint: tool.name !== 'track_container',
-          destructiveHint: false,
+          readOnlyHint: ![
+            'track_container',
+            'set_party_role',
+            'set_custom_field',
+            'stop_shipment_tracking',
+            'resume_shipment_tracking',
+            'cancel_tracking_request',
+            'add_reference_numbers',
+            'remove_reference_numbers',
+          ].includes(tool.name),
+          destructiveHint: [
+            'set_party_role',
+            'set_custom_field',
+            'stop_shipment_tracking',
+            'cancel_tracking_request',
+            'remove_reference_numbers',
+          ].includes(tool.name),
           openWorldHint: tool.name === 'search_docs',
         });
       }

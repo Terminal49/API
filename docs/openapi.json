@@ -15681,6 +15681,8 @@
                             "tracking_slots": {
                               "limit": 10,
                               "used": 4,
+                              "active_containers": 3,
+                              "pending_tracking_requests": 1,
                               "remaining": 6
                             }
                           }
@@ -21989,17 +21991,30 @@
                 "required": [
                   "limit",
                   "used",
+                  "active_containers",
+                  "pending_tracking_requests",
                   "remaining"
                 ],
                 "properties": {
                   "limit": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "Tracking slots the plan allows."
                   },
                   "used": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "Slots in use: active containers plus pending tracking requests that reserve capacity, deduplicated by container number."
+                  },
+                  "active_containers": {
+                    "type": "integer",
+                    "description": "Slots held by containers that are currently being tracked."
+                  },
+                  "pending_tracking_requests": {
+                    "type": "integer",
+                    "description": "Slots reserved by tracking requests that have not resolved yet (`pending` or `awaiting_manifest`)."
                   },
                   "remaining": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "Slots still available, never below zero."
                   }
                 }
               }
