@@ -9,6 +9,7 @@ import {
   createTerminal49McpServer,
   TERMINAL49_SERVER_INSTRUCTIONS,
 } from './server.js';
+import { defaultTools } from './tools/registry.js';
 
 const LEGACY_PROTOCOL_VERSIONS = [
   '2025-11-25',
@@ -157,11 +158,123 @@ describe('MCP protocol compatibility', () => {
     const transportEventsDescription =
       toolSchemas.get('get_container')?.properties?.include?.description;
     expect(transportEventsDescription).toMatch(
-      /transport_events: Event summary \(count, rail event count, and latest event\); use get_container_transport_events for the full timeline/,
+      /transport_events: Active event summary \(count, rail event count, and latest event\); use get_container_transport_events for the full timeline/,
     );
     expect(documentedToolSection('get_container')).toMatch(
       /transport_events.*events\.count.*events\.rail_events_count.*events\.latest_event.*get_container_transport_events.*full timeline/,
     );
+  });
+
+  it('warns that estimated_value is not available by lane, in tools/list and the docs', async () => {
+    // The API answers estimated_value with a lane dimension or lane filter
+    // (pol, pol_country, container_type) with a 400: the trade-intel service
+    // checks every field used, grouped or filtered. The measure an agent picks
+    // must carry that rule, filters included, wherever it is offered.
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const laneRule =
+      /estimated_value.*not available.*\bfilters?\b.*\bpol\b.*\bpol_country\b.*\bcontainer_type\b/s;
+
+    for (const toolName of ['get_trade_trends', 'get_trade_breakdown']) {
+      const schema = tools.find((tool) => tool.name === toolName)
+        ?.inputSchema as AdvertisedInputSchema | undefined;
+      expect(schema?.properties?.measure?.description, toolName).toMatch(
+        laneRule,
+      );
+      expect(documentedToolSection(toolName), toolName).toMatch(laneRule);
+    }
+  });
+
+  it('states the default window the API computes, in tools/list, the MCP docs and the OpenAPI spec', async () => {
+    // Without since, the trade-intel service (analytics._range) returns the
+    // N months ending with until, which defaults to the current, partial
+    // month: since = until - (N - 1). With until 2026-10, trends starts at
+    // 2024-11 and breakdown at 2025-11. "N months ago" would be N + 1 months.
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const spec = JSON.parse(
+      readFileSync(
+        new URL('../../../docs/openapi.json', import.meta.url),
+        'utf8',
+      ),
+    );
+    const windows = [
+      {
+        toolName: 'get_trade_trends',
+        path: '/trade_intel/trends',
+        request: 'TradeIntelTrendsRequest',
+        window: '24 months ending with',
+        since: '23 months before',
+      },
+      {
+        toolName: 'get_trade_breakdown',
+        path: '/trade_intel/breakdown',
+        request: 'TradeIntelBreakdownRequest',
+        window: '12 months ending with',
+        since: '11 months before',
+      },
+    ];
+
+    for (const { toolName, path, request, window, since } of windows) {
+      const tool = tools.find((candidate) => candidate.name === toolName);
+      const sinceDescriptions = {
+        'tools/list since': (tool?.inputSchema as AdvertisedInputSchema)
+          ?.properties?.since?.description,
+        'openapi since':
+          spec.components.schemas[request].properties.since.description,
+      };
+      const windowDescriptions = {
+        'tools/list description': tool?.description,
+        'docs/mcp/home.mdx': documentedToolSection(toolName),
+        'openapi operation': spec.paths[path].post.description,
+      };
+
+      for (const [surface, text] of Object.entries(sinceDescriptions)) {
+        expect(text, `${toolName} ${surface}`).toContain(since);
+      }
+      for (const [surface, text] of Object.entries(windowDescriptions)) {
+        expect(text, `${toolName} ${surface}`).toContain(window);
+      }
+      for (const [surface, text] of Object.entries({
+        ...sinceDescriptions,
+        ...windowDescriptions,
+      })) {
+        expect(text, `${toolName} ${surface}`).not.toMatch(
+          /\d+ months ago|about (?:a|two) years? back/,
+        );
+      }
+    }
+  });
+
+  it('gives the tools/list count and names wherever the docs count tools', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const read = (path: string) =>
+      readFileSync(new URL(path, import.meta.url), 'utf8');
+    const docs = {
+      'packages/mcp/README.md': read('../README.md'),
+      'packages/mcp/TOOLS_OVERVIEW.md': read('../TOOLS_OVERVIEW.md'),
+      'docs/api-docs/in-depth-guides/mcp.mdx': read(
+        '../../../docs/api-docs/in-depth-guides/mcp.mdx',
+      ),
+    };
+
+    for (const [path, text] of Object.entries(docs)) {
+      const counts = [
+        ...text.matchAll(
+          /\b(\d+)\*{0,2} (?:specialized )?tools\b|Tools \((\d+) Available\)/gi,
+        ),
+      ].map((match) => Number(match[1] ?? match[2]));
+      expect(counts.length, path).toBeGreaterThan(0);
+      for (const count of counts) expect(count, path).toBe(tools.length);
+    }
+
+    const readmeTable = [
+      ...docs['packages/mcp/README.md'].matchAll(
+        /^\| \*\*`([a-z_]+)`\*\* \|/gm,
+      ),
+    ].map((match) => match[1]);
+    expect(readmeTable.sort()).toEqual(tools.map((tool) => tool.name).sort());
   });
 
   it('advertises bounded, identifier-only inputs in tools/list', async () => {
@@ -174,7 +287,7 @@ describe('MCP protocol compatibility', () => {
       ]),
     );
 
-    expect(tools).toHaveLength(14);
+    expect(tools).toHaveLength(defaultTools().length);
     for (const tool of tools) {
       expect(tool.name.length, tool.name).toBeLessThanOrEqual(64);
       expect(tool.inputSchema.properties, tool.name).not.toHaveProperty(
@@ -214,7 +327,7 @@ describe('MCP protocol compatibility', () => {
     expect(
       toolSchemas.get('get_container')?.properties?.include?.description,
     ).toMatch(
-      /transport_events: Event summary.*get_container_transport_events/,
+      /transport_events: Active event summary.*get_container_transport_events/,
     );
 
     for (const name of [
@@ -249,6 +362,7 @@ describe('MCP protocol compatibility', () => {
             'pod_terminal',
             'transport_events',
             'custom_fields',
+            'party_roles',
           ],
         },
       },
@@ -306,15 +420,21 @@ describe('MCP protocol compatibility', () => {
           client.listResourceTemplates(),
         ]);
 
-      expect(tools).toHaveLength(14);
+      expect(tools).toHaveLength(defaultTools().length);
       expect(prompts).toHaveLength(3);
       expect(resources).toHaveLength(3);
       expect(resourceTemplates).toHaveLength(1);
 
       for (const tool of tools) {
         expect(tool.annotations).toMatchObject({
-          readOnlyHint: tool.name !== 'track_container',
-          destructiveHint: false,
+          readOnlyHint: ![
+            'track_container',
+            'set_party_role',
+            'set_custom_field',
+          ].includes(tool.name),
+          destructiveHint: ['set_party_role', 'set_custom_field'].includes(
+            tool.name,
+          ),
           openWorldHint: tool.name === 'search_docs',
         });
       }

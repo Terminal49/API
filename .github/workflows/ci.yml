@@ -35,6 +35,8 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install workspace dependencies
         run: npm ci
+      - name: Check agent trust guards and generated OpenAPI artifacts
+        run: npm run check:agent-trust
       - name: Check root and every workspace
         run: npx vp run check
       - name: Test every workspace
@@ -42,8 +44,8 @@ jobs:
       - name: Build every workspace
         run: npx vp run build
 
-  # Consumer compatibility: the standalone SDK lockfile on every supported
-  # Node version, with no workspace tooling involved.
+  # Consumer compatibility: the SDK on every supported Node version. npm ci
+  # from the SDK directory installs from the root workspace lockfile.
   sdk:
     runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
     strategy:
@@ -59,14 +61,19 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: sdks/typescript-sdk/package-lock.json
-      - name: Install standalone SDK deps
+          cache-dependency-path: package-lock.json
+      - name: Install SDK deps
         run: npm ci
       - name: Build SDK
         run: npm run build
       - name: Type-check SDK
         run: npm run type-check
+      - name: Import the built SDK
+        run: node --input-type=module -e "const sdk = await import('@terminal49/sdk'); if (typeof sdk.Terminal49Client !== 'function') throw new Error('Terminal49Client export missing');"
+      # Vitest 5 and Vite+ 1.x support Node 22.12+ only, so the Node 20 leg
+      # proves install, build, types, and import, and leaves tests to 22+.
       - name: Test SDK
+        if: matrix.node-version != 20
         run: npm test -- --run
 
   # Development tooling: root workspace lockfile on the development runtime.
@@ -114,10 +121,14 @@ jobs:
         run: npm run build --workspace @terminal49/cli
       - name: Type-check CLI
         run: npm run type-check --workspace @terminal49/cli
+      - name: Run the built CLI
+        run: node sdks/typescript-sdk-cli/dist/bin/t49.js --help
+      # Vitest 5 and Vite+ 1.x support Node 22.12+ only, so the Node 20 leg
+      # proves install, build, types, and the binary, and leaves tests to 22+.
       - name: Test CLI
+        if: matrix.node-version != 20
         run: npm run test --workspace @terminal49/cli
       # Vite+ linting is static, so it only needs the development runtime.
-      # Build/test still cover the full matrix for consumers.
       - name: Check CLI (Vite+ and anti-slop)
         if: matrix.node-version == 24
         run: npm run lint --workspace @terminal49/cli

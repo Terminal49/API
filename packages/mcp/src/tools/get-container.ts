@@ -22,14 +22,22 @@ import {
   type CustomFieldValue,
   loadCustomFields,
 } from './custom-fields.js';
+import {
+  loadPartyRoles,
+  type PartyRole,
+  type PartyRolesResult,
+} from './party-roles.js';
 
 export type ContainerInclude =
   | 'shipment'
   | 'pod_terminal'
   | 'transport_events'
-  | 'custom_fields';
+  | 'custom_fields'
+  | 'party_roles';
 
-type ApiContainerInclude = Exclude<ContainerInclude, 'custom_fields'>;
+/** Includes loaded from sub-resources instead of the container's include param. */
+type SubResourceInclude = 'custom_fields' | 'party_roles';
+type ApiContainerInclude = Exclude<ContainerInclude, SubResourceInclude>;
 
 /** The default sideloads. `include` augments — never replaces — these. */
 const DEFAULT_INCLUDES: ContainerInclude[] = ['shipment', 'pod_terminal'];
@@ -104,11 +112,17 @@ export interface ContainerStatus {
   } | null;
   custom_fields: CustomFieldValue[] | null;
   custom_fields_note?: string;
+  /** Present only when party_roles is requested. */
+  party_roles?: PartyRole[] | null;
+  party_roles_note?: string;
   events?: {
     count: number;
     latest_event?: {
       event: string;
       timestamp: string;
+      value: unknown;
+      data_source: string | null;
+      invalidated_at: string | null;
       location?: string;
     };
     rail_events_count?: number;
@@ -152,13 +166,19 @@ export async function executeGetContainer(
   try {
     const includes = resolveIncludes(args.include);
     const apiIncludes = includes.filter(
-      (inc): inc is ApiContainerInclude => inc !== 'custom_fields',
+      (inc): inc is ApiContainerInclude =>
+        inc !== 'custom_fields' && inc !== 'party_roles',
     );
-    const [result, customFields] = await Promise.all([
+    const [result, customFields, partyRoles] = await Promise.all([
       client.containers.get(args.id, apiIncludes, { format: 'raw' }),
       includes.includes('custom_fields')
         ? loadCustomFields(() =>
             client.containers.customFields(args.id, { format: 'mapped' }),
+          )
+        : Promise.resolve(null),
+      includes.includes('party_roles')
+        ? loadPartyRoles(() =>
+            client.containers.partyRoles(args.id, { format: 'raw' }),
           )
         : Promise.resolve(null),
     ]);
@@ -174,7 +194,7 @@ export async function executeGetContainer(
       timestamp: new Date().toISOString(),
     });
 
-    return formatContainerResponse(raw, includes, customFields);
+    return formatContainerResponse(raw, includes, customFields, partyRoles);
   } catch (error) {
     const duration = Date.now() - startTime;
     logMcpEvent({
@@ -194,6 +214,7 @@ function formatContainerResponse(
   apiResponse: any,
   includes: string[],
   customFields: CustomFieldsResult | null,
+  partyRoles: PartyRolesResult | null,
 ): ContainerStatus {
   const container = apiResponse.data?.attributes || {};
   const relationships = apiResponse.data?.relationships || {};
@@ -246,8 +267,9 @@ function formatContainerResponse(
     statusResult,
     includes.filter(
       (include) =>
-        include !== 'custom_fields' ||
-        Array.isArray(customFields?.custom_fields),
+        (include !== 'custom_fields' ||
+          Array.isArray(customFields?.custom_fields)) &&
+        (include !== 'party_roles' || Array.isArray(partyRoles?.party_roles)),
     ),
   );
 
@@ -329,6 +351,10 @@ function formatContainerResponse(
     ...(customFields?.custom_fields_note
       ? { custom_fields_note: customFields.custom_fields_note }
       : {}),
+    ...(partyRoles ? { party_roles: partyRoles.party_roles } : {}),
+    ...(partyRoles?.party_roles_note
+      ? { party_roles_note: partyRoles.party_roles_note }
+      : {}),
     events: eventsData,
     created_at: container.created_at,
     _metadata: metadata,
@@ -363,8 +389,12 @@ function isTrackingStopped(shipment: any): boolean {
   );
 }
 
-function formatEventsData(events: any[]): any {
-  if (!events || events.length === 0) {
+function formatEventsData(
+  events: any[],
+): NonNullable<ContainerStatus['events']> {
+  // Summaries describe active events; the timeline retains withdrawn history.
+  events = events.filter((event: any) => !event.attributes?.invalidated_at);
+  if (events.length === 0) {
     return { count: 0 };
   }
 
@@ -389,6 +419,9 @@ function formatEventsData(events: any[]): any {
       ? {
           event: latestEvent.event,
           timestamp: latestEvent.timestamp,
+          value: latestEvent.value ?? null,
+          data_source: latestEvent.data_source ?? null,
+          invalidated_at: latestEvent.invalidated_at ?? null,
           location: latestEvent.location_name || latestEvent.port_name,
         }
       : undefined,

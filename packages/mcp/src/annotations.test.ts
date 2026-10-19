@@ -1,6 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vite-plus/test';
+import { z } from 'zod';
 import { createTerminal49McpServer } from './server.js';
+import {
+  DEFAULT_TOOLSETS,
+  TOOL_REGISTRY,
+  TOOLSETS,
+  type Toolset,
+} from './tools/registry.js';
 
 vi.mock('@sentry/node', () => ({
   captureException: vi.fn(),
@@ -75,115 +82,122 @@ type ClaudeSubmission = {
   };
 };
 
-function getRegisteredTools(): Record<
-  string,
-  { title?: string; annotations?: ToolAnnotations }
-> {
-  const server = createTerminal49McpServer('token');
-  return (server as any)._registeredTools as Record<
-    string,
-    { title?: string; annotations?: ToolAnnotations }
-  >;
+type RegisteredTool = {
+  title?: string;
+  annotations?: ToolAnnotations;
+  inputSchema?: z.ZodType;
+};
+
+function getRegisteredTools(
+  toolsets: readonly Toolset[] = DEFAULT_TOOLSETS,
+): Record<string, RegisteredTool> {
+  const server = createTerminal49McpServer('token', undefined, undefined, {
+    toolsets,
+  });
+  // SAFETY: McpServer keeps registered tools in this map. The size check in
+  // 'annotates every registered tool' fails if the SDK renames it.
+  return (server as any)._registeredTools as Record<string, RegisteredTool>;
 }
 
 describe('MCP tool annotations', () => {
-  const readTools = [
-    'search_container',
-    'get_container',
-    'get_container_route',
-    'get_container_transport_events',
-    'get_shipment_details',
-    'get_supported_shipping_lines',
-    'list_containers',
-    'list_shipments',
-    'list_tracking_requests',
-    'whoami',
-  ];
-  const allTools = [...readTools, 'track_container'];
+  it('annotates every registered tool with a title and boolean hints', () => {
+    const tools = getRegisteredTools(TOOLSETS);
 
-  it('marks fetch-only tools as read-only', () => {
-    const tools = getRegisteredTools();
-
-    for (const name of readTools) {
-      const annotations = tools[name]?.annotations;
-      expect(annotations, name).toBeDefined();
-      expect(annotations?.readOnlyHint, `${name}.readOnlyHint`).toBe(true);
+    expect(Object.keys(tools)).toHaveLength(TOOL_REGISTRY.length);
+    for (const [name, tool] of Object.entries(tools)) {
+      expect(tool.title?.trim(), `${name}.title`).toBeTruthy();
+      for (const hint of [
+        'readOnlyHint',
+        'destructiveHint',
+        'openWorldHint',
+      ] as const) {
+        expect(tool.annotations?.[hint], `${name}.${hint}`).toBeTypeOf(
+          'boolean',
+        );
+      }
     }
   });
 
-  it('marks search_docs as a read-only public lookup', () => {
-    const annotations = getRegisteredTools().search_docs?.annotations;
-
-    expect(annotations?.readOnlyHint).toBe(true);
-    expect(annotations?.destructiveHint).toBe(false);
-    expect(annotations?.openWorldHint).toBe(true);
+  it('never marks a read-only tool as destructive', () => {
+    for (const tool of TOOL_REGISTRY) {
+      const { readOnlyHint, destructiveHint } = tool.annotations;
+      expect(destructiveHint && readOnlyHint, tool.name).toBe(false);
+    }
   });
 
-  it('marks track_container as a non-idempotent write', () => {
-    const tools = getRegisteredTools();
-    const annotations = tools.track_container?.annotations;
-
-    expect(annotations).toBeDefined();
-    expect(annotations?.readOnlyHint).toBe(false);
-    expect(annotations?.idempotentHint).toBe(false);
+  it('matches each tier to its annotations', () => {
+    for (const tool of TOOL_REGISTRY) {
+      const { readOnlyHint, destructiveHint } = tool.annotations;
+      expect(readOnlyHint, `${tool.name} tier ${tool.tier}`).toBe(
+        tool.tier === 'read',
+      );
+      if (tool.tier === 'C') {
+        expect(destructiveHint, `${tool.name} tier C`).toBe(true);
+      }
+    }
   });
 
-  it('advertises track_container as the only write and no destructive tools', () => {
+  it('advertises only the expected writes, and the record edits as destructive', () => {
+    // MCP: destructiveHint false means the tool only adds. set_party_role
+    // detaches parties (remove, replace) and set_custom_field overwrites or
+    // clears values, so both must say true. track_container only creates.
     const tools = getRegisteredTools();
-    const writeTools = Object.entries(tools)
+    const writes = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
       .map(([name]) => name);
     const destructiveTools = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.destructiveHint === true)
       .map(([name]) => name);
 
-    expect(writeTools).toEqual(['track_container']);
-    expect(destructiveTools).toEqual([]);
+    expect(writes.sort()).toEqual([
+      'set_custom_field',
+      'set_party_role',
+      'track_container',
+    ]);
+    expect(destructiveTools.sort()).toEqual([
+      'set_custom_field',
+      'set_party_role',
+    ]);
   });
 
-  it('marks every tool as private-account-only and non-destructive', () => {
+  it('marks the record edits as idempotent and track_container as not', () => {
     const tools = getRegisteredTools();
 
-    for (const name of allTools) {
-      const annotations = tools[name]?.annotations;
-      expect(annotations, name).toBeDefined();
-      expect(annotations?.openWorldHint, `${name}.openWorldHint`).toBe(false);
-      expect(annotations?.destructiveHint, `${name}.destructiveHint`).toBe(
-        false,
+    expect(tools.set_party_role?.annotations?.idempotentHint).toBe(true);
+    expect(tools.set_custom_field?.annotations?.idempotentHint).toBe(true);
+    expect(tools.track_container?.annotations?.idempotentHint).toBe(false);
+  });
+
+  it('gives every tier C tool an optional confirmation_token input', () => {
+    const tools = getRegisteredTools(TOOLSETS);
+
+    for (const definition of TOOL_REGISTRY.filter(
+      (tool) => tool.tier === 'C',
+    )) {
+      const schema = tools[definition.name]?.inputSchema;
+      expect(schema, definition.name).toBeDefined();
+      const jsonSchema = z.toJSONSchema(schema!, { io: 'input' }) as {
+        properties?: Record<string, unknown>;
+        required?: string[];
+      };
+      expect(jsonSchema.properties, definition.name).toHaveProperty(
+        'confirmation_token',
+      );
+      expect(jsonSchema.required ?? [], definition.name).not.toContain(
+        'confirmation_token',
       );
     }
   });
 
-  it('annotates every registered tool', () => {
-    const tools = getRegisteredTools();
-
-    // Guard against the SDK renaming/restructuring `_registeredTools`: if the
-    // map ever resolves to undefined or empty, the per-tool loop below would
-    // pass vacuously. Assert it actually contains the tools we expect first.
+  it('marks only search_docs as open world', () => {
     expect(
-      tools,
-      '_registeredTools is empty - SDK internals may have changed',
-    ).toBeTruthy();
-    expect(
-      Object.keys(tools).length,
-      '_registeredTools is empty - SDK internals may have changed',
-    ).toBeGreaterThanOrEqual(allTools.length);
-
-    for (const [name, tool] of Object.entries(tools)) {
-      expect(tool.title, `${name}.title`).toEqual(expect.any(String));
-      expect(tool.title?.trim().length, `${name}.title`).toBeGreaterThan(0);
-      expect(tool.annotations, name).toBeDefined();
-      expect(tool.annotations?.readOnlyHint, `${name}.readOnlyHint`).toBeTypeOf(
-        'boolean',
-      );
-      expect(
-        tool.annotations?.destructiveHint,
-        `${name}.destructiveHint`,
-      ).toBeTypeOf('boolean');
-    }
+      TOOL_REGISTRY.filter((tool) => tool.annotations.openWorldHint).map(
+        (tool) => tool.name,
+      ),
+    ).toEqual(['search_docs']);
   });
 
-  it('keeps live annotations and locked store listings consistent', () => {
+  it('lists exactly the default toolset tools, with live annotations, in the store submissions', () => {
     const tools = getRegisteredTools();
     const chatGpt = JSON.parse(
       readFileSync(

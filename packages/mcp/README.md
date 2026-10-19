@@ -15,24 +15,40 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (14 Available)
+### 🛠️ Tools (30 Available)
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
 | **`search_container`** | Search by container#, BL, booking, or reference | Fast fuzzy search |
 | **`track_container`** | Create tracking request and get container data | SCAC autocomplete ✨ |
-| **`get_container`** | Get detailed container info with flexible data loading | Progressive loading |
-| **`get_shipment_details`** | Get shipment routing, BOL, containers, ports | Full shipment context |
+| **`identify_tracking_number`** | Predict a number's type and carrier and check whether it is already tracked | Creates nothing |
+| **`get_container`** | Get detailed container info with flexible data loading | Optional custom fields and party roles |
+| **`get_shipment_details`** | Get shipment routing, BOL, containers, ports | Optional custom fields and party roles |
 | **`get_container_transport_events`** | Get full event timeline for a container | Milestone history |
 | **`get_supported_shipping_lines`** | List 40+ major carriers with SCAC codes | Filterable by name/code |
 | **`get_container_route`** | Get ports in route order with ETAs and the current vessel | Premium feature |
+| **`get_location`** | Get a port, terminal, or metro area | FIRMS code, address, time zone |
+| **`get_vessel`** | Get a vessel's position and, optionally, its projected track to a port | Projection is a premium feature |
 | **`list_shipments`** | List shipments with filters and pagination | Fleet-level visibility |
 | **`list_containers`** | List containers with filters and pagination | Returns ResourceLinks ✨ |
 | **`summarize_containers`** | Count containers grouped by terminal, status, carrier, port, hold, or date | Same filters as `list_containers` |
-| **`list_parties`** | Find parties by company name and return their IDs | Feeds `advanced_filters.parties` |
+| **`list_parties`** | Find parties by company name, or read one by ID | Feeds `advanced_filters.parties` |
+| **`list_custom_field_definitions`** | List the account's custom fields, their types, and enum options | Needs a signed-in user |
 | **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |
+| **`get_tracking_request`** | Get one tracking request's status, failure reason, and shipment | Follow-up after tracking |
+| **`list_documents`** | Find documents by file name, reference, or type | Never returns extracted data or file links |
+| **`get_document`** | Get one document, with opt-in extracted data, source email, and download link | Untrusted content is labeled |
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
-| **`whoami`** | Identify the credential, its account, and the features it can use | Explains empty or unauthorized results |
+| **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
+| **`set_party_role`** | Attach, replace, or detach a party (such as the drayage carrier) on containers or shipments | Destructive write, only on request |
+| **`set_custom_field`** | Set or clear one of the account's custom fields on containers or shipments | Destructive write, only on request |
+| **`search_importers`** | Find US importers by name, by what they import, or both | Trade intelligence, per account |
+| **`get_importer_profile`** | One importer's totals, monthly series, ports, origins, carriers, and products | Trade intelligence, per account |
+| **`search_commodities`** | Turn a product description or HS prefix into four-digit HS codes | Trade intelligence, per account |
+| **`rank_importers`** | Rank importers by containers for a product, US port, or origin country | Trade intelligence, per account |
+| **`get_trade_trends`** | Time series of containers, TEUs, or estimated value | Trade intelligence, per account |
+| **`get_trade_breakdown`** | Nested totals over one to three dimensions | Trade intelligence, per account |
+| **`get_trade_data_coverage`** | Where trade data starts, the latest and last full month | Trade intelligence, per account |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -373,6 +389,9 @@ npm run lint
 |----------|----------|---------|-------------|
 | `T49_API_TOKEN` | ✅ Yes | - | Terminal49 API token |
 | `T49_API_BASE_URL` | No | `https://api.terminal49.com/v2` | API base URL |
+| `T49_MCP_TOOLSETS` | No | `core,documents,operations,trade` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
+| `T49_MCP_READ_ONLY` | No | `false` | Serve only tools whose `readOnlyHint` is true. Accepts `true`, `false`, `1` or `0`, in any case. |
+| `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` and `trade` when callers share `T49_API_TOKEN` |
 | `OPENAI_APPS_CHALLENGE` | Only for ChatGPT submission | - | Exact domain-verification token issued by the OpenAI submission portal |
 | `NODE_ENV` | No | `development` | Environment |
 | `LOG_LEVEL` | No | `info` | Logging level |
@@ -389,6 +408,19 @@ npm run lint
 > Only enable `SENTRY_MCP_RECORD_INPUTS` or `SENTRY_MCP_RECORD_OUTPUTS` after confirming that your Sentry project is approved to store shipment identifiers, references, and customer data.
 
 Credential headers (`Authorization`, cookies, and any header whose name contains auth, token, secret, cookie, session, api-key, password, or signature) and request cookies are removed from every error and transaction event before it is sent, regardless of `SENTRY_SEND_DEFAULT_PII`.
+
+Signed URLs, such as the document download link that `get_document` returns, are replaced with `[REDACTED_URL]` in logs, Sentry events and PostHog events. This holds even when `SENTRY_MCP_RECORD_OUTPUTS` is on.
+
+### Toolsets
+
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `set_party_role` and `set_custom_field` are in `operations`. The trade intelligence tools are in `trade`. Every other tool today is in `core`. `whoami` reports the toolsets a session serves and whether it has write tools.
+
+- `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
+- The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
+- `X-T49-MCP-Read-Only: true` or `T49_MCP_READ_ONLY=true` removes every tool whose `readOnlyHint` is false, including `track_container`. Both accept `true`, `false`, `1` or `0`, in any case. Any other header value returns 400. The header cannot turn off read-only mode that the env turned on.
+- The server instructions name only the tools the session serves.
+- When the gateway uses one shared `T49_API_TOKEN`, it serves only `core` and the read-only `trade` toolset unless `T49_MCP_ALLOW_SHARED_TOKEN_WRITES=true`.
+- Toolsets are never read from the connector URL. The OAuth resource stays the root origin.
 
 ---
 
