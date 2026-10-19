@@ -99,7 +99,7 @@ function toRow(record: z.infer<typeof rawNotificationSchema>): NotificationRow {
 }
 
 const rawListSchema = z.object({
-  data: z.array(z.unknown()).catch([]),
+  data: z.array(z.unknown()),
   links: z.record(z.string(), z.unknown()).catch({}),
   meta: z.record(z.string(), z.unknown()).catch({}),
 });
@@ -130,7 +130,7 @@ export async function executeListWebhookNotifications(
   if (input.notification_id) {
     return { notifications: [toRow(rawSingleSchema.parse(raw).data)] };
   }
-  const list = rawListSchema.parse(raw ?? {});
+  const list = rawListSchema.parse(raw);
   return {
     notifications: list.data.flatMap((record) => {
       const parsed = rawNotificationSchema.safeParse(record);

@@ -126,6 +126,18 @@ describe('list_webhooks', () => {
     expect(requests[0]?.query.get('page[size]')).toBe('5');
   });
 
+  it.each([
+    ['no data', { meta: { total: 0 } }],
+    ['data that is not a list', { data: { id: WEBHOOK_ID } }],
+  ])(
+    'fails instead of reporting no webhooks for a list with %s',
+    async (_case, body) => {
+      const { client } = fakeApiClient({ 'GET /webhooks': { body } });
+
+      await expect(executeListWebhooks({}, client)).rejects.toThrow();
+    },
+  );
+
   it('reports a webhook with no secret, headers or valid URL', async () => {
     const { client } = fakeApiClient({
       'GET /webhooks': {
