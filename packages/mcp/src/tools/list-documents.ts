@@ -16,6 +16,7 @@ import {
   softResultFields,
   toDocumentSummary,
 } from './documents.js';
+import { includedList, topLevelObject } from './api-fields.js';
 import { isFeatureNotEnabled, type SoftResult } from './soft-results.js';
 
 const MAX_PAGE_SIZE = 25;
@@ -112,9 +113,9 @@ export type ListDocumentsResult = z.infer<typeof listDocumentsSchema>;
 // A list with no data array is a broken response, not an empty result.
 const rawListSchema = z.object({
   data: z.array(z.unknown()),
-  included: z.array(z.unknown()).catch([]),
-  links: z.record(z.string(), z.unknown()).catch({}),
-  meta: z.record(z.string(), z.unknown()).catch({}),
+  included: includedList,
+  links: topLevelObject,
+  meta: topLevelObject,
 });
 
 const rawTypesSchema = z.object({

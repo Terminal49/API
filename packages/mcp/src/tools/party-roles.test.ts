@@ -153,4 +153,36 @@ describe('party roles on snapshots', () => {
 
     expect(result.party_roles?.[0]?.party_name).toBe('ACME');
   });
+
+  it('keeps the party names when one included record is malformed', async () => {
+    const roles = partyRoles('customer', 'Cargo');
+    roles.included.unshift({ type: 'party' } as (typeof roles.included)[0]);
+    const { client } = fakeApiClient({
+      [`GET /containers/${CONTAINER_ID}`]: { body: container },
+      [`GET /containers/${CONTAINER_ID}/party_roles`]: { body: roles },
+    });
+
+    const result = await executeGetContainer(
+      { id: CONTAINER_ID, include: ['party_roles'] },
+      client,
+    );
+
+    expect(result.party_roles?.[0]?.party_name).toBe('ACME LOGISTICS');
+  });
+
+  it('fails instead of reporting unnamed parties when included is not a list', async () => {
+    const { client } = fakeApiClient({
+      [`GET /containers/${CONTAINER_ID}`]: { body: container },
+      [`GET /containers/${CONTAINER_ID}/party_roles`]: {
+        body: { ...partyRoles('customer', 'Cargo'), included: {} },
+      },
+    });
+
+    await expect(
+      executeGetContainer(
+        { id: CONTAINER_ID, include: ['party_roles'] },
+        client,
+      ),
+    ).rejects.toThrow();
+  });
 });

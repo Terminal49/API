@@ -168,6 +168,29 @@ describe('list_parties', () => {
     });
   });
 
+  it.each([
+    ['no data', { links: { next: null } }],
+    ['data that is not a list', { data: { id: PARTY_ID } }],
+    ['a next link that is not a string', { data: [], links: { next: 2 } }],
+  ])(
+    'fails instead of reporting no parties for a page with %s',
+    async (_case, body) => {
+      const { client } = fakeApiClient({ 'GET /parties': { body } });
+
+      await expect(executeListParties({}, client)).rejects.toThrow();
+    },
+  );
+
+  it('fails instead of naming a party by its id when its attributes are not an object', async () => {
+    const { client } = fakeApiClient({
+      [`GET /parties/${PARTY_ID}`]: { body: { data: { id: PARTY_ID } } },
+    });
+
+    await expect(
+      executeListParties({ id: PARTY_ID }, client),
+    ).rejects.toThrow();
+  });
+
   it('matches nothing for an unknown party id', async () => {
     const { client } = fakeApiClient({});
 
