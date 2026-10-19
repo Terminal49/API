@@ -2284,9 +2284,14 @@ export async function runStdioServer(
 
   // One stdio process serves one user, so a secret made at startup is enough.
   // Tokens from an earlier process stop working, which costs one re-preview.
-  const confirmationSecret =
-    process.env.T49_MCP_CONFIRMATION_SECRET?.trim() ||
-    randomBytes(32).toString('hex');
+  const envSecret = process.env.T49_MCP_CONFIRMATION_SECRET?.trim();
+  const usableSecret = usableConfirmationSecret(envSecret);
+  if (envSecret && !usableSecret) {
+    console.error(
+      'WARNING: T49_MCP_CONFIRMATION_SECRET is shorter than 32 characters, so this process uses a random secret instead.',
+    );
+  }
+  const confirmationSecret = usableSecret ?? randomBytes(32).toString('hex');
 
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
     console.error(`Terminal49 MCP Server v${SERVER_VERSION} running on stdio`);
