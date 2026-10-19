@@ -176,6 +176,90 @@
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
+    "get_tracking_request": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads one tracking request's status and result without modifying it.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "identify_tracking_number": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Predicts a number's type and carrier and checks existing tracking without creating a tracking request.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_location": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads a port, terminal, or metro area's details without modifying them.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_vessel": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads a vessel's position and projected track without modifying any data.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "list_custom_field_definitions": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads the account's custom field definitions and options without modifying them.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "list_documents": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Lists document metadata on the account without modifying any document.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_document": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads one document's metadata and, on request, its extracted data, source email and a short-lived download link, without modifying the document.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
     "search_importers": {
       "annotations": {
         "readOnlyHint": true,
@@ -258,6 +342,30 @@
         "read_only_justification": "Reads the coverage dates of the US import market data without modifying records.",
         "open_world_justification": "Reads Terminal49's own trade intelligence data; does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "set_party_role": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Attaches, replaces, or detaches a party, such as the drayage carrier, on the user's own containers or shipments when the user asks; it changes those records.",
+        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Replacing or detaching a party removes that party's assignment from the record. The party, container, and shipment are not deleted, and calling the tool again can restore the assignment."
+      }
+    },
+    "set_custom_field": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Sets or clears one of the account's own custom fields on the user's containers or shipments when the user asks; it changes those records.",
+        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Setting a field overwrites its previous value, and null clears it. The container or shipment is not deleted, and calling the tool again with the old value restores it."
       }
     }
   },

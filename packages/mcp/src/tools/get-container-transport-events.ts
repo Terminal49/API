@@ -18,6 +18,7 @@ export const getContainerTransportEventsTool = {
     '(vessel loaded, departed, arrived, discharged, rail movements, delivery). ' +
     'Use this for questions about journey history, "what happened", timeline analysis, rail tracking. ' +
     'For deadline changes, value is the reported deadline; timestamp is when it was reported. ' +
+    'Vessel events carry vessel_id for get_vessel. ' +
     'More efficient than get_container with transport_events when you only need event data.',
   inputSchema: {
     type: 'object',
@@ -57,6 +58,7 @@ export const transportEventsSchema = z.object({
       invalidated_at: z.string().nullable(),
       timezone: z.string().optional(),
       voyage_number: z.string().optional(),
+      vessel_id: z.string().nullable(),
       location: z
         .object({
           name: z.string().optional(),
@@ -279,6 +281,7 @@ function formatTransportEventsResponse(
       invalidated_at: attrs.invalidated_at ?? null,
       timezone: normalizeText(attrs.timezone),
       voyage_number: normalizeText(attrs.voyage_number),
+      vessel_id: relationships.vessel?.data?.id ?? null,
       location: resolveLocation(attrs, relationships, included),
     };
   });

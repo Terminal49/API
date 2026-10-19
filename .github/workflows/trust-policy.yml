@@ -15,12 +15,7 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: read
-  actions: read
-  checks: read
-  issues: write
-  pull-requests: read
+permissions: {}
 
 concurrency:
   group: trust-policy-advisory
@@ -35,6 +30,15 @@ jobs:
       github.event.pull_request.base.ref == github.event.repository.default_branch)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Adding a label to a pull request needs issues and pull-requests write.
+    # This token cannot merge (contents: read) or approve, because the repository
+    # does not let Actions approve pull requests.
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      issues: write
+      pull-requests: write
     steps:
       - name: Resolve trusted default-branch commit
         id: trusted

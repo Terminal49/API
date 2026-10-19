@@ -13,8 +13,10 @@ const sdk = vi.hoisted(() => ({
   containersGet: vi.fn(),
   containersEvents: vi.fn(),
   containersCustomFields: vi.fn(),
+  containersPartyRoles: vi.fn(),
   shipmentsGet: vi.fn(),
   shipmentsCustomFields: vi.fn(),
+  shipmentsPartyRoles: vi.fn(),
 }));
 
 vi.mock('@terminal49/sdk', () => {
@@ -27,10 +29,12 @@ vi.mock('@terminal49/sdk', () => {
         get: sdk.containersGet,
         events: sdk.containersEvents,
         customFields: sdk.containersCustomFields,
+        partyRoles: sdk.containersPartyRoles,
       };
       shipments = {
         get: sdk.shipmentsGet,
         customFields: sdk.shipmentsCustomFields,
+        partyRoles: sdk.shipmentsPartyRoles,
       };
     },
     AuthenticationError: class AuthenticationError extends Error {},
@@ -50,6 +54,33 @@ const CUSTOM_FIELDS = [
     value: 'PO-2048',
     displayValue: 'PO-2048',
     dataType: 'text',
+  },
+];
+
+const PARTY_ROLES_RAW = {
+  data: [
+    {
+      id: 'party-role-1',
+      type: 'party_role',
+      attributes: { role: 'customer' },
+      relationships: { party: { data: { id: 'party-1', type: 'party' } } },
+    },
+  ],
+  included: [
+    {
+      id: 'party-1',
+      type: 'party',
+      attributes: { company_name: 'Acme Imports' },
+    },
+  ],
+};
+
+const PARTY_ROLES = [
+  {
+    id: 'party-role-1',
+    role: 'customer',
+    party_id: 'party-1',
+    party_name: 'Acme Imports',
   },
 ];
 
@@ -190,6 +221,7 @@ describe('detail tool output schemas', () => {
       },
     });
     sdk.containersCustomFields.mockResolvedValue(CUSTOM_FIELDS);
+    sdk.containersPartyRoles.mockResolvedValue(PARTY_ROLES_RAW);
 
     const { tool, result } = await callTool('get_container', {
       id: CONTAINER_ID,
@@ -198,6 +230,7 @@ describe('detail tool output schemas', () => {
         'pod_terminal',
         'transport_events',
         'custom_fields',
+        'party_roles',
       ],
     });
 
@@ -209,6 +242,7 @@ describe('detail tool output schemas', () => {
       shipment: { ref_numbers: ['PO-2048', null] },
       events: { count: 1, rail_events_count: 1 },
       custom_fields: [{ slug: 'po_number', display_value: 'PO-2048' }],
+      party_roles: PARTY_ROLES,
     });
   });
 
@@ -313,11 +347,13 @@ describe('detail tool output schemas', () => {
       },
     });
     sdk.shipmentsCustomFields.mockResolvedValue(CUSTOM_FIELDS);
+    sdk.shipmentsPartyRoles.mockResolvedValue(PARTY_ROLES_RAW);
 
     const { tool, result } = await callTool('get_shipment_details', {
       id: SHIPMENT_ID,
       include_containers: true,
       include_custom_fields: true,
+      include_party_roles: true,
     });
 
     expectOutputMatchesSchema(tool, result);
@@ -333,6 +369,7 @@ describe('detail tool output schemas', () => {
       },
       containers: { count: 1 },
       custom_fields: [{ slug: 'po_number' }],
+      party_roles: PARTY_ROLES,
     });
   });
 
@@ -350,7 +387,10 @@ describe('detail tool output schemas', () => {
               voyage_number: '628E',
               data_source: 'shipping_line',
             },
-            relationships: { location: { data: { id: 'port-1' } } },
+            relationships: {
+              location: { data: { id: 'port-1' } },
+              vessel: { data: { id: 'vessel-1', type: 'vessel' } },
+            },
           },
           {
             id: 'event-2',
@@ -381,8 +421,11 @@ describe('detail tool output schemas', () => {
     expect(result.structuredContent).toMatchObject({
       total_events: 2,
       timeline: [
-        { location: { name: 'Shanghai', code: 'CNSHA', type: 'port' } },
-        { value: '2026-08-24', location: null },
+        {
+          vessel_id: 'vessel-1',
+          location: { name: 'Shanghai', code: 'CNSHA', type: 'port' },
+        },
+        { vessel_id: null, value: '2026-08-24', location: null },
       ],
       milestones: { vessel_departed_at: '2026-07-25T08:00:00.000Z' },
       _metadata: {

@@ -136,14 +136,14 @@ The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP end
 
 Two optional request headers reduce the tools your client sees. They can only remove tools.
 
-- `X-T49-MCP-Read-Only: true` lists only read-only tools. It removes `track_container`.
+- `X-T49-MCP-Read-Only: true` lists only read-only tools. It removes `track_container`, `set_party_role` and `set_custom_field`.
 - `X-T49-MCP-Toolsets` takes a comma-separated list of toolsets.
 
 The toolset names are:
 
-- `core`: every tool except the trade intelligence tools.
-- `documents`: no tools yet.
-- `operations`: no tools yet.
+- `core`: every tool except the document reads, the record writes and the trade intelligence tools. `whoami` reports the toolsets a session serves.
+- `documents`: `list_documents` and `get_document`.
+- `operations`: `set_party_role` and `set_custom_field`. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
 - `documents_write`: no tools yet.
 - `developer`: no tools yet.
 - `trade`: the [trade intelligence tools](#trade-intelligence-tools).
@@ -170,12 +170,14 @@ Self-hosted deployments can enable [Sentry MCP Monitoring](https://docs.sentry.i
 Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPUTS=false` and `SENTRY_MCP_RECORD_OUTPUTS=false` unless your Sentry project is approved to store shipment identifiers, references, and customer data.
 </Warning>
 
+Signed URLs, such as a document download link, are replaced with `[REDACTED_URL]` in logs, Sentry, and PostHog, even when output recording is on.
+
 ---
 
 ## Tools reference
 
 <Note>
-Every tool is read-only except `track_container`, which creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
+Every tool is read-only except three. `set_party_role` and `set_custom_field` change parties and custom fields on your containers and shipments; repeating a call changes nothing more. Because they can detach a party or overwrite a field value, they are marked as destructive for MCP clients. `track_container` creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
 </Note>
 
 ### `search_container`
@@ -295,6 +297,7 @@ Get detailed container information with flexible data loading. Choose what to in
   - `pod_terminal` – terminal name, location (lightweight)
   - `transport_events` – adds `events.count`, `events.rail_events_count`, and `events.latest_event`; use `get_container_transport_events` for the full timeline
   - `custom_fields` – account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)
+  - `party_roles` – companies assigned to the container by role, such as `customer` or `pickup_dray_carrier`. Each row has the party role `id`, `role`, `party_id`, and `party_name`. `party_name` is the company name, else the party's name, else its nickname. If the credential cannot read party roles, `party_roles` is `null` and `party_roles_note` explains why.
 
 The response may also include `_metadata` with factual details such as `includes_loaded`.
 
@@ -405,7 +408,7 @@ The response may also include `_metadata` with factual details such as `includes
 
 ### `get_container_transport_events`
 
-Get the full event timeline for a container's journey.
+Get the full event timeline for a container's journey. Each event has a `vessel_id`, or `null`, that you can pass to `get_vessel`.
 
 **Parameters**
 - `id` *(uuid, required)* – Terminal49 container UUID
@@ -498,6 +501,7 @@ Get shipment-level information including routing, BOL, and all containers.
 - `id` *(uuid, required)* – Terminal49 shipment UUID
 - `include_containers` *(boolean, optional)* – include container list (default: true)
 - `include_custom_fields` *(boolean, optional)* – include account-defined custom fields such as PO number or project manager (default: false; needs a signed-in user, not an API key)
+- `include_party_roles` *(boolean, optional)* – include the companies assigned to the shipment by role, in the same shape as `get_container` (default: false)
 
 **Good for**
 - "Tell me about this shipment"
@@ -650,6 +654,7 @@ Find the companies on the account's shipments (customers, shippers, consignees, 
 
 **Parameters**
 
+- `id` *(uuid, optional)* - one party to read, such as `party_id` from a party role. When you pass `id`, the tool ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
 - `search` *(string, optional)* - company name or part of one; case and punctuation are ignored.
 - `limit` *(number, optional)* - most parties to return. Default 25, maximum 50.
 
@@ -657,6 +662,44 @@ Find the companies on the account's shipments (customers, shippers, consignees, 
 
 - "How many containers does Acme have at the terminal?" (find Acme, then filter by `customer`)
 - "Which containers is Ray Drayage picking up?" (find the carrier, then filter by `pickup_dray_carrier`)
+
+---
+
+### `set_party_role`
+
+Attach a party to containers or shipments in a role, replace the party in that role, or detach it. Find the party ID with `list_parties` first.
+
+**Parameters**
+
+- `container_ids` or `shipment_ids` *(array of IDs)* - 1 to 50 records; pass one, not both.
+- `role` *(string)* - containers support `pickup_dray_carrier`; shipments also support `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, and `freight_forwarder`.
+- `party_id` *(string)* - the party's ID.
+- `action` *(string)* - `add`, `replace`, or `remove`. `add` attaches the party beside any others in the role. A record holds one `pickup_dray_carrier` and one `customer`, so `add` fails on a record where a different party already holds one of those; use `replace` to swap it. `replace` makes the party the only one in the role and detaches the rest. It does not replace a shipment's `customer`: remove the current customer, then add the new one. `remove` detaches the party.
+
+Returns the records that changed, those that already matched, and any that failed. A call stops after about 20 seconds; on the hosted server that time starts when the request arrives, so checking your credentials counts toward it. Records it had not started saving by then are listed in `not_attempted`, unchanged, so you can call again with them. A record that was still being saved when time ran out is listed in `failed`, and so is a save that failed without a clear answer from Terminal49, such as a dropped connection. The change may have been applied to these records, so check them before you call again.
+
+**Good for**
+
+- "Set the drayage carrier to Manzo Transport on these containers." (`replace`)
+
+---
+
+### `set_custom_field`
+
+Set or clear one of your account's custom fields on containers or shipments.
+
+**Parameters**
+
+- `entity` *(string)* - `container` or `shipment`.
+- `ids` *(array of IDs)* - 1 to 50 records.
+- `api_slug` *(string)* - the custom field's API slug.
+- `value` *(string, number, boolean, array of strings, or null)* - the new value; pass an array of option values for a multi-select field, and `null` to clear the field.
+
+Returns the records that changed, those that already matched, and any that failed. A call stops after about 20 seconds; on the hosted server that time starts when the request arrives, so checking your credentials counts toward it. Records it had not started saving by then are listed in `not_attempted`, unchanged, so you can call again with them. A record that was still being saved when time ran out is listed in `failed`, and so is a save that failed without a clear answer from Terminal49, such as a dropped connection. The change may have been applied to these records, so check them before you call again.
+
+**Good for**
+
+- "Set Sales Rep to Sofia Cortina on these containers."
 
 ---
 
@@ -676,6 +719,182 @@ List tracking requests with optional filters and pagination.
 - "List latest tracking activity"
 
 **REST equivalent**: [GET /tracking_requests](/api-docs/api-reference/tracking-requests/list-tracking-requests)
+
+---
+
+### `get_tracking_request`
+
+Get one tracking request: its number, carrier SCAC, status, failure reason, retry state, and the shipment it created.
+
+**Parameters**
+- `id` *(uuid, required)* – tracking request UUID, such as the `id` from `list_tracking_requests`
+- `include_custom_fields` *(boolean, optional)* – include account-defined custom fields set on the request (default: false; needs a signed-in user, not an API key)
+
+**Returns**
+- `request_number`, `request_type`, `scac`, `status`, `failed_reason`, `ref_numbers`, `tags`, `is_retrying`, and `retry_count`
+- `shipment_id` once the request has succeeded (status `created`), otherwise `null`
+
+**Good for**
+- "Did my tracking request go through?"
+- "Why did tracking fail for this number?"
+
+**REST equivalent**: [GET /tracking_requests/{id}](/api-docs/api-reference/tracking-requests/get-a-single-tracking-request)
+
+---
+
+### `identify_tracking_number`
+
+Identify a container, Bill of Lading, or booking number without tracking it. The tool creates nothing and adds no tracking volume.
+
+**Parameters**
+- `number` *(string, required)* – one number, 4 to 64 characters
+
+**Returns**
+- `number_type` (`container`, `bill_of_lading`, or `booking_number`), `is_valid`, `check_digit_passed`, and `invalid_reason`
+- `carrier` – the `decision` (`auto_select`, `needs_confirmation`, or `no_prediction`), the `selected` carrier, and the `candidates`, each with `scac`, `name`, and `confidence`
+- `already_tracked` – the account's `containers` and `shipments` with exactly this number, and any `in_progress_request`. It is `null` when none is found.
+- `already_tracked_note` – set when the check could not run. Then `already_tracked` is `null`, but that does not mean the number is untracked.
+
+Carrier prediction is in beta. If Terminal49 limits the request rate, the tool returns `error: "rate_limited"` with a message instead of failing.
+
+**Good for**
+- "Which carrier is MAEU123456789?"
+- "Are we already tracking CAIU2885402?"
+
+**REST equivalent**: [POST /tracking_requests/infer_number](/api-docs/api-reference/tracking-requests/auto-detect-carrier)
+
+---
+
+### `get_location`
+
+Get a port, terminal, or metro area.
+
+**Parameters**
+- `kind` *(string, required)* – `port`, `terminal`, or `metro_area`
+- `id` *(string, required)* – the Terminal49 UUID. A port or metro area also accepts its UN/LOCODE, such as `USLAX`. A terminal needs its UUID.
+
+**Returns**
+- Every kind: `name` and `time_zone`
+- A port or metro area: `code` (UN/LOCODE), `state_abbr`, `country_code`, `latitude`, and `longitude`
+- A terminal: `nickname`, `firms_code`, `smdg_code`, `bic_facility_code`, `address`, and its `port`. The terminal's `time_zone` is its port's time zone.
+
+**Good for**
+- "What is the FIRMS code for this terminal?"
+- "Which time zone is the last free day in?"
+
+**REST equivalent**: [GET /ports/{id}](/api-docs/api-reference/ports/get-a-port-using-the-locode-or-the-id), [GET /terminals/{id}](/api-docs/api-reference/terminals/get-a-terminal-using-the-id), [GET /metro_areas/{id}](/api-docs/api-reference/metro-areas/get-a-metro-area-using-the-unlocode-or-the-id)
+
+---
+
+### `get_vessel`
+
+Get a vessel's name, IMO, MMSI, and last reported position. Optionally project its track to a port and estimate when it arrives.
+
+**Parameters**
+- `id` *(uuid, required)* – vessel UUID, such as `vessel_id` from `get_container_transport_events`
+- `eta_to` *(object, optional)* – project the track to a port:
+  - `port_id` *(uuid, required)* – the port the vessel is heading to
+  - `previous_port_id` *(uuid, required)* – the port it left before that
+  - `latitude` and `longitude` *(numbers, optional)* – start from these coordinates instead of the last reported position. Give both or neither.
+
+**Returns**
+- `position` – `latitude`, `longitude`, `speed_knots`, `heading_degrees`, and `reported_at`, or `null`
+- `eta` – with `eta_to`: `estimated_arrival_at`, `total_positions`, and up to 120 evenly spaced `positions`
+
+The tool always returns `position`.
+
+The projection needs Routing Data, a paid feature. Without it, `eta` is `null` and `eta_note` explains why. If the API cannot project the port pair, `eta` is also `null` and `eta_note` asks you to check `port_id` and `previous_port_id`.
+
+If the account does not have vessel data, the tool returns `error: "FeatureNotEnabled"` with a message and an `alternative` instead of the vessel.
+
+**Good for**
+- "Where is the vessel now?"
+- "When will the vessel reach Los Angeles?"
+
+**REST equivalent**: [GET /vessels/{id}](/api-docs/api-reference/vessels/get-a-vessel-using-the-id), [GET /vessels/{id}/future_positions](/api-docs/api-reference/vessels/get-vessel-future-positions), [GET /vessels/{id}/future_positions_with_coordinates](/api-docs/api-reference/vessels/get-vessel-future-positions-with-coordinates)
+
+---
+
+### `list_custom_field_definitions`
+
+List the account's custom fields, such as PO number or project manager.
+
+**Parameters**
+- `entity_type` *(string, optional)* – `container` or `shipment`. Omit it for both.
+- `include_archived` *(boolean, optional)* – also list archived fields (default: false)
+
+**Returns**
+- `definitions` – each with `api_slug`, `display_name`, `description`, `entity_type`, `data_type`, `validation`, `sensitive`, and `archived`
+- `options` – for `enum` and `enum_multi` fields, the allowed `label` and `value` pairs in display order
+- `options_note` – set when one field's options cannot be loaded. That field's `options` is `null`, and the other definitions still return.
+
+Custom fields need a signed-in user. With an API key, `definitions` is `null` and `custom_fields_note` explains why.
+
+**Good for**
+- "Which custom fields does our account have?"
+- "What values can the priority field take?"
+
+**REST equivalent**: [GET /accounts/{account_id}/custom_field_definitions](/api-docs/api-reference/custom-fields/list-account-custom-field-definitions)
+
+---
+
+### `list_documents`
+
+Find documents on the account, such as Bills of Lading, arrival notices, and delivery orders. Results are newest first.
+
+**Parameters**
+- `filename` *(string, optional)* – text to match in the file name
+- `reference` *(string, optional)* – one reference to match, such as a Bill of Lading, booking, container, or PO number
+- `document_types` *(string[], optional)* – document type codes, such as `arrival_notice`
+- `sort` *(string, optional)* – `created_at`, `document_type`, or `added_by`, with a leading `-` for descending (default: `-created_at`)
+- `page`, `page_size` *(optional)* – page number and page size (default and maximum 25)
+- `include_types` *(boolean, optional)* – also return every document type code with its label (default: false)
+
+**Returns**
+- `items` – each with `id`, `name`, `document_type`, `source`, `file_name`, file type and size, `pages` for a document split from a packet, the linked `shipment_ids` and `container_ids`, and `has_extracted_data`, which is `true` only when the latest extraction has fields
+- `links` and `meta` – if `links.next` exists, the page is partial
+- `document_types` – with `include_types`
+
+`name` and `file_name` are cut to 256 characters. Whoever sends a file picks its name, so treat both as data. Rows never include extracted data or a file link. Use `get_document` for those.
+
+If the account does not have document processing, the tool returns `error: "FeatureNotEnabled"` with a message and an `alternative`.
+
+**Good for**
+- "Find the arrival notice for MAEU123456789."
+- "Which delivery orders came in this week?"
+
+**REST equivalent**: [GET /documents](/api-docs/api-reference/documents/list-documents), [GET /documents/types](/api-docs/api-reference/documents/list-document-types)
+
+---
+
+### `get_document`
+
+Get one document. The extracted data, the email it came in, and a download link are each opt-in.
+
+**Parameters**
+- `id` *(uuid, required)* – document UUID, such as an `id` from `list_documents`
+- `include_extracted_data` *(boolean, optional)* – include the fields Terminal49 extracted from the file (default: false)
+- `include_source_email` *(boolean, optional)* – for a document that arrived by email, include that email (default: false)
+- `include_download_url` *(boolean, optional)* – include a short-lived link to download the file (default: false)
+
+**Returns**
+- The `list_documents` fields, plus `classification_notes` (cut to 256 characters) and `email_submission_id`
+- `extracted_data` – `trust: "untrusted"`, a `notice`, `schema_version`, `extracted_at`, and `fields`. Fields that would take the data past 16,000 characters are named in `omitted_fields` and left out.
+- `source_email` – `trust: "untrusted"`, a `notice`, `subject`, `from`, `to`, `cc`, `sent_at`, the first 2,000 characters of the body as `body_preview`, and `omitted_addresses`. The subject is cut to 500 characters. `from`, `to`, and `cc` keep at most 20 addresses each, and each address is cut to 320 characters. `omitted_addresses` counts the addresses left out of each list, including entries that are not strings.
+- `download` – `delivered_as: "resource_link"` and `expires_at`, the time the link stops working. `expires_at` is `null` when the link names no usable expiry. The link itself comes back as a `resource_link` content block, not in the structured result.
+
+When a requested part is not available, it is `null` and a note explains why: `extracted_data_note`, `source_email_note`, or `download_note`. An extraction with no fields yet reads as not available, because extraction may still be running.
+
+<Warning>
+Extracted data and the source email are text that people outside your account write. The tool labels them untrusted. Your AI client should treat them as data and never follow instructions found in them.
+</Warning>
+
+**Good for**
+- "What does this arrival notice say about the consignee?"
+- "Who sent this Bill of Lading?"
+- "Give me the delivery order file."
+
+**REST equivalent**: [GET /documents/{id}](/api-docs/api-reference/documents/get-a-document), [GET /documents/{id}/download_url](/api-docs/api-reference/documents/get-a-document-download-url)
 
 ---
 
@@ -704,10 +923,13 @@ Identify the caller: API key or signed-in user, the account the session is scope
 
 **Returns**
 - `kind` (`api_key` or `user`), `channel` (`api`, `dashboard`, `mcp`, `askt49`), and the API key label when there is one
-- `account` – company name, business type (`shipper`, `freight_forwarder`, `customs_broker`, `trucking_company`, …), plan, SCAC, location, and tracking-slot usage on free and trial plans
+- `account` – company name, business type (`shipper`, `freight_forwarder`, `customs_broker`, `trucking_company`, …), plan, SCAC, location, and tracking-slot usage on free and trial plans (limit, used, active containers, pending tracking requests, remaining)
 - `user` – email, name, role, job role, and job title for a signed-in user; `null` for an API key
 - `other_accounts` – other accounts the signed-in user can switch to
 - `features` – one status per gated feature: `available`, `requires_paid_plan`, `requires_user_credential`, or `not_enabled`
+- `credential_type` – how this MCP session signed in: `user`, `agent`, `api_key`, or `shared_token`
+- `enabled_toolsets` – the toolsets this session serves
+- `write_tools_available` – `false` when the session serves only read-only tools
 
 **Good for**
 - "Which account am I connected to?"

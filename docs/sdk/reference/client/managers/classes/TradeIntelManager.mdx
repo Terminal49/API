@@ -35,7 +35,7 @@ importers use several names, so absent volume does not mean low volume.
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
 | `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
-| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+| `defaultFormat?` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
 
 #### Returns
 
@@ -49,7 +49,7 @@ importers use several names, so absent volume does not mean low volume.
 
 ### breakdown()
 
-> **breakdown**(`request`): `Promise`\<\{ `dims`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `fact`: `string`; `filters`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `measure`: `"containers"` \| `"teus"` \| `"estimated_value"`; `notes`: `string`[]; `rows`: `object` & `object`[]; `since`: `string`; `until`: `string`; \}\>
+> **breakdown**(`request`): `Promise`\<\{ `dims`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `fact`: `string`; `filters`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `measure`: `"containers"` \| `"teus"` \| `"estimated_value"`; `notes`: `string`[]; `rows`: (`object` & `object`)[]; `since`: `string`; `until`: `string`; \}\>
 
 Nested totals over a dimension hierarchy, with a grand total and
 subtotals at every level. Defaults to the 12 months ending with the
@@ -84,7 +84,7 @@ current, partial month.
 
 #### Returns
 
-`Promise`\<\{ `dims`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `fact`: `string`; `filters`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `measure`: `"containers"` \| `"teus"` \| `"estimated_value"`; `notes`: `string`[]; `rows`: `object` & `object`[]; `since`: `string`; `until`: `string`; \}\>
+`Promise`\<\{ `dims`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `fact`: `string`; `filters`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `measure`: `"containers"` \| `"teus"` \| `"estimated_value"`; `notes`: `string`[]; `rows`: (`object` & `object`)[]; `since`: `string`; `until`: `string`; \}\>
 
 ***
 
@@ -123,7 +123,7 @@ parties, and commodity lines. Searches the last `months` months
 | Parameter | Type |
 | ------ | ------ |
 | `bolNumber` | `string` |
-| `options` | [`TradeIntelBillOfLadingLookupOptions`](/sdk/reference/client/managers/interfaces/TradeIntelBillOfLadingLookupOptions) |
+| `options?` | [`TradeIntelBillOfLadingLookupOptions`](/sdk/reference/client/managers/interfaces/TradeIntelBillOfLadingLookupOptions) |
 
 #### Returns
 
@@ -195,7 +195,7 @@ both. Results are ranked by match quality, not size.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `request` | \{ `imports?`: `string` \| `null`; `limit?`: `number`; `min_containers?`: `number` \| `null`; `name?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `port_of_discharge?`: `string` \| `null`; `state?`: `string` \| `null`; \} | - |
+| `request?` | \{ `imports?`: `string` \| `null`; `limit?`: `number`; `min_containers?`: `number` \| `null`; `name?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `port_of_discharge?`: `string` \| `null`; `state?`: `string` \| `null`; \} | - |
 | `request.imports?` | `string` \| `null` | **Description** What the company imports, in plain words (semantic match). **Example** `frozen shrimp` |
 | `request.limit?` | `number` | **Description** Maximum results to return. **Default** `10` |
 | `request.min_containers?` | `number` \| `null` | **Description** Minimum containers in the index window. |
@@ -221,7 +221,7 @@ port of discharge, or origin country.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `request` | \{ `hs4?`: `string` \| `null`; `limit?`: `number`; `months?`: `number`; `origin_country?`: `string` \| `null`; `port_of_discharge?`: `string` \| `null`; \} | - |
+| `request?` | \{ `hs4?`: `string` \| `null`; `limit?`: `number`; `months?`: `number`; `origin_country?`: `string` \| `null`; `port_of_discharge?`: `string` \| `null`; \} | - |
 | `request.hs4?` | `string` \| `null` | **Description** 4-digit HS heading: rank importers of containers carrying it. Any other value returns `400`. Use `commodities/search` to find one. **Example** `0306` |
 | `request.limit?` | `number` | **Description** Maximum importers to return. **Default** `20` |
 | `request.months?` | `number` | **Description** Full calendar months ending last month. **Default** `12` |
@@ -236,7 +236,7 @@ port of discharge, or origin country.
 
 ### trends()
 
-> **trends**(`request?`): `Promise`\<\{ `fact`: `string`; `filters`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `group_by`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `interval`: `"month"` \| `"quarter"` \| `"year"`; `measure`: `"containers"` \| `"teus"` \| `"estimated_value"`; `notes`: `string`[]; `series`: `object` & `object`[]; `since`: `string`; `until`: `string`; \}\>
+> **trends**(`request?`): `Promise`\<\{ `fact`: `string`; `filters`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `group_by`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `interval`: `"month"` \| `"quarter"` \| `"year"`; `measure`: `"containers"` \| `"teus"` \| `"estimated_value"`; `notes`: `string`[]; `series`: (`object` & `object`)[]; `since`: `string`; `until`: `string`; \}\>
 
 Time series of containers, TEUs, or estimated value, optionally split by
 up to two dimensions. Defaults to the 24 months ending with the current,
@@ -246,7 +246,7 @@ partial month.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `request` | \{ `filters?`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `group_by?`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `interval?`: `"month"` \| `"quarter"` \| `"year"`; `measure?`: `"containers"` \| `"teus"` \| `"estimated_value"`; `since?`: `string` \| `null`; `top?`: `number`; `until?`: `string` \| `null`; \} | - |
+| `request?` | \{ `filters?`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `group_by?`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `interval?`: `"month"` \| `"quarter"` \| `"year"`; `measure?`: `"containers"` \| `"teus"` \| `"estimated_value"`; `since?`: `string` \| `null`; `top?`: `number`; `until?`: `string` \| `null`; \} | - |
 | `request.filters?` | \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \} | - |
 | `request.filters.carrier?` | `string` \| `null` | **Description** Substring of the ocean carrier name as it appears on manifests. Carriers appear under spelling variants; prefer `scac` for an exact match. **Example** `MAERSK` |
 | `request.filters.company?` | `string` \| `null` | **Description** Case-insensitive **substring** match on the company name, so `IKEA` also matches `IKEA SUPPLY AG`. For one company's own figures use `companies/profile`, which matches the exact name. **Example** `CATERPILLAR` |
@@ -272,4 +272,4 @@ partial month.
 
 #### Returns
 
-`Promise`\<\{ `fact`: `string`; `filters`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `group_by`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `interval`: `"month"` \| `"quarter"` \| `"year"`; `measure`: `"containers"` \| `"teus"` \| `"estimated_value"`; `notes`: `string`[]; `series`: `object` & `object`[]; `since`: `string`; `until`: `string`; \}\>
+`Promise`\<\{ `fact`: `string`; `filters`: \{ `carrier?`: `string` \| `null`; `company?`: `string` \| `null`; `company_state?`: `string` \| `null`; `container_type?`: `string` \| `null`; `dest_state?`: `string` \| `null`; `hs2?`: `string` \| `null`; `hs4?`: `string` \| `null`; `origin_country?`: `string` \| `null`; `origin_region?`: `string` \| `null`; `pod?`: `string` \| `null`; `pod_coast?`: `"EAST"` \| `"WEST"` \| `"GULF"` \| `null`; `pol?`: `string` \| `null`; `pol_country?`: `string` \| `null`; `reefer?`: `boolean` \| `null`; `scac?`: `string` \| `null`; \}; `group_by`: (`"reefer"` \| `"carrier"` \| `"scac"` \| `"origin_country"` \| `"origin_region"` \| `"pod"` \| `"pod_coast"` \| `"dest_state"` \| `"pol"` \| `"pol_country"` \| `"container_type"` \| `"company"` \| `"company_state"` \| `"hs4"` \| `"hs2"`)[]; `interval`: `"month"` \| `"quarter"` \| `"year"`; `measure`: `"containers"` \| `"teus"` \| `"estimated_value"`; `notes`: `string`[]; `series`: (`object` & `object`)[]; `since`: `string`; `until`: `string`; \}\>
