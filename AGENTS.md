@@ -112,7 +112,7 @@ For substantive documentation writing, use the repo-local skill at `skills/termi
 Standard commands live in **Build and Development Commands** above; the notes below are the non-obvious gotchas for this environment. The startup update script already runs `npm ci` at the repo root.
 
 ### Node version
-- The repo requires **Node 24.11+** (`engines: 24.x`, `.tool-versions` pins `24.11.0`) because that is Vite+ 1.3.0's Node 24 floor. The VM's baseline `node` on `PATH` (`/exec-daemon/node`) is **v22**; a login-shell hook selects nvm's Node 24, so **run commands from a login shell**. If `node -v` shows v22, run `nvm use 24` first.
+- The repo requires **Node 24.11+** (`engines: 24.x`, `.tool-versions` pins `24.11.0`) because that is Vite+ 0.3.3's Node 24 floor. The VM's baseline `node` on `PATH` (`/exec-daemon/node`) is **v22**; a login-shell hook selects nvm's Node 24, so **run commands from a login shell**. If `node -v` shows v22, run `nvm use 24` first.
 
 ### Products & how to run them (nothing here is a long-running backend — MCP/SDK are clients of the external Terminal49 API at `https://api.terminal49.com/v2`)
 - **SDK** (`@terminal49/sdk`): unit tests are fixture-based and need no network/token (`npm run test --workspace @terminal49/sdk -- --run`). `smoke`/`example` scripts hit the live API and need `T49_API_TOKEN`.
