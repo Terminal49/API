@@ -442,12 +442,15 @@ describe('MCP protocol compatibility', () => {
             'stop_shipment_tracking',
             'resume_shipment_tracking',
             'cancel_tracking_request',
+            'add_reference_numbers',
+            'remove_reference_numbers',
           ].includes(tool.name),
           destructiveHint: [
             'set_party_role',
             'set_custom_field',
             'stop_shipment_tracking',
             'cancel_tracking_request',
+            'remove_reference_numbers',
           ].includes(tool.name),
           openWorldHint: tool.name === 'search_docs',
         });

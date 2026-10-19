@@ -1,5 +1,6 @@
 /**
- * Live write evals for the tracking lifecycle tools.
+ * Live write evals for the tracking lifecycle, reference number and party
+ * tools.
  *
  * These change account data, so they run only against a dedicated sandbox
  * account and only when both are set:
@@ -42,6 +43,18 @@ if (!enableWrite || !sandboxToken) {
   });
   let served: string[] = [];
   let shipmentId: string | undefined;
+
+  /** Previews a tier C call, then confirms it with the token it returned. */
+  const confirmed = async (tool: string, args: Record<string, unknown>) => {
+    const preview = structured(await client.callTool(tool, args));
+    if (preview.status !== 'confirmation_required') return preview;
+    return structured(
+      await client.callTool(tool, {
+        ...args,
+        confirmation_token: preview.confirmation_token,
+      }),
+    );
+  };
 
   describe('Terminal49 MCP write eval (sandbox account)', () => {
     beforeAll(async () => {
@@ -134,6 +147,44 @@ if (!enableWrite || !sandboxToken) {
       });
       expect(result.isError).toBe(false);
       expect(structured(result).error).toBe('invalid_confirmation');
+    });
+
+    it('adds a reference number, then removes it with a confirmed preview', async ({
+      skip,
+    }) => {
+      if (!served.includes('add_reference_numbers') || !shipmentId) {
+        return skip();
+      }
+      const target = { entity_type: 'shipment', entity_id: shipmentId };
+      const refNumber = `MCP-EVAL-${Date.now().toString(36).toUpperCase()}`;
+
+      let needsRemove = false;
+      try {
+        const added = await client.callTool('add_reference_numbers', {
+          ...target,
+          add: [refNumber],
+        });
+        needsRemove = structured(added).status === 'added';
+        expect(added.isError).toBe(false);
+        expect(structured(added).status).toBe('added');
+        expect(structured(added).ref_numbers).toContain(refNumber);
+
+        const removed = await confirmed('remove_reference_numbers', {
+          ...target,
+          remove: [refNumber],
+        });
+        if (removed.status === 'removed') needsRemove = false;
+        expect(removed.status).toBe('removed');
+        expect(removed.ref_numbers).not.toContain(refNumber);
+      } finally {
+        // Leave the sandbox shipment's list as it was even when an assert failed.
+        if (needsRemove) {
+          await confirmed('remove_reference_numbers', {
+            ...target,
+            remove: [refNumber],
+          });
+        }
+      }
     });
   });
 }

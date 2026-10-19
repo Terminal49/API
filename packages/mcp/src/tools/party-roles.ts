@@ -1,5 +1,6 @@
 /**
- * Shared party role loading for get_container and get_shipment_details.
+ * Shared party role reads for get_container, get_shipment_details and
+ * set_party_role.
  *
  * A party role links one company (a party) to a container or shipment in a
  * role such as customer or pickup_dray_carrier. A credential that cannot read
@@ -33,15 +34,21 @@ export const partyAttributesSchema = z.object({
   nickname: nullableString,
 });
 
+/** A party's non-empty names, in the order its display name is chosen. */
+export function partyNames(
+  attributes: z.infer<typeof partyAttributesSchema>,
+): string[] {
+  const { company_name, name, nickname } = attributes;
+  return [company_name, name, nickname]
+    .map((text) => text?.trim())
+    .filter((text): text is string => Boolean(text));
+}
+
 /** A party's display name: its company name, else its name, else its nickname. */
 export function partyName(
   attributes: z.infer<typeof partyAttributesSchema>,
 ): string | null {
-  const { company_name, name, nickname } = attributes;
-  return (
-    [company_name, name, nickname].map((text) => text?.trim()).find(Boolean) ??
-    null
-  );
+  return partyNames(attributes)[0] ?? null;
 }
 
 const rawPartyRolesSchema = z.object({

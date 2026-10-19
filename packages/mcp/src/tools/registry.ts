@@ -166,6 +166,31 @@ export const TOOL_REGISTRY = [
     },
   },
   {
+    name: 'add_reference_numbers',
+    title: 'Add Reference Numbers',
+    toolset: 'operations',
+    tier: 'A',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
+    name: 'remove_reference_numbers',
+    title: 'Remove Reference Numbers',
+    toolset: 'operations',
+    tier: 'C',
+    confirms: 'always',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
     toolset: 'core',

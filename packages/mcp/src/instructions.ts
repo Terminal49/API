@@ -24,6 +24,10 @@ const WRITE_EFFECTS = {
   resume_shipment_tracking: 'starts tracking a stopped shipment again',
   cancel_tracking_request:
     'cancels a tracking request that is still pending, which cannot be undone',
+  add_reference_numbers:
+    'adds reference numbers to a container, shipment or tracking request and keeps the ones already there',
+  remove_reference_numbers:
+    'removes reference numbers from a container, shipment or tracking request',
   set_party_role:
     'attaches, replaces or detaches a party (such as the drayage carrier) on up to 50 containers or shipments',
   set_custom_field:

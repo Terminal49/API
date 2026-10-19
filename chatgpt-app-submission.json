@@ -164,6 +164,30 @@
         "destructive_justification": "A cancelled tracking request cannot be restored. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. It cancels only a request that is still pending."
       }
     },
+    "add_reference_numbers": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Adds reference numbers to one container, shipment or tracking request in the user's Terminal49 account.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Keeps every reference number already on the record and only adds new ones. remove_reference_numbers undoes the change."
+      }
+    },
+    "remove_reference_numbers": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Removes reference numbers from one container, shipment or tracking request in the user's Terminal49 account.",
+        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
+        "destructive_justification": "Removes the named reference numbers from the record. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview."
+      }
+    },
     "search_docs": {
       "annotations": {
         "readOnlyHint": true,
