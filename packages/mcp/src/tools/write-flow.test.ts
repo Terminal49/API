@@ -419,6 +419,27 @@ describe('runConfirmedWrite on a request that can ask the user', () => {
     });
   });
 
+  it('leaves the confirmation unspent when the user declines', async () => {
+    const target = record();
+    const asked = await runConfirmedWrite(elicitingContext(), target.plan({}));
+    const requestState = stateOf(asked);
+    await runConfirmedWrite(
+      elicitingContext({ requestState, answer: { action: 'decline' } }),
+      target.plan({}),
+    );
+
+    const result = await runConfirmedWrite(
+      elicitingContext({
+        requestState,
+        answer: { action: 'accept', confirm: true },
+      }),
+      target.plan({}),
+    );
+
+    expect(result).toEqual({ status: 'done' });
+    expect(target.write).toHaveBeenCalledOnce();
+  });
+
   /** A context whose channel is parsed from what a client sent. */
   function answeredContext(
     requestState: string | undefined,
