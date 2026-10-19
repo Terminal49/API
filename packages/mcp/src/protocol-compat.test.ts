@@ -183,6 +183,20 @@ describe('MCP protocol compatibility', () => {
     expect(trackSection).toMatch(/To look a number up, use `search_container`/);
   });
 
+  it('advertises the explicit-request rule for track_container in instructions and tools/list', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const description = tools.find(
+      (tool) => tool.name === 'track_container',
+    )?.description;
+    const rule = /track_container only when the user asks to track/;
+
+    expect(client.getInstructions()).toMatch(rule);
+    expect(description).toMatch(
+      /call this only when the user asks to track or add a number/,
+    );
+  });
+
   it('warns that estimated_value is not available by lane, in tools/list and the docs', async () => {
     // The API answers estimated_value with a lane dimension or lane filter
     // (pol, pol_country, container_type) with a 400: the trade-intel service
