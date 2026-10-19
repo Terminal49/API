@@ -34,7 +34,7 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 
 ### cancel()
 
-> **cancel**(`id`): `Promise`\<`any`\>
+> **cancel**(`id`, `options?`): `Promise`\<`any`\>
 
 Cancel a tracking request that is still `pending` or `awaiting_manifest`.
 It moves to status `cancelled`. Any other status returns 422.
@@ -44,6 +44,7 @@ It moves to status `cancelled`. Any other status returns 422.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
