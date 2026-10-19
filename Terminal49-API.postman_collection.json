@@ -21406,7 +21406,7 @@
                     "request": {
                         "name": "Get vessel future positions",
                         "description": {
-                            "content": "Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+                            "content": "Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>",
                             "type": "text/plain"
                         },
                         "url": {
@@ -21534,6 +21534,81 @@
                                 }
                             ],
                             "body": "{\n  \"data\": {\n    \"id\": \"<uuid>\",\n    \"type\": \"vessel\",\n    \"attributes\": {\n      \"name\": \"<string>\",\n      \"imo\": \"<string>\",\n      \"mmsi\": \"<string>\",\n      \"latitude\": \"<number>\",\n      \"longitude\": \"<number>\",\n      \"nautical_speed_knots\": \"<number>\",\n      \"navigational_heading_degrees\": \"<number>\",\n      \"position_timestamp\": \"<dateTime>\",\n      \"positions\": [\n        {\n          \"latitude\": \"<number>\",\n          \"longitude\": \"<number>\",\n          \"timestamp\": \"<dateTime>\",\n          \"estimated\": \"<boolean>\",\n          \"heading\": \"<number>\"\n        },\n        {\n          \"latitude\": \"<number>\",\n          \"longitude\": \"<number>\",\n          \"timestamp\": \"<dateTime>\",\n          \"estimated\": \"<boolean>\",\n          \"heading\": \"<number>\"\n        }\n      ]\n    }\n  },\n  \"links\": {\n    \"self\": \"<uri>\"\n  }\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        },
+                        {
+                            "id": "bd2c476d-2705-5524-9099-f4d2975e60e4",
+                            "name": "Unauthorized. The API token is missing or invalid, or the account may not perform this action.",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "vessels",
+                                        ":id",
+                                        "future_positions"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) The destination port id",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "port_id",
+                                            "value": "<uuid>"
+                                        },
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) The previous port id",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "previous_port_id",
+                                            "value": "<uuid>"
+                                        }
+                                    ],
+                                    "variable": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) ",
+                                                "type": "text/plain"
+                                            },
+                                            "type": "any",
+                                            "value": "<string>",
+                                            "key": "id"
+                                        }
+                                    ]
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "Authorization",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {}
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"errors\": [\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": \"string\"\n      }\n    },\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": 65,\n        \"key_1\": \"string\"\n      }\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
@@ -21699,7 +21774,7 @@
                     "request": {
                         "name": "Get vessel future positions from coordinates",
                         "description": {
-                            "content": "Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+                            "content": "Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>",
                             "type": "text/plain"
                         },
                         "url": {
@@ -21863,6 +21938,99 @@
                                 }
                             ],
                             "body": "{\n  \"data\": {\n    \"id\": \"<uuid>\",\n    \"type\": \"vessel\",\n    \"attributes\": {\n      \"name\": \"<string>\",\n      \"imo\": \"<string>\",\n      \"mmsi\": \"<string>\",\n      \"latitude\": \"<number>\",\n      \"longitude\": \"<number>\",\n      \"nautical_speed_knots\": \"<number>\",\n      \"navigational_heading_degrees\": \"<number>\",\n      \"position_timestamp\": \"<dateTime>\",\n      \"positions\": [\n        {\n          \"latitude\": \"<number>\",\n          \"longitude\": \"<number>\",\n          \"timestamp\": \"<dateTime>\",\n          \"estimated\": \"<boolean>\",\n          \"heading\": \"<number>\"\n        },\n        {\n          \"latitude\": \"<number>\",\n          \"longitude\": \"<number>\",\n          \"timestamp\": \"<dateTime>\",\n          \"estimated\": \"<boolean>\",\n          \"heading\": \"<number>\"\n        }\n      ]\n    }\n  },\n  \"links\": {\n    \"self\": \"<uri>\"\n  }\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        },
+                        {
+                            "id": "f2fe9f41-2849-5629-9b4f-54355f9bbdbe",
+                            "name": "Unauthorized. The API token is missing or invalid, or the account may not perform this action.",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "vessels",
+                                        ":id",
+                                        "future_positions_with_coordinates"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) The destination port id",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "port_id",
+                                            "value": "<uuid>"
+                                        },
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) The previous port id",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "previous_port_id",
+                                            "value": "<uuid>"
+                                        },
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) Starting latitude coordinate",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "latitude",
+                                            "value": "<number>"
+                                        },
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) Starting longitude coordinate",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "longitude",
+                                            "value": "<number>"
+                                        }
+                                    ],
+                                    "variable": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) ",
+                                                "type": "text/plain"
+                                            },
+                                            "type": "any",
+                                            "value": "<string>",
+                                            "key": "id"
+                                        }
+                                    ]
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "Authorization",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {}
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"errors\": [\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": \"string\"\n      }\n    },\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": 65,\n        \"key_1\": \"string\"\n      }\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
@@ -32724,7 +32892,7 @@
                     "request": {
                         "name": "Get a vessel using the id",
                         "description": {
-                            "content": "Returns a vessel by id. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>",
+                            "content": "Returns a vessel by id, with its current position. Add `show_positions` to include its position history. <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>",
                             "type": "text/plain"
                         },
                         "url": {
@@ -32854,8 +33022,82 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "44f4fa24-27e0-507d-bb5f-4535deb95d67",
-                            "name": "Forbidden - Feature not enabled",
+                            "id": "0323d989-3209-5640-9e77-3fca5e974087",
+                            "name": "Unauthorized. The API token is missing or invalid, or the account may not perform this action.",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "vessels",
+                                        ":id"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [
+                                        {
+                                            "disabled": true,
+                                            "description": {
+                                                "content": "ISO 8601 timestamp to filter positions from. 7 days by default.",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "show_positions[from_timestamp]",
+                                            "value": "<dateTime>"
+                                        },
+                                        {
+                                            "disabled": true,
+                                            "description": {
+                                                "content": "ISO 8601 timestamp to filter positions up to. Current time by default.",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "show_positions[to_timestamp]",
+                                            "value": "<dateTime>"
+                                        }
+                                    ],
+                                    "variable": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) ",
+                                                "type": "text/plain"
+                                            },
+                                            "type": "any",
+                                            "value": "<string>",
+                                            "key": "id"
+                                        }
+                                    ]
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "Authorization",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {}
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"errors\": [\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": \"string\"\n      }\n    },\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": 65,\n        \"key_1\": \"string\"\n      }\n    }\n  ]\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        },
+                        {
+                            "id": "4051a105-f0c7-5c6d-8556-3eb3fe7ca51d",
+                            "name": "Forbidden - Routing data feature is not enabled for this account",
                             "originalRequest": {
                                 "url": {
                                     "path": [
@@ -33013,7 +33255,7 @@
                     "request": {
                         "name": "Get a vessel using the imo",
                         "description": {
-                            "content": "Returns a vessel by the given IMO number. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>",
+                            "content": "Returns a vessel by the given IMO number, with its current position. Add `show_positions` to include its position history. <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>",
                             "type": "text/plain"
                         },
                         "url": {
@@ -33143,8 +33385,82 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "312b25b5-4f65-5c53-a55c-89ea5149365d",
-                            "name": "Forbidden - Feature not enabled",
+                            "id": "f51e2fca-eecc-5b64-bbdf-caa1529d32ce",
+                            "name": "Unauthorized. The API token is missing or invalid, or the account may not perform this action.",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "vessels",
+                                        ":imo"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [
+                                        {
+                                            "disabled": true,
+                                            "description": {
+                                                "content": "ISO 8601 timestamp to filter positions from. 7 days by default.",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "show_positions[from_timestamp]",
+                                            "value": "<dateTime>"
+                                        },
+                                        {
+                                            "disabled": true,
+                                            "description": {
+                                                "content": "ISO 8601 timestamp to filter positions up to. Current time by default.",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "show_positions[to_timestamp]",
+                                            "value": "<dateTime>"
+                                        }
+                                    ],
+                                    "variable": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) ",
+                                                "type": "text/plain"
+                                            },
+                                            "type": "any",
+                                            "value": "<string>",
+                                            "key": "imo"
+                                        }
+                                    ]
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "Authorization",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {}
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"errors\": [\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": \"string\"\n      }\n    },\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": 65,\n        \"key_1\": \"string\"\n      }\n    }\n  ]\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        },
+                        {
+                            "id": "99605076-8739-5e9b-8bc4-77fd54415536",
+                            "name": "Forbidden - Routing data feature is not enabled for this account",
                             "originalRequest": {
                                 "url": {
                                     "path": [
@@ -33302,7 +33618,7 @@
                     "request": {
                         "name": "Get vessel future positions",
                         "description": {
-                            "content": "Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+                            "content": "Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>",
                             "type": "text/plain"
                         },
                         "url": {
@@ -33430,6 +33746,81 @@
                                 }
                             ],
                             "body": "{\n  \"data\": {\n    \"id\": \"<uuid>\",\n    \"type\": \"vessel\",\n    \"attributes\": {\n      \"name\": \"<string>\",\n      \"imo\": \"<string>\",\n      \"mmsi\": \"<string>\",\n      \"latitude\": \"<number>\",\n      \"longitude\": \"<number>\",\n      \"nautical_speed_knots\": \"<number>\",\n      \"navigational_heading_degrees\": \"<number>\",\n      \"position_timestamp\": \"<dateTime>\",\n      \"positions\": [\n        {\n          \"latitude\": \"<number>\",\n          \"longitude\": \"<number>\",\n          \"timestamp\": \"<dateTime>\",\n          \"estimated\": \"<boolean>\",\n          \"heading\": \"<number>\"\n        },\n        {\n          \"latitude\": \"<number>\",\n          \"longitude\": \"<number>\",\n          \"timestamp\": \"<dateTime>\",\n          \"estimated\": \"<boolean>\",\n          \"heading\": \"<number>\"\n        }\n      ]\n    }\n  },\n  \"links\": {\n    \"self\": \"<uri>\"\n  }\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        },
+                        {
+                            "id": "003571b6-a82e-547b-99b5-0f8019d60c18",
+                            "name": "Unauthorized. The API token is missing or invalid, or the account may not perform this action.",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "vessels",
+                                        ":id",
+                                        "future_positions"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) The destination port id",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "port_id",
+                                            "value": "<uuid>"
+                                        },
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) The previous port id",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "previous_port_id",
+                                            "value": "<uuid>"
+                                        }
+                                    ],
+                                    "variable": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) ",
+                                                "type": "text/plain"
+                                            },
+                                            "type": "any",
+                                            "value": "<string>",
+                                            "key": "id"
+                                        }
+                                    ]
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "Authorization",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {}
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"errors\": [\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": \"string\"\n      }\n    },\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": 65,\n        \"key_1\": \"string\"\n      }\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
@@ -33595,7 +33986,7 @@
                     "request": {
                         "name": "Get vessel future positions from coordinates",
                         "description": {
-                            "content": "Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>",
+                            "content": "Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>",
                             "type": "text/plain"
                         },
                         "url": {
@@ -33759,6 +34150,99 @@
                                 }
                             ],
                             "body": "{\n  \"data\": {\n    \"id\": \"<uuid>\",\n    \"type\": \"vessel\",\n    \"attributes\": {\n      \"name\": \"<string>\",\n      \"imo\": \"<string>\",\n      \"mmsi\": \"<string>\",\n      \"latitude\": \"<number>\",\n      \"longitude\": \"<number>\",\n      \"nautical_speed_knots\": \"<number>\",\n      \"navigational_heading_degrees\": \"<number>\",\n      \"position_timestamp\": \"<dateTime>\",\n      \"positions\": [\n        {\n          \"latitude\": \"<number>\",\n          \"longitude\": \"<number>\",\n          \"timestamp\": \"<dateTime>\",\n          \"estimated\": \"<boolean>\",\n          \"heading\": \"<number>\"\n        },\n        {\n          \"latitude\": \"<number>\",\n          \"longitude\": \"<number>\",\n          \"timestamp\": \"<dateTime>\",\n          \"estimated\": \"<boolean>\",\n          \"heading\": \"<number>\"\n        }\n      ]\n    }\n  },\n  \"links\": {\n    \"self\": \"<uri>\"\n  }\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        },
+                        {
+                            "id": "c62c3838-4f77-5072-89db-ee5ff96d445d",
+                            "name": "Unauthorized. The API token is missing or invalid, or the account may not perform this action.",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "vessels",
+                                        ":id",
+                                        "future_positions_with_coordinates"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) The destination port id",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "port_id",
+                                            "value": "<uuid>"
+                                        },
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) The previous port id",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "previous_port_id",
+                                            "value": "<uuid>"
+                                        },
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) Starting latitude coordinate",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "latitude",
+                                            "value": "<number>"
+                                        },
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) Starting longitude coordinate",
+                                                "type": "text/plain"
+                                            },
+                                            "key": "longitude",
+                                            "value": "<number>"
+                                        }
+                                    ],
+                                    "variable": [
+                                        {
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) ",
+                                                "type": "text/plain"
+                                            },
+                                            "type": "any",
+                                            "value": "<string>",
+                                            "key": "id"
+                                        }
+                                    ]
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: apikey",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "Authorization",
+                                        "value": "<API Key>"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {}
+                            },
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"errors\": [\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": \"string\"\n      }\n    },\n    {\n      \"detail\": \"<string>\",\n      \"title\": \"<string>\",\n      \"source\": {\n        \"pointer\": \"<string>\",\n        \"parameter\": \"<string>\"\n      },\n      \"code\": \"<string>\",\n      \"status\": \"<string>\",\n      \"meta\": {\n        \"key_0\": 65,\n        \"key_1\": \"string\"\n      }\n    }\n  ]\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         },
