@@ -14,6 +14,7 @@ import {
   writeContext,
 } from '../test/write-context.js';
 import { STOP_TRACKING_NOT_ENABLED } from './shipment-tracking.js';
+import { executeResumeShipmentTracking } from './resume-shipment-tracking.js';
 import {
   executeStopShipmentTracking,
   stopShipmentTrackingOutputSchema,
@@ -65,6 +66,10 @@ function trackedShipment(features = enabled) {
       stoppedAt = STOPPED_AT;
       return { body: shipment(stoppedAt, containers, billOfLading) };
     },
+    [`PATCH /shipments/${SHIPMENT_ID}/resume_tracking`]: () => {
+      stoppedAt = null;
+      return { body: shipment(stoppedAt, containers, billOfLading) };
+    },
   };
   return {
     ...fakeApiClient(routes),
@@ -80,7 +85,7 @@ function trackedShipment(features = enabled) {
   };
 }
 
-function patches(requests: { method: string }[]) {
+function patches(requests: { method: string; path: string }[]) {
   return requests.filter((request) => request.method === 'PATCH');
 }
 
@@ -123,6 +128,41 @@ describe('stop_shipment_tracking', () => {
     });
     expect(stopShipmentTrackingOutputSchema.parse(result)).toEqual(result);
     expect(patches(requests)).toEqual([]);
+  });
+
+  it('refuses a token replayed after a resume restored the previewed state', async () => {
+    const { client, requests } = trackedShipment();
+    const context = writeContext(client);
+    const preview = await executeStopShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      context,
+    );
+    const confirmed = {
+      shipment_id: SHIPMENT_ID,
+      confirmation_token: tokenOf(preview),
+    };
+    await executeStopShipmentTracking(confirmed, client, context);
+    await executeResumeShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      context,
+    );
+
+    const replay = await executeStopShipmentTracking(
+      confirmed,
+      client,
+      context,
+    );
+
+    expect(replay).toMatchObject({
+      error: 'invalid_confirmation',
+      reason: 'used',
+    });
+    expect(patches(requests).map((request) => request.path)).toEqual([
+      `/shipments/${SHIPMENT_ID}/stop_tracking`,
+      `/shipments/${SHIPMENT_ID}/resume_tracking`,
+    ]);
   });
 
   it('stops tracking with the token from the preview', async () => {

@@ -17,10 +17,7 @@ import {
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
 import { executeGetContainer } from './tools/get-container.js';
-import {
-  executeTrackContainer,
-  trackContainerAudit,
-} from './tools/track-container.js';
+import { executeTrackContainer } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
 import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
 import {
@@ -160,11 +157,7 @@ import {
   resumeShipmentTrackingInputSchema,
   resumeShipmentTrackingOutputSchema,
 } from './tools/resume-shipment-tracking.js';
-import {
-  credentialHash,
-  runWrite,
-  usableConfirmationSecret,
-} from './tools/write-kit.js';
+import { credentialHash, usableConfirmationSecret } from './tools/write-kit.js';
 import {
   confirmationChannel,
   createToolContext,
@@ -1505,26 +1498,17 @@ export function createTerminal49McpServer(
         },
         context,
       ) =>
-        runWrite(
-          context,
+        executeTrackContainer(
           {
-            tool: 'track_container',
-            entityType: 'tracking_request',
-            entityId: undefined,
+            number,
+            numberType,
+            containerNumber,
+            scac,
+            bookingNumber,
+            refNumbers,
           },
-          () =>
-            executeTrackContainer(
-              {
-                number,
-                numberType,
-                containerNumber,
-                scac,
-                bookingNumber,
-                refNumbers,
-              },
-              client,
-            ),
-          trackContainerAudit,
+          client,
+          context,
         ),
     ),
     identify_tracking_number: tool(
@@ -1921,7 +1905,8 @@ export function createTerminal49McpServer(
           'Add reference numbers, such as PO or job numbers, to a container, shipment, or tracking request. ' +
           'It keeps every reference number already on the record and adds only the new ones, so calling it again with the same numbers changes nothing. ' +
           'Returns added with the list before (previous) and after (ref_numbers), or already_present when every number was already there. ' +
-          'concurrent_change_detected is true when the list read back after the change differs from the list sent, which means someone else changed it at the same time.',
+          'concurrent_change_detected is true when the list read back after the change differs from the list sent, which means someone else changed it at the same time. ' +
+          'Terminal49 replaces the whole list and has no conditional update, so a number someone else adds between this tool reading the list and writing it is lost, and concurrent_change_detected does not report it.',
         inputSchema: addReferenceNumbersInputSchema,
         outputSchema: addReferenceNumbersOutputSchema,
       },
@@ -2499,9 +2484,14 @@ export async function runStdioServer(
 
   // One stdio process serves one user, so a secret made at startup is enough.
   // Tokens from an earlier process stop working, which costs one re-preview.
-  const confirmationSecret =
-    process.env.T49_MCP_CONFIRMATION_SECRET?.trim() ||
-    randomBytes(32).toString('hex');
+  const envSecret = process.env.T49_MCP_CONFIRMATION_SECRET?.trim();
+  const usableSecret = usableConfirmationSecret(envSecret);
+  if (envSecret && !usableSecret) {
+    console.error(
+      'WARNING: T49_MCP_CONFIRMATION_SECRET is shorter than 32 characters, so this process uses a random secret instead.',
+    );
+  }
+  const confirmationSecret = usableSecret ?? randomBytes(32).toString('hex');
 
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
     console.error(`Terminal49 MCP Server v${SERVER_VERSION} running on stdio`);

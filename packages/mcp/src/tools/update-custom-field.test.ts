@@ -23,6 +23,7 @@ import {
   writeContext,
 } from '../test/write-context.js';
 import { CREDENTIAL_NOT_SUPPORTED } from './custom-field-values.js';
+import { executeSetCustomField } from './set-custom-field.js';
 import { ToolInputError } from './soft-results.js';
 import {
   executeUpdateCustomField,
@@ -180,6 +181,30 @@ describe('update_custom_field', () => {
       path: `${CF_CONTAINER_PATH}/custom_fields/po_number`,
     });
     expect(stored.values.has('po_number')).toBe(false);
+  });
+
+  it('refuses a clear token replayed after set_custom_field restored the value', async () => {
+    const stored = storedCustomFields(CF_CONTAINER_PATH, { po_number: 'PO-1' });
+    const { client, requests } = fakeApiClient(stored.routes);
+    const context = writeContext(client);
+    const preview = await executeUpdateCustomField(clear(), client, context);
+    await executeUpdateCustomField(clear(tokenOf(preview)), client, context);
+    await executeSetCustomField({ ...target, value: 'PO-1' }, client, context);
+
+    const replay = await executeUpdateCustomField(
+      clear(tokenOf(preview)),
+      client,
+      context,
+    );
+
+    expect(replay).toMatchObject({
+      error: 'invalid_confirmation',
+      reason: 'used',
+    });
+    expect(stored.values.get('po_number')).toBeDefined();
+    expect(
+      requests.filter((request) => request.method === 'DELETE'),
+    ).toHaveLength(1);
   });
 
   it('binds the token to the value it previewed', async () => {

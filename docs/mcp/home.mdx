@@ -970,7 +970,7 @@ Add reference numbers, such as PO or job numbers, to a container, shipment, or t
 - `status: "noop"` when Terminal49 refuses the list. Nothing changed.
 - `unreadable_reference_numbers` when Terminal49 returns the record's list in a form the tool cannot read. Nothing changed.
 
-Terminal49 replaces the whole list on each change, so the tool sends the numbers already on the record plus the new ones. Empty (null) entries in the list hold no number, and the tool leaves them out.
+Terminal49 replaces the whole list on each change, so the tool sends the numbers already on the record plus the new ones. Empty (null) entries in the list hold no number, and the tool leaves them out. Terminal49 has no conditional update for this list. If someone else adds a number after the tool reads the list and before it writes, that number is lost, and `concurrent_change_detected` does not report it.
 
 **Good for**
 - "Tag MSCU1234565 with PO 4500123."
