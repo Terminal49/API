@@ -12,7 +12,8 @@
     "!dist/**/*.test.*",
     "!dist/**/*.test-d.*",
     "!dist/test",
-    "!dist/scripts"
+    "!dist/scripts",
+    "!dist/**/*.map"
   ],
   "type": "module",
   "main": "dist/index.js",
