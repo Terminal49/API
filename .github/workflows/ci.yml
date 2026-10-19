@@ -61,7 +61,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: sdks/typescript-sdk/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Install standalone SDK deps
         run: npm ci
       - name: Build SDK
