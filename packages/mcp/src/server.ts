@@ -1082,6 +1082,14 @@ function formatToolError(
     return 'Invalid or unsupported list filter. Use the names, values, and operators documented in the tool schema.';
   }
 
+  if (err.name === 'AuthenticationError' || err.status === 401) {
+    return 'Terminal49 rejected the credentials for this request (HTTP 401). Check that the API key or connection is valid and has API access.';
+  }
+
+  if (err.name === 'AuthorizationError' || err.status === 403) {
+    return 'This Terminal49 account is not permitted to make this request (HTTP 403).';
+  }
+
   return 'The Terminal49 request could not be completed. Contact support if the problem persists.';
 }
 
