@@ -4,7 +4,9 @@
  *
  * The API replaces the whole list on every PATCH and has no ETag, so a write
  * reads the list, sends the merged list and reads it back. A read-back that
- * differs from the list sent means someone else changed the list in between.
+ * differs from the list sent means someone changed the list after the PATCH.
+ * A change that lands between the read and the PATCH is overwritten, and
+ * nothing here can see it.
  */
 
 import type { Terminal49Client } from '@terminal49/sdk';

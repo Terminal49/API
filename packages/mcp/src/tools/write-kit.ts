@@ -17,7 +17,12 @@
  * token is not a security boundary: a model can make both calls itself. The
  * backend still decides what the credential may do.
  */
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import {
+  createHash,
+  createHmac,
+  randomBytes,
+  timingSafeEqual,
+} from 'node:crypto';
 import {
   inputRequired,
   type InputRequiredResult,
@@ -113,6 +118,7 @@ function tokenMac(
   secret: string,
   binding: ConfirmationBinding,
   expiresAt: number,
+  nonce: string,
   state: string,
 ): string {
   return mac(secret, [
@@ -123,6 +129,7 @@ function tokenMac(
     binding.accountId,
     binding.credentialHash,
     expiresAt,
+    nonce,
     state,
   ]);
 }
@@ -139,13 +146,15 @@ export function issueConfirmationToken(
   now: number = Date.now(),
 ): IssuedConfirmation {
   const expiresAt = now + CONFIRMATION_TTL_MS;
+  // Makes every preview's token unique, so one approval confirms one write.
+  const nonce = randomBytes(4).toString('hex');
   const state = stateTag(secret, fingerprint);
   return {
     confirmation_token: [
       CONFIRMATION_TOKEN_PREFIX,
-      expiresAt.toString(36),
+      `${expiresAt.toString(36)}${nonce}`,
       state,
-      tokenMac(secret, binding, expiresAt, state),
+      tokenMac(secret, binding, expiresAt, nonce, state),
     ].join('.'),
     expires_at: new Date(expiresAt).toISOString(),
   };
@@ -173,7 +182,7 @@ function sameMac(a: string, b: string): boolean {
 }
 
 const TOKEN_PATTERN = new RegExp(
-  `^${CONFIRMATION_TOKEN_PREFIX}\\.([0-9a-z]{1,12})\\.([A-Za-z0-9_-]{43})\\.([A-Za-z0-9_-]{43})$`,
+  `^${CONFIRMATION_TOKEN_PREFIX}\\.([0-9a-z]{1,12})([0-9a-f]{8})\\.([A-Za-z0-9_-]{43})\\.([A-Za-z0-9_-]{43})$`,
 );
 
 export function checkConfirmationToken(
@@ -185,11 +194,11 @@ export function checkConfirmationToken(
 ): ConfirmationCheck {
   const match = TOKEN_PATTERN.exec(token);
   if (!match) return { ok: false, reason: 'malformed' };
-  const [, encodedExpiry = '', state = '', signature = ''] = match;
+  const [, encodedExpiry = '', nonce = '', state = '', signature = ''] = match;
   const expiresAt = Number.parseInt(encodedExpiry, 36);
-  // The MAC covers the expiry and the state tag, so an edit to either is a
-  // mismatch, never a stale preview.
-  if (!sameMac(signature, tokenMac(secret, binding, expiresAt, state))) {
+  // The MAC covers the expiry, the nonce and the state tag, so an edit to any
+  // of them is a mismatch, never a stale preview.
+  if (!sameMac(signature, tokenMac(secret, binding, expiresAt, nonce, state))) {
     return { ok: false, reason: 'mismatch' };
   }
   if (now >= expiresAt) return { ok: false, reason: 'expired' };
@@ -212,7 +221,7 @@ export const CONFIRMATION_NOT_CONFIGURED: NotPermittedResult = {
 };
 
 export interface InvalidConfirmationResult extends SoftResult<'invalid_confirmation'> {
-  reason: Exclude<ConfirmationRejection, 'stale'>;
+  reason: Exclude<ConfirmationRejection, 'stale'> | 'used';
 }
 
 const INVALID_CONFIRMATION_MESSAGES = {
@@ -220,6 +229,7 @@ const INVALID_CONFIRMATION_MESSAGES = {
   mismatch:
     'The confirmation_token was issued for a different call, account or credential.',
   expired: 'The confirmation_token has expired.',
+  used: 'The confirmation_token was already used to make this change.',
 } satisfies Record<InvalidConfirmationResult['reason'], string>;
 
 const INVALID_REQUEST_STATE_MESSAGES = {
@@ -228,6 +238,7 @@ const INVALID_REQUEST_STATE_MESSAGES = {
   mismatch:
     'The confirmation state the client sent back was issued for a different call, account or credential.',
   expired: 'The confirmation the user gave has expired.',
+  used: 'The confirmation the user gave was already used to make this change.',
 } satisfies Record<InvalidConfirmationResult['reason'], string>;
 
 export function invalidConfirmation(
@@ -685,6 +696,26 @@ function elicitConfirmation(
   });
 }
 
+/**
+ * Tokens that already confirmed a write, kept until they expire. A token is
+ * bound to the record's state, and a tier A inverse such as
+ * resume_shipment_tracking can restore that state, so without this one
+ * approval could confirm the same write twice. It lives in process memory, so
+ * on a multi-instance deployment another instance can still accept the token
+ * once more before it expires.
+ */
+const spentTokens = new Map<string, number>();
+
+/** Marks a token used. False when it already confirmed a write. */
+function spendToken(token: string, now: number = Date.now()): boolean {
+  for (const [spent, expiresAt] of spentTokens) {
+    if (expiresAt <= now) spentTokens.delete(spent);
+  }
+  if (spentTokens.has(token)) return false;
+  spentTokens.set(token, now + CONFIRMATION_TTL_MS);
+  return true;
+}
+
 const RECORD_CHANGED_NOTE =
   'The record changed after you last saw it. Here is its current state.';
 
@@ -790,6 +821,12 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
       }
     }
 
+    const confirmation =
+      channel.kind === 'token' ? token : channel.requestState;
+    if (confirmation && !spendToken(confirmation)) {
+      await audit(phase, 'invalid_confirmation');
+      return invalidConfirmation(plan.tool, 'used', channel.kind);
+    }
     const done = await plan.write(read.preview);
     await audit(phase, auditOutcome(done));
     return done;

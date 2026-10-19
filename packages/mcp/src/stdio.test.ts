@@ -157,13 +157,18 @@ describe('runStdioServer', () => {
       });
     });
 
-    it('refuses tier C writes when the env secret is too short', async () => {
+    it('warns and uses a random secret when the env secret is too short', async () => {
       vi.stubEnv('T49_MCP_CONFIRMATION_SECRET', 'short-secret');
       const [factory] = await startStdio();
 
       await expect(cancel(factory!)).resolves.toMatchObject({
-        error: 'not_permitted',
+        status: 'confirmation_required',
       });
+      const stderr = vi.mocked(console.error).mock.calls.flat().join('\n');
+      expect(stderr).toContain(
+        'WARNING: T49_MCP_CONFIRMATION_SECRET is shorter than 32 characters',
+      );
+      expect(stderr).not.toContain('short-secret');
     });
   });
 });

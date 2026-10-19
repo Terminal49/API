@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { executeAddReferenceNumbers } from './add-reference-numbers.js';
 import { executeAssignParty } from './assign-party.js';
 import { executeCancelTrackingRequest } from './cancel-tracking-request.js';
-import { tokenOf, writeContext } from '../test/write-context.js';
+import { auditEvents, tokenOf, writeContext } from '../test/write-context.js';
 import { executeGetContainer } from './get-container.js';
 import { executeGetContainerRoute } from './get-container-route.js';
 import { executeGetContainerTransportEvents } from './get-container-transport-events.js';
@@ -249,6 +249,7 @@ describe('MCP tool contracts', () => {
     const result = await executeTrackContainer(
       { number: 'CAIU2885402', scac: 'MAEU' },
       client,
+      writeContext(client),
     );
 
     expect(createFromInfer).toHaveBeenCalledWith('CAIU2885402', {
@@ -296,6 +297,7 @@ describe('MCP tool contracts', () => {
     const result = await executeTrackContainer(
       { number: 'SELU4039824' },
       client,
+      writeContext(client),
     );
 
     expect(createFromInfer).not.toHaveBeenCalled();
@@ -335,6 +337,7 @@ describe('MCP tool contracts', () => {
     const result = await executeTrackContainer(
       { number: 'MSCU1234566', numberType: 'container', scac: 'MSCU' },
       client,
+      writeContext(client),
     );
 
     expect(createFromInfer).toHaveBeenCalledTimes(1);
@@ -994,6 +997,7 @@ describe('MCP tool contracts', () => {
     const result = await executeTrackContainer(
       { number: 'TEMU8347291', scac: 'TEMU' },
       client,
+      writeContext(client),
     );
 
     expect(createFromInfer).toHaveBeenCalledWith('TEMU8347291', {
@@ -1011,6 +1015,44 @@ describe('MCP tool contracts', () => {
     expect(result._metadata).toBeUndefined();
   });
 
+  it('track_container audits the tracking request it creates', async () => {
+    const REQUEST_ID = '3d2c1b0a-9f8e-4d7c-8b6a-5f4e3d2c1b0a';
+    const lines: string[] = [];
+    const spy = vi
+      .spyOn(console, 'error')
+      .mockImplementation((line: string) => {
+        lines.push(line);
+      });
+    const client = asClient({
+      createTrackingRequestFromInfer: vi.fn().mockResolvedValue({
+        infer: { inferred_type: 'container' },
+        trackingRequest: { data: { type: 'tracking_request', id: REQUEST_ID } },
+      }),
+      containers: { get: vi.fn() },
+    });
+
+    try {
+      await executeTrackContainer(
+        { number: 'TEMU8347291', scac: 'TEMU' },
+        client,
+        writeContext(client),
+      );
+    } finally {
+      spy.mockRestore();
+    }
+
+    expect(auditEvents(lines)).toEqual([
+      expect.objectContaining({
+        tool: 'track_container',
+        tier: 'A',
+        phase: 'execute',
+        outcome: 'created',
+        entity_type: 'tracking_request',
+        entity_id: REQUEST_ID,
+      }),
+    ]);
+  });
+
   it('track_container distinguishes an uncreated request from a hard upstream failure', async () => {
     const client = asClient({
       search: vi.fn().mockResolvedValue({ data: [] }),
@@ -1022,6 +1064,7 @@ describe('MCP tool contracts', () => {
     const result = await executeTrackContainer(
       { number: 'CAIU2885402', scac: 'MAEU' },
       client,
+      writeContext(client),
     );
 
     expect(result).toMatchObject({
@@ -1039,7 +1082,11 @@ describe('MCP tool contracts', () => {
     });
 
     await expect(
-      executeTrackContainer({ number: 'CAIU1234567', scac: 'MAEU' }, client),
+      executeTrackContainer(
+        { number: 'CAIU1234567', scac: 'MAEU' },
+        client,
+        writeContext(client),
+      ),
     ).rejects.toThrow('fails the ISO 6346 check digit');
     expect(createFromInfer).not.toHaveBeenCalled();
   });
