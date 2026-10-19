@@ -290,6 +290,40 @@ function verifiedReadTool(sourceFile, checker) {
   return helper;
 }
 
+// The server dispatches only what selectTools returns, so selectTools must
+// derive its result from TOOL_REGISTRY rather than return its own list.
+function verifySelectTools(sourceFile, checker, registryDeclaration) {
+  const helpers = sourceFile.statements.filter(
+    (statement) =>
+      ts.isFunctionDeclaration(statement) &&
+      statement.name?.text === 'selectTools',
+  );
+  const [helper] = helpers;
+  const [statement] = helper?.body?.statements ?? [];
+  const returned =
+    statement && ts.isReturnStatement(statement) && statement.expression
+      ? unwrapExpression(statement.expression)
+      : undefined;
+  const filtered =
+    returned && ts.isCallExpression(returned) ? returned.expression : undefined;
+  if (
+    helpers.length !== 1 ||
+    !helper.modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+    ) ||
+    helper.body.statements.length !== 1 ||
+    !filtered ||
+    !ts.isPropertyAccessExpression(filtered) ||
+    filtered.name.text !== 'filter' ||
+    !ts.isIdentifier(filtered.expression) ||
+    checker.getSymbolAtLocation(filtered.expression)?.valueDeclaration !==
+      registryDeclaration
+  )
+    throw new Error(
+      `${registryPath} must declare export function selectTools(selection) once, returning TOOL_REGISTRY.filter(...)`,
+    );
+}
+
 function collectRegistryToolNames() {
   if (!existsSync(resolve(root, registryPath))) return [];
   const { sourceFile, checker } = parseSource(registryPath);
@@ -309,6 +343,11 @@ function collectRegistryToolNames() {
     throw new Error(
       `TOOL_REGISTRY at ${at(declarations[0])} must be an array literal`,
     );
+  if (registry.elements.length === 0)
+    throw new Error(
+      `${registryPath} declares an empty TOOL_REGISTRY; declare every MCP tool in it`,
+    );
+  verifySelectTools(sourceFile, checker, declarations[0]);
   let readTool;
   return registry.elements.map((entry) => {
     if (
@@ -349,9 +388,47 @@ function checkFeatureMap() {
   const registeredTools = [];
   const toolImports = new Map();
   const registeredImplementations = new Map();
+  const registryTools = collectRegistryToolNames();
   const { sourceFile, checker } = parseSource(serverPath);
   if (!sourceFile) throw new Error('Missing MCP registration source');
   const at = (node) => sourceLine(sourceFile, serverPath, node);
+  function isSelectToolsCall(node) {
+    const call = node && unwrapExpression(node);
+    if (
+      !call ||
+      !ts.isCallExpression(call) ||
+      !ts.isIdentifier(call.expression)
+    )
+      return false;
+    const [specifier] =
+      checker.getSymbolAtLocation(call.expression)?.declarations ?? [];
+    const declaration = specifier?.parent?.parent?.parent;
+    return (
+      !!specifier &&
+      ts.isImportSpecifier(specifier) &&
+      !specifier.isTypeOnly &&
+      (specifier.propertyName ?? specifier.name).text === 'selectTools' &&
+      ts.isImportDeclaration(declaration) &&
+      !declaration.importClause?.isTypeOnly &&
+      declaration.moduleSpecifier.text === './tools/registry.js'
+    );
+  }
+  // The loop must iterate selectTools(...) or a const bound to it, so the
+  // toolset and read-only selection decides what gets registered.
+  function iteratesRegistrySelection(iterable) {
+    const expression = unwrapExpression(iterable);
+    if (isSelectToolsCall(expression)) return true;
+    if (!ts.isIdentifier(expression)) return false;
+    const declaration =
+      checker.getSymbolAtLocation(expression)?.valueDeclaration;
+    return (
+      !!declaration &&
+      ts.isVariableDeclaration(declaration) &&
+      ts.isVariableDeclarationList(declaration.parent) &&
+      (declaration.parent.flags & ts.NodeFlags.Const) !== 0 &&
+      isSelectToolsCall(declaration.initializer)
+    );
+  }
   for (const statement of sourceFile.statements) {
     if (
       !ts.isImportDeclaration(statement) ||
@@ -637,15 +714,14 @@ function checkFeatureMap() {
             checker.getSymbolAtLocation(definition)
         )
           throw dispatchRequired();
+        if (!iteratesRegistrySelection(loop.expression))
+          throw new Error(
+            `MCP handler map ${mapDeclaration.name.text} at ${at(loop.expression)} must iterate the selectTools(...) result imported from ./tools/registry.js`,
+          );
         dispatches += 1;
       },
     );
     if (dispatches === 0) throw dispatchRequired();
-    const [literal] = literalRegistrations;
-    if (literal)
-      throw new Error(
-        `MCP tool ${literal.text} at ${at(literal)} bypasses TOOL_REGISTRY; register every tool through the registry handler map`,
-      );
     function dispatchRequired() {
       const map = mapDeclaration.name.text;
       return new Error(
@@ -653,9 +729,14 @@ function checkFeatureMap() {
       );
     }
   }
+  const [literal] = literalRegistrations;
+  if (literal && existsSync(resolve(root, registryPath)))
+    throw new Error(
+      `MCP tool ${literal.text} at ${at(literal)} bypasses TOOL_REGISTRY; register every tool through the registry handler map`,
+    );
   assertEqual(
     'MCP tool registry against the server handler map',
-    collectRegistryToolNames(),
+    registryTools,
     handlerMapTools,
   );
   assertEqual(

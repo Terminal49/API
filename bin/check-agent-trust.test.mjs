@@ -780,11 +780,14 @@ const forwardingRegistrar =
 const registryServer = ({
   handlers = '  tool_a: tool({}, async () => executeA()),',
   registrar = forwardingRegistrar,
+  selection = 'const selected = selectTools({ toolsets: DEFAULT_TOOLSETS, readOnly: false });',
   dispatch = 'for (const definition of selected) {\n  tools[definition.name](definition);\n}',
   extra = '',
 } = {}) => `
 import { executeA } from './tools/tool-a.js';
 import { executeB } from './tools/tool-b.js';
+import { DEFAULT_TOOLSETS, TOOL_REGISTRY, selectTools } from './tools/registry.js';
+${selection}
 const tool =
   (spec, handler) =>
   (definition) => {
@@ -807,11 +810,16 @@ const readToolHelper = `function readTool(name, title, toolset = 'core') {
   };
 }`;
 
+const selectToolsHelper = `export function selectTools(selection) {
+  return TOOL_REGISTRY.filter((tool) => selection.toolsets.includes(tool.toolset));
+}`;
+
 function createRegistryRepository(
   t,
   {
     registry = "readTool('tool_a', 'Tool A')",
     readTool = readToolHelper,
+    selectTools = selectToolsHelper,
     server = registryServer(),
   } = {},
 ) {
@@ -828,7 +836,7 @@ function createRegistryRepository(
   }
   writeFileSync(
     join(repository, 'packages/mcp/src/tools/registry.ts'),
-    `export const TOOL_REGISTRY = [\n  ${registry},\n] as const satisfies readonly ToolDefinition[];\n${readTool}\n`,
+    `export const TOOL_REGISTRY = [\n${registry ? `  ${registry},\n` : ''}] as const satisfies readonly ToolDefinition[];\n${readTool}\n${selectTools}\n`,
   );
   writeFileSync(join(repository, 'packages/mcp/src/server.ts'), server);
   writeJson(repository, 'skills/agent-trust/feature-map.json', {
@@ -1103,4 +1111,104 @@ test('accepts a registrar that builds the tool context from ./tools/context', (t
   );
   const result = runGuard(repository);
   assert.equal(result.status, 0, result.stderr);
+});
+
+for (const [form, options] of [
+  [
+    'iterates TOOL_REGISTRY directly',
+    {
+      dispatch:
+        'for (const definition of TOOL_REGISTRY) tools[definition.name](definition);',
+    },
+  ],
+  [
+    'iterates an empty array',
+    {
+      dispatch:
+        'for (const definition of []) tools[definition.name](definition);',
+    },
+  ],
+  [
+    'iterates a collection not built by selectTools',
+    { selection: "const selected = [{ name: 'tool_a' }];" },
+  ],
+  [
+    'iterates a reassignable selection',
+    {
+      selection:
+        'let selected = selectTools({ toolsets: DEFAULT_TOOLSETS, readOnly: false });',
+    },
+  ],
+]) {
+  test(`rejects a dispatch loop that ${form}`, (t) => {
+    const result = runGuard(
+      createRegistryRepository(t, { server: registryServer(options) }),
+    );
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stderr,
+      /MCP handler map tools at packages\/mcp\/src\/server\.ts:\d+ must iterate the selectTools\(\.\.\.\) result imported from \.\/tools\/registry\.js/,
+    );
+  });
+}
+
+test('accepts a dispatch loop over a direct selectTools call', (t) => {
+  const result = runGuard(
+    createRegistryRepository(t, {
+      server: registryServer({
+        selection: '',
+        dispatch:
+          'for (const definition of selectTools({ toolsets: DEFAULT_TOOLSETS, readOnly: false })) tools[definition.name](definition);',
+      }),
+    }),
+  );
+  assert.equal(result.status, 0, result.stderr);
+});
+
+for (const [form, selectTools] of [
+  [
+    'returns an empty list',
+    'export function selectTools(selection) {\n  return [];\n}',
+  ],
+  [
+    'filters a collection other than TOOL_REGISTRY',
+    'export function selectTools(selection) {\n  return OTHER.filter(() => true);\n}',
+  ],
+  ['is missing', ''],
+]) {
+  test(`rejects a selectTools helper that ${form}`, (t) => {
+    const result = runGuard(createRegistryRepository(t, { selectTools }));
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stderr,
+      /packages\/mcp\/src\/tools\/registry\.ts must declare export function selectTools\(selection\) once, returning TOOL_REGISTRY\.filter\(\.\.\.\)/,
+    );
+  });
+}
+
+test('rejects an empty registry with only literal registrations', (t) => {
+  const repository = createRegistryRepository(t, {
+    registry: '',
+    server:
+      "import { executeA } from './tools/tool-a.js';\nserver.registerTool('tool_a', {}, () => executeA());",
+  });
+  const result = runGuard(repository);
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(
+    result.stderr,
+    /packages\/mcp\/src\/tools\/registry\.ts declares an empty TOOL_REGISTRY/,
+  );
+});
+
+test('rejects literal registrations alongside a registry with no registrar', (t) => {
+  const repository = createRegistryRepository(t, {
+    server:
+      "import { executeA } from './tools/tool-a.js';\nserver.registerTool('tool_a', {}, () => executeA());",
+  });
+  const result = runGuard(repository);
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(
+    result.stderr,
+    /MCP tool tool_a at packages\/mcp\/src\/server\.ts:2 bypasses TOOL_REGISTRY; register every tool through the registry handler map/,
+  );
 });
