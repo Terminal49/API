@@ -101,7 +101,7 @@ const ISO_6346_LETTER_VALUES: Record<string, number> = {
   Z: 38,
 };
 
-class ContainerCheckDigitError extends Error {
+export class ContainerCheckDigitError extends Error {
   constructor(number: string) {
     super(`Container number ${number} fails the ISO 6346 check digit`);
     this.name = 'ContainerCheckDigitError';

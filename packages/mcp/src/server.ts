@@ -13,7 +13,11 @@ import {
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
 import { executeGetContainer } from './tools/get-container.js';
-import { executeTrackContainer } from './tools/track-container.js';
+import {
+  ContainerCheckDigitError,
+  executeTrackContainer,
+  TrackContainerError,
+} from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
 import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
 import {
@@ -951,8 +955,14 @@ function wrapTool<TArgs>(
       };
     } catch (error) {
       const err = error as Error;
-      captureMcpException(error);
-      await flushMcpEvents();
+      const isExpectedTrackingError =
+        toolName === 'track_container' &&
+        (error instanceof ContainerCheckDigitError ||
+          error instanceof TrackContainerError);
+      if (!isExpectedTrackingError) {
+        captureMcpException(error);
+        await flushMcpEvents();
+      }
       // Log the real error for operators; never echo internal messages (which
       // can contain upstream URLs, tokens, or stack detail) back to the client.
       logMcpEvent({
