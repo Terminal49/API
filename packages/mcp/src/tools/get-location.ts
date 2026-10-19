@@ -98,6 +98,8 @@ const rawPlaceSchema = z.object({
   data: z.object({ id: z.string(), attributes: placeAttributesSchema }),
 });
 
+const unknownPlaceSchema = z.object({ data: z.null() });
+
 const rawTerminalSchema = z.object({
   data: z.object({
     id: z.string(),
@@ -139,11 +141,10 @@ async function getPlace(
       ? await client.ports.get(id, { format: 'raw' })
       : await client.metroAreas.get(id, { format: 'raw' });
   // An unknown metro area answers 200 with data: null.
-  const parsed = rawPlaceSchema.safeParse(raw);
-  if (!parsed.success) {
+  if (unknownPlaceSchema.safeParse(raw).success) {
     throw new NotFoundError(`No ${LOCATION_LABELS[kind]} found with id ${id}`);
   }
-  const { data } = parsed.data;
+  const { data } = rawPlaceSchema.parse(raw);
   const { city, ...attributes } = data.attributes;
   const place: LocationResult = { kind, id: data.id, ...attributes };
   if (kind === 'port') place.city = city;
