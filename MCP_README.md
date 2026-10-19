@@ -60,7 +60,7 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (21)
+## 🛠️ Available Tools (28)
 
 | Tool | Description |
 |------|-------------|
@@ -85,6 +85,13 @@ Search for bill of lading 123456789
 | `get_document` | Get one document, with opt-in extracted data, source email, and download link |
 | `search_docs` | Search the public Terminal49 documentation |
 | `whoami` | Identify the credential, account, available features, and session toolsets |
+| `search_importers` | Find US importers by name, by what they import, or both (trade intelligence) |
+| `get_importer_profile` | One importer's totals, monthly series, ports, origins, carriers, and products (trade intelligence) |
+| `search_commodities` | Turn a product description or HS prefix into four-digit HS codes (trade intelligence) |
+| `rank_importers` | Rank importers by containers for a product, US port, or origin country (trade intelligence) |
+| `get_trade_trends` | Time series of containers, TEUs, or estimated value (trade intelligence) |
+| `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
+| `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
 
 ### 🎯 Workflow Prompts (3)
 
