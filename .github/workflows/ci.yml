@@ -44,8 +44,8 @@ jobs:
       - name: Build every workspace
         run: npx vp run build
 
-  # Consumer compatibility: the standalone SDK lockfile on every supported
-  # Node version, with no workspace tooling involved.
+  # Consumer compatibility: the SDK on every supported Node version. npm ci
+  # from the SDK directory installs from the root workspace lockfile.
   sdk:
     runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
     strategy:
@@ -62,7 +62,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      - name: Install standalone SDK deps
+      - name: Install SDK deps
         run: npm ci
       - name: Build SDK
         run: npm run build
