@@ -17,10 +17,7 @@ import {
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
 import { executeGetContainer } from './tools/get-container.js';
-import {
-  executeTrackContainer,
-  trackContainerAudit,
-} from './tools/track-container.js';
+import { executeTrackContainer } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
 import { executeGetShipmentDetails } from './tools/get-shipment-details.js';
 import {
@@ -112,7 +109,6 @@ import {
 } from './tools/resume-shipment-tracking.js';
 import {
   credentialHash,
-  runWrite,
   usableConfirmationSecret,
 } from './tools/write-kit.js';
 import {
@@ -1431,26 +1427,17 @@ export function createTerminal49McpServer(
         },
         context,
       ) =>
-        runWrite(
-          context,
+        executeTrackContainer(
           {
-            tool: 'track_container',
-            entityType: 'tracking_request',
-            entityId: undefined,
+            number,
+            numberType,
+            containerNumber,
+            scac,
+            bookingNumber,
+            refNumbers,
           },
-          () =>
-            executeTrackContainer(
-              {
-                number,
-                numberType,
-                containerNumber,
-                scac,
-                bookingNumber,
-                refNumbers,
-              },
-              client,
-            ),
-          trackContainerAudit,
+          client,
+          context,
         ),
     ),
     identify_tracking_number: tool(

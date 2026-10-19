@@ -13,7 +13,8 @@ import { logMcpEvent } from '../logging.js';
 import { executeGetContainer } from './get-container.js';
 import { executeSearchContainer } from './search-container.js';
 import { httpStatus } from './soft-results.js';
-import type { WriteAuditSummary } from './write-kit.js';
+import type { ToolContext } from './context.js';
+import { runWrite, type WriteAuditSummary } from './write-kit.js';
 
 export interface TrackContainerArgs {
   number: string;
@@ -386,7 +387,24 @@ async function findExistingTracking(
   }
 }
 
-export async function executeTrackContainer(
+export function executeTrackContainer(
+  args: TrackContainerArgs,
+  client: Terminal49Client,
+  context: ToolContext,
+): Promise<any> {
+  return runWrite(
+    context,
+    {
+      tool: 'track_container',
+      entityType: 'tracking_request',
+      entityId: undefined,
+    },
+    () => trackContainer(args, client),
+    trackContainerAudit,
+  );
+}
+
+async function trackContainer(
   args: TrackContainerArgs,
   client: Terminal49Client,
 ): Promise<any> {
