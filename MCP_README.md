@@ -60,7 +60,7 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (28)
+## 🛠️ Available Tools (28 by default)
 
 | Tool | Description |
 |------|-------------|
@@ -92,6 +92,14 @@ Search for bill of lading 123456789
 | `get_trade_trends` | Time series of containers, TEUs, or estimated value (trade intelligence) |
 | `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
 | `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
+
+The opt-in `operations` toolset adds three write tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists `operations`. `stop_shipment_tracking` and `cancel_tracking_request` return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+
+| Tool | Description |
+|------|-------------|
+| `stop_shipment_tracking` | Stop updates for a shipment and its containers, after a confirmed preview |
+| `resume_shipment_tracking` | Start tracking a stopped shipment again |
+| `cancel_tracking_request` | Cancel a pending tracking request, after a confirmed preview. It cannot be undone. |
 
 ### 🎯 Workflow Prompts (3)
 

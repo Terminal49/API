@@ -18,7 +18,7 @@
  */
 import type { McpServer } from '@modelcontextprotocol/server';
 import type { BeforeSendFn, UserIdentity } from '@posthog/mcp';
-import { redactSignedUrlsDeep } from './signed-urls.js';
+import { redactSecretsDeep } from './redaction.js';
 // `PostHog` is imported from `@posthog/mcp`'s re-export rather than from
 // `posthog-node` directly, and deliberately so. `posthog-node` is a *peer*
 // dependency of `@posthog/mcp`, and this monorepo also carries a transitive
@@ -158,7 +158,7 @@ export function initializePostHogFromEnv(
 /**
  * `beforeSend` hook. Drops `$exception` events wholesale, strips
  * customer-identifying properties from everything else, and redacts signed
- * URLs from what remains.
+ * URLs and confirmation tokens from what remains.
  */
 const redactSensitiveProperties: BeforeSendFn = (event) => {
   // `enableExceptionAutocapture: false` below should mean these never appear.
@@ -175,7 +175,7 @@ const redactSensitiveProperties: BeforeSendFn = (event) => {
     }
   }
 
-  event.properties = redactSignedUrlsDeep(event.properties);
+  event.properties = redactSecretsDeep(event.properties);
   return event;
 };
 
@@ -276,6 +276,35 @@ export function instrumentMcpServerWithPostHog<TServer extends McpServer>(
   }
 
   return server;
+}
+
+/**
+ * Capture one server-side event for an account. The caller passes only
+ * properties it has already scrubbed. No-op when PostHog is not configured.
+ */
+export function captureMcpEvent(
+  event: string,
+  accountId: string,
+  properties: Record<string, string | null>,
+): void {
+  if (!client) {
+    return;
+  }
+
+  try {
+    client.capture({
+      distinctId: accountId,
+      event,
+      properties: {
+        ...properties,
+        mcp_server_name: SERVER_NAME,
+        mcp_server_version: SERVER_VERSION,
+      },
+      groups: { account: accountId },
+    });
+  } catch {
+    // Analytics must never fail a tool call.
+  }
 }
 
 /** Bound a promise so a slow/unreachable PostHog host cannot stall a request. */

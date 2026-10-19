@@ -9,7 +9,7 @@ import {
   createTerminal49McpServer,
   TERMINAL49_SERVER_INSTRUCTIONS,
 } from './server.js';
-import { defaultTools } from './tools/registry.js';
+import { defaultTools, selectTools, TOOLSETS } from './tools/registry.js';
 
 const LEGACY_PROTOCOL_VERSIONS = [
   '2025-11-25',
@@ -259,20 +259,28 @@ describe('MCP protocol compatibility', () => {
       ),
     };
 
+    // A doc counts either the default tools/list or every registered tool.
+    const allTools = selectTools({ toolsets: TOOLSETS, readOnly: false });
     for (const [path, text] of Object.entries(docs)) {
       const counts = [
         ...text.matchAll(
-          /\b(\d+)\*{0,2} (?:specialized )?tools\b|Tools \((\d+) Available\)/gi,
+          /\b(\d+)\*{0,2} (?:specialized )?tools\b|Tools \((\d+) (?:Available|by default)/gi,
         ),
       ].map((match) => Number(match[1] ?? match[2]));
       expect(counts.length, path).toBeGreaterThan(0);
-      for (const count of counts) expect(count, path).toBe(tools.length);
+      for (const count of counts) {
+        expect([tools.length, allTools.length], path).toContain(count);
+      }
     }
 
+    // The README's first tool table lists the default tools.
+    const readme = docs['packages/mcp/README.md'];
+    const defaultTable = readme.slice(
+      readme.indexOf('| Tool |'),
+      readme.indexOf('\n\n', readme.indexOf('| Tool |')),
+    );
     const readmeTable = [
-      ...docs['packages/mcp/README.md'].matchAll(
-        /^\| \*\*`([a-z_]+)`\*\* \|/gm,
-      ),
+      ...defaultTable.matchAll(/^\| \*\*`([a-z_]+)`\*\* \|/gm),
     ].map((match) => match[1]);
     expect(readmeTable.sort()).toEqual(tools.map((tool) => tool.name).sort());
   });
@@ -431,10 +439,16 @@ describe('MCP protocol compatibility', () => {
             'track_container',
             'set_party_role',
             'set_custom_field',
+            'stop_shipment_tracking',
+            'resume_shipment_tracking',
+            'cancel_tracking_request',
           ].includes(tool.name),
-          destructiveHint: ['set_party_role', 'set_custom_field'].includes(
-            tool.name,
-          ),
+          destructiveHint: [
+            'set_party_role',
+            'set_custom_field',
+            'stop_shipment_tracking',
+            'cancel_tracking_request',
+          ].includes(tool.name),
           openWorldHint: tool.name === 'search_docs',
         });
       }

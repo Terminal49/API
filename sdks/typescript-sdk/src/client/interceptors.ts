@@ -211,6 +211,13 @@ export class ErrorMappingInterceptor {
       response.status,
       extractErrorMessage(errorBody),
       errorBody,
+      // The caller decides how long to wait, so the retry sleep cap does not
+      // apply here.
+      parseRetryAfterMs(
+        response.headers.get('Retry-After'),
+        Date.now(),
+        Number.POSITIVE_INFINITY,
+      ),
     );
   }
 }

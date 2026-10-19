@@ -22,32 +22,3 @@ export function redactSignedUrls(text: string): string {
     isSignedUrl(url) ? REDACTED_URL : url,
   );
 }
-
-/**
- * A copy of `value` with signed URLs redacted from every string in it. Only
- * arrays and plain objects are walked; other objects are returned as they are.
- */
-export function redactSignedUrlsDeep<T>(value: T): T {
-  if (typeof value === 'string') {
-    // SAFETY: a string input yields a string output.
-    return redactSignedUrls(value) as T;
-  }
-  if (Array.isArray(value)) {
-    // SAFETY: mapping an array element-wise keeps its type.
-    return value.map((item) => redactSignedUrlsDeep(item)) as T;
-  }
-  const prototype =
-    value !== null && typeof value === 'object'
-      ? Object.getPrototypeOf(value)
-      : undefined;
-  if (prototype === Object.prototype || prototype === null) {
-    // SAFETY: the copy has the same keys, with each value redacted in place.
-    return Object.fromEntries(
-      Object.entries(value as object).map(([key, nested]) => [
-        key,
-        redactSignedUrlsDeep(nested),
-      ]),
-    ) as T;
-  }
-  return value;
-}
