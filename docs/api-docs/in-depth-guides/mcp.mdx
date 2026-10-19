@@ -359,7 +359,7 @@ The `vercel.json` configures the MCP server (excerpt):
 | `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
 | `T49_MCP_ALLOWED_HOSTS` | No | Comma-separated host allowlist for request Host validation |
 | `T49_MCP_ALLOWED_ORIGINS` | No | Comma-separated origin allowlist for request Origin validation |
-| `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
+| `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,operations,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
 | `T49_MCP_READ_ONLY` | No | Serves only read-only tools when set to `true` or `1`; defaults to `false` |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | Serves toolsets other than `core` and `trade` when callers share `T49_API_TOKEN`; defaults to `false` |
 | `SENTRY_DSN` | No | Enables Sentry MCP Monitoring |
