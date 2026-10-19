@@ -1,119 +1,108 @@
-# Terminal49 API Repository — Agent Instructions
+# Terminal49 API repository
 
-> **This is a public repository.** Do not commit API keys, secrets, internal URLs, customer data, or any proprietary information. Use placeholders in all examples (e.g. `Token YOUR_API_KEY`).
+> **This is a public repository.** Do not commit API keys, secrets, internal URLs, customer data, or proprietary information. Use placeholders in every example, such as `Authorization: Token YOUR_API_KEY`.
 
-This repo is **not docs-only**. It contains three things that ship independently:
+This file is the only agent-instructions file in the repository. `CLAUDE.md` is a symlink to it, and Codex and Cursor read it directly. Edit `AGENTS.md`, never a copy.
 
-1. **Documentation** (`docs/`) — the Mintlify site and the OpenAPI source of truth.
-2. **The Terminal49 MCP server + OAuth gateway** (`api/`, `packages/mcp/`) — deployed to **mcp.terminal49.com** on Vercel.
-3. **The Terminal49 TypeScript SDK** (`sdks/typescript-sdk/`) — published to npm as `@terminal49/sdk`.
+## What ships from this repo
 
-It is an **npm workspaces monorepo** (`packages/*`, `sdks/*`), Node 24. Vite+ is the development toolchain and delegates package installation to npm. The root `package-lock.json` is the authoritative workspace lockfile; `vp install` (root) and Vercel both install from it.
+Four things ship independently from one npm workspaces monorepo (`packages/*`, `sdks/*`):
 
-> `CLAUDE.md` / `claude.md` are symlinks to this file. Edit `AGENTS.md` to change agent instructions.
+| Product | Path | Ships to |
+| --- | --- | --- |
+| Documentation and the OpenAPI spec | `docs/` | Mintlify, through its Git integration |
+| MCP server and OAuth gateway | `api/`, `packages/mcp/` (`@terminal49/mcp`) | `mcp.terminal49.com` on Vercel (`vercel.json`) |
+| TypeScript SDK | `sdks/typescript-sdk/` (`@terminal49/sdk`) | npm |
+| CLI | `sdks/typescript-sdk-cli/` (`@terminal49/cli`) | npm |
 
-For detailed docs writing standards, voice, and terminology, see [WRITING_GUIDE.md](WRITING_GUIDE.md) and [agent.md](agent.md).
+The MCP server, SDK, and CLI are clients of the Terminal49 API at `https://api.terminal49.com/v2`. Nothing here runs a long-lived backend.
 
----
+## Where things live
 
-For substantive documentation writing, use the repo-local skill at `skills/terminal49-docs-writing/SKILL.md`. It includes content-type-specific guides for tutorials, how-to guides, reference pages, concepts, webhook/event docs, SDK/MCP docs, DataSync/coverage docs, changelog/update posts, and navigation.
+- `docs/docs.json` defines Mintlify navigation, branding, and tabs. Mintlify publishes every Markdown file under `docs/`, so keep repository notes out of that directory.
+- `docs/openapi.json` is the source of truth for the API reference, the SDK types, and the MCP filter schemas.
+- `docs/images/` holds every image that a docs page uses. Pages reference them as `/images/<file>`.
+- `api/` holds the Vercel functions. `api/mcp.ts` serves the MCP endpoint (Streamable HTTP, stateless) and resolves caller auth. The other files serve the `/.well-known/*` discovery documents that `vercel.json` routes to them.
+- `packages/mcp/src/server.ts` builds the server (`createTerminal49McpServer()`) for both the stdio entry (`src/index.ts`) and the `api/` gateway. Tools are in `src/tools/` and resources in `src/resources/`.
+- `packages/mcp/src/resource.ts` is the only place that derives the OAuth `resource` identifier. The protected-resource metadata and the `WWW-Authenticate` challenge both call it so they cannot diverge (RFC 9728). Do not derive the resource anywhere else.
+- `skills/` holds repository skills. `skills/terminal49-docs-writing/` is the docs-writing standard, and `skills/agent-trust/` is the change-verification gate.
 
-## Project Structure
+## Do not hand-edit generated files
 
-### Documentation (`docs/`)
-- `docs/` holds the Mintlify site content and configuration.
-- `docs/api-docs/`, `docs/datasync/`, `docs/sdk/`, `docs/mcp/`, `docs/updates/` contain MDX pages grouped by product area.
-- `docs/docs.json` defines navigation, branding, and tabs.
-- `docs/openapi.json` is the source of truth for API reference content.
-- `docs/images/` and `assets/images/` store images used by MDX pages.
+Change the source and regenerate instead.
 
-### MCP gateway (`api/`) — Vercel serverless functions
-- `api/mcp.ts` — the MCP endpoint (Streamable HTTP transport, stateless). Handles caller auth: WorkOS AuthKit token resolution, env-token + client-secret mode, and pass-through.
-- `api/oauth-protected-resource.ts` — RFC 9728 Protected Resource Metadata (`/.well-known/oauth-protected-resource`).
-- `vercel.json` — routes (`/mcp`, `/.well-known/*`), function config, install/build commands. This is what deploys to mcp.terminal49.com.
-- These import the server from `packages/mcp/src/`.
+| Generated file | Source | Regenerate with |
+| --- | --- | --- |
+| `Terminal49-API.postman_collection.json` | `docs/openapi.json` | `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,enableOptionalParameters=false` |
+| `sdks/typescript-sdk/src/generated/**` | `docs/openapi.json` | `npm run generate:types --workspace @terminal49/sdk` |
+| `packages/mcp/src/generated/**` | `docs/openapi.json` | `npm run generate:filters --workspace @terminal49/mcp` |
+| `docs/sdk/reference/**` | SDK source | `npm run sdk:docs` (CI fails if the output is stale) |
 
-### MCP server (`packages/mcp/`) — `@terminal49/mcp`
-- `src/server.ts` — `createTerminal49McpServer()`, built on `@modelcontextprotocol/sdk` (`McpServer`, `registerTool`/`registerResource`). Used by both the stdio entry (`src/index.ts`) and the `api/` HTTP gateway.
-- `src/resource.ts` — **single source of truth** for the OAuth `resource` identifier. Both the PRM endpoint and the `WWW-Authenticate` challenge resolve through it so they can never diverge (RFC 9728). Do not reintroduce per-file resource derivation.
-- `src/tools/`, `src/resources/` — MCP tools and resources.
-- `tests/`, `src/**/*.test.ts` — Vitest through Vite+.
+## Commands
 
-### TypeScript SDK (`sdks/typescript-sdk/`) — `@terminal49/sdk`
-- `src/` — the client (JSON:API, openapi-fetch). `src/generated/**` is generated — **do not hand-edit**.
+Vite+ (`vp`) is the toolchain, and it delegates package installs to npm. The root `package-lock.json` is the only lockfile. The repo needs Node 24.11 or later (`.tool-versions` pins `24.11.0`), which is the Node 24 floor of Vite+ 1.3.0.
 
----
+- Install: `vp install`. CI and Vercel run `npm ci`.
+- Check: `vp run check`. It runs `vp check`, builds the SDK declarations that other workspaces import, and then runs `tsc` for `api/` and every workspace. Keep the `tsc` checks and the SDK-first order. Vite+ type-aware linting stays off until it respects each package's own Node types.
+- Test: `vp run test`. To test one package, run `vp run --filter @terminal49/mcp test`.
+- Build: `vp run build`. It builds the SDK, then the MCP server, then the CLI, because a cold build needs the SDK declarations first. The published packages build with `tsc`. Do not switch them to `vp pack` without comparing the package contents and updating both npm publish workflows.
+- Format: `vp run format`. Oxfmt skips docs, generated files, and package metadata.
+- Lint the OpenAPI spec: `spectral lint --ruleset .spectral.yaml docs/openapi.json`.
+- Preview the docs: `cd docs && npx -y mintlify@latest dev`. The Mintlify CLI is not a workspace dependency, because the root `overrides` break its MDX parser.
+- Run the MCP server locally, or test it from Claude Desktop: see [packages/mcp/LOCAL_DEV.md](packages/mcp/LOCAL_DEV.md). The gateway env template is `.env.local.example`.
 
-## Scope
+Oxlint, Oxfmt, Vitest, and the recursive tasks all read the root `vite.config.ts`. Do not add lint or format config to a workspace. A package-level Vitest config is fine. The vendored lint plugin is in `tools/oxlint/anti-slop/`. Its README lists the local changes to re-apply when you re-vendor it.
 
-- **Docs** live in `docs/` (MDX, `docs/docs.json`, `docs/openapi.json`).
-- **Code** in `api/`, `packages/mcp/`, and `sdks/typescript-sdk/` is editable, but it is **deployed, public-facing infrastructure** — run the tests and lint before considering a change done.
-- **Do not hand-edit generated files** unless explicitly asked:
-  - `Terminal49-API.postman_collection.json` (from `docs/openapi.json`)
-  - `sdks/typescript-sdk/src/generated/**` (from `docs/openapi.json` via `openapi-typescript`)
-  - `packages/mcp/src/generated/**` (filter schemas from `docs/openapi.json` via `npm run generate:filters --workspace @terminal49/mcp`)
-  - `docs/sdk/reference/**` (generated SDK docs; CI checks they are up to date)
+Move these versions together with `vite-plus`, never one at a time: the `vite` override (`npm:@voidzero-dev/vite-plus-core`), the exact `vitest` pin, `@oxlint/plugins`, and the `@vitest/coverage-v8` dev dependency in each workspace.
 
----
+`.github/workflows/ci.yml` runs `vp run check`, `vp run test`, and `vp run build`, then builds, tests, and lints the SDK, the CLI, and the MCP server in separate jobs.
 
-## Build and Development Commands
+## Write docs
 
-### Docs
-- Preview locally: `cd docs && mintlify dev`
-- Lint the OpenAPI spec: `spectral lint --ruleset .spectral.mjs docs/openapi.json`
-- Regenerate Postman: `openapi2postmanv2 -s docs/openapi.json -o Terminal49-API.postman_collection.json -p -O folderStrategy=Tags,enableOptionalParameters=false`
+For any substantive docs change, follow [skills/terminal49-docs-writing/SKILL.md](skills/terminal49-docs-writing/SKILL.md). It routes each page type to its own guide. [WRITING_GUIDE.md](WRITING_GUIDE.md) holds the voice, terminology, approved positioning phrases, and the information architecture.
 
-### Code (npm workspaces)
-- Install: `vp install` at the root (`npm ci` remains the frozen CI and Vercel install command).
-- Check everything: `vp run check`. This runs root `vp check`, builds the SDK types needed by its dependents, then runs the API gateway and every workspace's authoritative TypeScript check. Vite+ tsgolint is intentionally disabled until it respects the monorepo's per-package Node types; do not remove the `tsc` checks or the SDK-first ordering.
-- Test everything: `vp run test` (recursive Vite+/Vitest package tests). Target one package with `vp run --filter @terminal49/mcp test`.
-- Build everything: `vp run build`. The root task explicitly builds SDK → MCP → CLI because recursive Vite+ tasks run concurrently and cold builds need SDK declarations first. The publishable packages continue to use `tsc`; do not switch them to `vp pack` without comparing package contents and updating both npm publish workflows.
-- Format code: `vp run format`. Root Oxfmt excludes docs, generated files, and package metadata so Mintlify and generated artifacts keep their existing formatting.
-- **Shared Vite+ configuration:** Oxlint, Oxfmt, Vitest, and recursive tasks all resolve through the root `vite.config.ts`. Do not add workspace-level lint/format config. Package-level Vitest config is supported. The vendored plugin is in `tools/oxlint/anti-slop/` (see its README for local modifications to re-apply when re-vendoring).
-- **Toolchain version coupling** (root `package.json`): the `vite` override alias (`npm:@voidzero-dev/vite-plus-core`), the exact `vitest` pin, the `@vitest/coverage-v8` devDeps in workspaces, and `@oxlint/plugins` must all move in lockstep with the `vite-plus` version — do not bump any of them independently.
-- CI (`.github/workflows/ci.yml`) runs build + test + lint for both packages.
-- Running the MCP server locally + testing tool calls with Claude Desktop (stdio and gateway paths): [packages/mcp/LOCAL_DEV.md](packages/mcp/LOCAL_DEV.md). Gateway env template: `.env.local.example`.
+- Write for integration engineers who may not know logistics terms. Define each acronym on first use, such as Bill of Lading (BOL).
+- If an API behavior or schema changes, update `docs/openapi.json` first, then regenerate its outputs.
+- Give every MDX page frontmatter with a `title`.
 
----
+## Agent paved path
 
-## MCP Auth Gateway notes
+- Read [`skills/agent-trust/SKILL.md`](skills/agent-trust/SKILL.md) before adding or changing an OpenAPI endpoint, npm package, MCP tool, SDK entrypoint, or SDK/MCP docs route.
+- Extend the repository through [`skills/agent-trust/references/paved-path.md`](skills/agent-trust/references/paved-path.md); do not create alternate registration, generation, or verification flows.
+- Keep [`skills/agent-trust/feature-map.json`](skills/agent-trust/feature-map.json) synchronized in the same commit. CI rejects MCP tool, SDK export, and docs-route drift.
+- Run `npm run agent-verify` before handoff. `npm run agent-verify:quick` is for iteration and is not the completion gate.
+- P-Stack is optional user tooling, not a repository dependency. Install it with `/add-plugin pstack`, then run `/setup-pstack` to choose a user-local model budget. Repository wiring is in [`skills/agent-trust/references/pstack.md`](skills/agent-trust/references/pstack.md).
 
-- The gateway is an OAuth 2.1 **Resource Server**; **WorkOS** is the Authorization Server. Follow the MCP authorization spec (RFC 9728 / 8414 / 8707 / 6750).
-- Token validation is delegated to the Terminal49 backend (`/connected-clients/resolve`); the backend must enforce the token audience. The gateway must not weaken the `WWW-Authenticate` challenge, the PRM document, or the resource resolver without checking the spec.
-- Config is via env (`WORKOS_*`, `T49_MCP_*`). Never log tokens; return generic auth errors to clients and keep detail in server logs.
-- The canonical connector URL and OAuth resource identifier is the **root origin** `https://mcp.terminal49.com` (pin `WORKOS_MCP_RESOURCE`); don't use the `/mcp` path in client config. Production/client setup (WorkOS dashboard, env vars, ChatGPT + Claude specifics) is in [packages/mcp/WORKOS_MCP_SETUP.md](packages/mcp/WORKOS_MCP_SETUP.md).
+## MCP auth gateway
 
----
+- The gateway is an OAuth 2.1 resource server, and WorkOS is the authorization server. Follow the MCP authorization spec (RFC 9728, RFC 8414, RFC 8707, and RFC 6750).
+- The Terminal49 backend validates tokens at `/connected-clients/resolve` and must enforce the token audience. Do not weaken the `WWW-Authenticate` challenge, the protected-resource metadata, or the resource resolver without checking the spec.
+- Configuration comes from `WORKOS_*` and `T49_MCP_*` environment variables. Never log tokens. Return generic auth errors to clients and keep the detail in server logs.
+- The connector URL and the OAuth resource identifier are both the root origin `https://mcp.terminal49.com`, pinned by `WORKOS_MCP_RESOURCE`. Do not put the `/mcp` path in client config. Production setup for WorkOS, ChatGPT, and Claude is in [packages/mcp/WORKOS_MCP_SETUP.md](packages/mcp/WORKOS_MCP_SETUP.md).
 
-## Commit and Pull Request Guidelines
+## Commits and pull requests
 
-- Commit history favors conventional prefixes: `docs:`, `chore:`, `feat:`, `fix:`.
-- Keep docs changes, gateway/SDK code changes, and tooling changes in **separate commits** so reviews stay focused.
-- Do not manually edit generated files; update the source and regenerate.
-- PRs: short summary, linked issue/ticket if available, screenshots for doc UI changes.
+- Use conventional prefixes: `docs:`, `chore:`, `feat:`, and `fix:`.
+- Put docs changes, gateway or SDK code changes, and tooling changes in separate commits.
+- Give each PR a short summary, a linked issue when one exists, and screenshots for docs UI changes.
 
 ## Security
 
-- Never commit real API keys or secrets; use placeholders like `Token YOUR_API_KEY`.
-- The MCP gateway is public-facing — treat auth, the resource resolver, and the discovery endpoints as security-sensitive. Keep local credentials in your environment only.
+- Never commit real API keys or secrets. Keep local credentials in your environment.
+- The MCP gateway is public. Treat auth, the resource resolver, and the discovery endpoints as security-sensitive.
 
----
+## Tool-specific configuration
 
-## Cursor Cloud specific instructions
+These files hold only what one tool needs and the others cannot read:
 
-Standard commands live in **Build and Development Commands** above; the notes below are the non-obvious gotchas for this environment. The startup update script already runs `npm ci` at the repo root.
+- `.claude/agents/*.md` define the docs subagents. They are the canonical subagent briefs.
+- `.codex/agents/*.toml` register the same subagents for Codex and tell each one to read its `.claude/agents/` brief. `.codex/agents/seo.toml` is Codex-only. `.codex/config.toml` limits subagent fan-out.
+- `.cursor/rules/agent-trust.mdc` applies the agent paved path above in Cursor. `scripts/ci/classify-pr-risk.mjs` and `.github/CODEOWNERS` reference it.
 
-### Node version
-- The repo requires **Node 24.11+** (`engines: 24.x`, `.tool-versions` pins `24.11.0`) because that is Vite+ 0.3.3's Node 24 floor. The VM's baseline `node` on `PATH` (`/exec-daemon/node`) is **v22**; a login-shell hook selects nvm's Node 24, so **run commands from a login shell**. If `node -v` shows v22, run `nvm use 24` first.
+## Cursor Cloud notes
 
-### Products & how to run them (nothing here is a long-running backend — MCP/SDK are clients of the external Terminal49 API at `https://api.terminal49.com/v2`)
-- **SDK** (`@terminal49/sdk`): unit tests are fixture-based and need no network/token (`npm run test --workspace @terminal49/sdk -- --run`). `smoke`/`example` scripts hit the live API and need `T49_API_TOKEN`.
-- **MCP** (`@terminal49/mcp`): build then run the stdio server with `npm run mcp:stdio` (or `node packages/mcp/dist/index.js`). `initialize` + `tools/list` work **without** a token (see the quick-verification snippet in `packages/mcp/LOCAL_DEV.md`); a *successful* `tools/call` result needs a real `T49_API_TOKEN` (without one, tools return a generic Terminal49 error — the wiring still runs). The `api/` HTTP gateway (Path 2/3) additionally needs the Vercel CLI + a local backend and is optional.
-- **Docs** (`docs/`): see the mintlify gotcha below.
+The startup script runs `npm ci` at the repo root. No `T49_API_TOKEN` is provisioned, so calls to the live API fail. The live MCP eval in CI also skips without `MCP_EVAL_TOKEN`.
 
-### `mintlify dev` gotcha (docs preview)
-- Running `mintlify dev` / local `npx mintlify` **from inside this monorepo fails** — it reports `Unable to parse page metadata` for nearly every page and aborts with `Failed to parse MDX files`. The MDX/frontmatter is valid; the cause is the root `package.json` `overrides` (which pin `zod`/`express`/etc. inside `@mintlify/*` transitive deps) bleeding into the workspace-hoisted `mintlify` and breaking its parser.
-- **Workaround:** run an isolated mintlify install from the docs dir: `cd docs && npx -y mintlify@latest dev`. This serves all pages on `http://localhost:3000`. (Docs deploy via the hosted Mintlify Git integration and CI does not run the preview, so this only affects local preview.)
-
-### No local secrets by default
-- No `T49_API_TOKEN` is provisioned in the Cloud VM, so live SDK/MCP calls against the Terminal49 API can't be exercised without one (matches CI, where the live MCP eval skips without `MCP_EVAL_TOKEN`).
+- The VM's default `node` (`/exec-daemon/node`) is v22. A login-shell hook selects Node 24 through nvm, so run commands from a login shell. If `node -v` prints v22, run `nvm use 24`.
+- SDK unit tests use fixtures and need no network: `npm run test --workspace @terminal49/sdk -- --run`. The `smoke` and `example` scripts call the live API and need `T49_API_TOKEN`.
+- Run the MCP stdio server with `npm run mcp:stdio --workspace @terminal49/mcp`, or with `node packages/mcp/dist/index.js` after a build. `initialize` and `tools/list` work without a token. A tool call without a token returns a generic Terminal49 error, which still proves the wiring. The `api/` gateway also needs the Vercel CLI and a local backend.

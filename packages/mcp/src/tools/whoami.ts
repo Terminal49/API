@@ -5,11 +5,9 @@
  * that enforces the feature.
  */
 
-import type {
-  CurrentAccount,
-  CurrentCredential,
-  Terminal49Client,
-} from '@terminal49/sdk';
+import type { CurrentAccount } from '@terminal49/sdk';
+import type { McpCredentialType, ToolContext } from './context.js';
+import type { Toolset } from './registry.js';
 
 export interface WhoamiTrackingSlots {
   limit: number;
@@ -55,6 +53,11 @@ export interface WhoamiResponse {
   /** Other open accounts the signed-in user can work in. Empty for API keys. */
   other_accounts: Array<{ id: string; company_name: string }>;
   features: Record<string, WhoamiFeature>;
+  /** How this MCP session signed in. */
+  credential_type: McpCredentialType;
+  enabled_toolsets: Toolset[];
+  /** False when the session serves only read-only tools. */
+  write_tools_available: boolean;
 }
 
 function location(account: CurrentAccount): string | null {
@@ -78,10 +81,9 @@ function toAccount(account: CurrentAccount): WhoamiAccount {
 }
 
 export async function executeWhoami(
-  client: Terminal49Client,
+  context: ToolContext,
 ): Promise<WhoamiResponse> {
-  // SAFETY: `format: 'mapped'` makes the SDK return the result of mapCurrentCredential.
-  const me = (await client.me({ format: 'mapped' })) as CurrentCredential;
+  const me = await context.me();
 
   const user = me.user
     ? {
@@ -107,5 +109,8 @@ export async function executeWhoami(
     user,
     other_accounts: otherAccounts,
     features: me.features ?? {},
+    credential_type: context.credentialType,
+    enabled_toolsets: [...context.toolsets],
+    write_tools_available: context.writeToolsAvailable,
   };
 }

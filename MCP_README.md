@@ -60,21 +60,38 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (10)
+## 🛠️ Available Tools (28)
 
 | Tool | Description |
 |------|-------------|
 | `search_container` | Find containers by number, BL, booking, or reference |
 | `track_container` | Start tracking a container with carrier code |
+| `identify_tracking_number` | Predict a number's type and carrier without tracking it |
 | `get_container` | Get detailed container information |
 | `get_shipment_details` | Get complete shipment routing and containers |
 | `get_container_transport_events` | Get full event timeline |
 | `get_container_route` | Get ports in route order with ETAs and the current vessel |
+| `get_location` | Get a port, terminal, or metro area |
+| `get_vessel` | Get a vessel's position and projected arrival |
 | `get_supported_shipping_lines` | List 40+ supported carriers |
 | `list_containers` | Browse all tracked containers |
+| `summarize_containers` | Count containers by terminal, status, carrier, port, hold, or date |
 | `list_shipments` | Browse all shipments |
+| `list_parties` | Find parties by company name or ID |
+| `list_custom_field_definitions` | List the account's custom fields |
 | `list_tracking_requests` | Browse tracking requests |
-| `whoami` | Identify the credential, account, and available features |
+| `get_tracking_request` | Get one tracking request |
+| `list_documents` | Find documents such as Bills of Lading and arrival notices |
+| `get_document` | Get one document, with opt-in extracted data, source email, and download link |
+| `search_docs` | Search the public Terminal49 documentation |
+| `whoami` | Identify the credential, account, available features, and session toolsets |
+| `search_importers` | Find US importers by name, by what they import, or both (trade intelligence) |
+| `get_importer_profile` | One importer's totals, monthly series, ports, origins, carriers, and products (trade intelligence) |
+| `search_commodities` | Turn a product description or HS prefix into four-digit HS codes (trade intelligence) |
+| `rank_importers` | Rank importers by containers for a product, US port, or origin country (trade intelligence) |
+| `get_trade_trends` | Time series of containers, TEUs, or estimated value (trade intelligence) |
+| `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
+| `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
 
 ### 🎯 Workflow Prompts (3)
 
@@ -105,7 +122,7 @@ Pre-built workflows for common tasks:
 ├── api/mcp.ts              # Vercel HTTP endpoint
 ├── packages/mcp/           # MCP server package
 │   ├── src/
-│   │   ├── tools/          # 10 MCP tools
+│   │   ├── tools/          # MCP tools and the tool registry
 │   │   ├── prompts/        # 3 workflow prompts
 │   │   └── resources/      # Dynamic resources
 │   └── README.md           # Full documentation
