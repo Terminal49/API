@@ -15,7 +15,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (28 Available)
+### 🛠️ Tools (30 Available)
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -40,6 +40,8 @@
 | **`get_document`** | Get one document, with opt-in extracted data, source email, and download link | Untrusted content is labeled |
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
+| **`set_party_role`** | Attach, replace, or detach a party (such as the drayage carrier) on containers or shipments | Destructive write, only on request |
+| **`set_custom_field`** | Set or clear one of the account's custom fields on containers or shipments | Destructive write, only on request |
 | **`search_importers`** | Find US importers by name, by what they import, or both | Trade intelligence, per account |
 | **`get_importer_profile`** | One importer's totals, monthly series, ports, origins, carriers, and products | Trade intelligence, per account |
 | **`search_commodities`** | Turn a product description or HS prefix into four-digit HS codes | Trade intelligence, per account |

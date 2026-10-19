@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **28 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data.
+The Terminal49 MCP Server provides **30 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data.
 
 `packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
@@ -558,6 +558,46 @@ Extracted data and the email are text that people outside the account write. Tre
 
 ---
 
+### 22. `set_party_role`
+**Purpose**: Attach a party to containers or shipments in a role, replace the party in that role, or detach it (destructive writes)
+
+**Usage**:
+```typescript
+set_party_role({
+  container_ids: ["<container-id>"], // or shipment_ids; 1-50, not both
+  role: "pickup_dray_carrier", // containers support only this role
+  party_id: "<party-id-from-list_parties>",
+  action: "replace" // or "add" (beside others) or "remove"
+})
+```
+
+**Returns**:
+- `updated`, `unchanged` (already matched), `failed` (`id`, `error`), and `not_attempted` (the call ran out of time before reaching them; nothing changed on them)
+- A record still being saved when time ran out, or whose save failed without a clear answer (for example a dropped connection), is in `failed` with an error saying the change may or may not have been applied; check it before calling again
+
+**When to Use**: Only when the user asks to change these records. Resolve the company with `list_parties` first. `pickup_dray_carrier` and `customer` hold one party per record: `add` fails where a different party holds one, and `replace` swaps it (except a shipment `customer`, which must be removed, then added).
+
+---
+
+### 23. `set_custom_field`
+**Purpose**: Set or clear one of the account's custom fields on containers or shipments (destructive writes: overwrites or clears the previous value)
+
+**Usage**:
+```typescript
+set_custom_field({
+  entity: "container", // or "shipment"
+  ids: ["<container-id>"], // 1-50
+  api_slug: "sales_rep",
+  value: "Sofia Cortina" // an array of option values for a multi-select field; null clears
+})
+```
+
+**Returns**: the same `updated`, `unchanged`, `failed`, and `not_attempted` lists as `set_party_role`
+
+**When to Use**: Only when the user asks to change these records. Read the field's `api_slug` from `get_container` or `get_shipment_details` with custom fields first.
+
+---
+
 ### Trade intelligence tools
 
 `search_importers`, `get_importer_profile`, `search_commodities`, `rank_importers`, `get_trade_trends`, `get_trade_breakdown`, and `get_trade_data_coverage` answer US ocean import market questions from US Customs bill-of-lading records (January 2022 onward). They are read-only and enabled per account. See `docs/mcp/home.mdx` for parameters and the caveats agents must apply.
@@ -794,7 +834,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 28 tools and 4 resources, the LLM can:
+With these 30 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

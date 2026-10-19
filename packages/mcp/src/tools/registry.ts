@@ -84,6 +84,32 @@ export const TOOL_REGISTRY = [
   readTool('list_containers', 'List Containers'),
   readTool('summarize_containers', 'Summarize Containers'),
   readTool('list_parties', 'List Parties'),
+  // A replace or detach removes the party that held the role, and a set or
+  // clear overwrites the field value, so both are marked destructive.
+  {
+    name: 'set_party_role',
+    title: 'Set Party Role',
+    toolset: 'core',
+    tier: 'A',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
+    name: 'set_custom_field',
+    title: 'Set Custom Field',
+    toolset: 'core',
+    tier: 'A',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
   readTool('list_custom_field_definitions', 'List Custom Field Definitions'),
   readTool('list_tracking_requests', 'List Tracking Requests'),
   readTool('get_tracking_request', 'Get Tracking Request'),

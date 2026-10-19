@@ -47,6 +47,8 @@
       "search_container",
       "search_docs",
       "search_importers",
+      "set_custom_field",
+      "set_party_role",
       "summarize_containers",
       "track_container",
       "whoami"

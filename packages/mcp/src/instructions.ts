@@ -13,8 +13,8 @@ interface Segment {
   text: string;
   /** Keep the segment only when these tools are registered. */
   requires?: readonly ToolName[];
-  /** Keep the segment only when this tool is not registered. */
-  unless?: ToolName;
+  /** Keep the segment only when none of these tools is registered. */
+  unless?: readonly ToolName[];
 }
 
 interface Paragraph {
@@ -49,26 +49,42 @@ const PARAGRAPHS: readonly Paragraph[] = [
     aboutTools: true,
     segments: [
       {
+        text: 'Three tools change Terminal49 account records and are marked non-read-only: track_container creates a tracking request to begin monitoring a number; set_party_role attaches, replaces, or detaches a party (such as the drayage carrier) on containers or shipments; set_custom_field sets or clears an account custom field on containers or shipments. Call the two set_ tools only when the user asks to change those records. They can detach a party or overwrite or clear a field value, so they are marked destructive; neither deletes a container, shipment, or party. The other tools only fetch data and are marked read-only.',
+      },
+      {
         text: 'Only track_container changes Terminal49 account records: it creates a tracking request to begin monitoring a number and is marked non-read-only. The other tools only fetch data and are marked read-only.',
+        unless: ['set_party_role', 'set_custom_field'],
       },
       {
         text: 'These tools only fetch data and are marked read-only.',
-        unless: 'track_container',
+        unless: ['track_container', 'set_party_role', 'set_custom_field'],
       },
       {
-        text: " The shipment, container, tracking, party, and whoami tools operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation",
+        text: ' The shipment, container, tracking, party, ',
+        requires: ['search_docs', 'whoami'],
+      },
+      {
+        text: 'record-write, ',
+        requires: [
+          'search_docs',
+          'whoami',
+          'set_party_role',
+          'set_custom_field',
+        ],
+      },
+      {
+        text: "and whoami tools operate within the user's private Terminal49 account; search_docs searches the public Terminal49 documentation",
       },
       {
         text: "; the trade intelligence tools read US import market data, not the account's shipments.",
         requires: ['whoami', 'search_importers'],
       },
-      { text: '.', requires: ['whoami'], unless: 'search_importers' },
+      { text: '.', requires: ['whoami'], unless: ['search_importers'] },
       {
         text: " The trade intelligence tools read US import market data, not the account's shipments.",
         requires: ['search_importers'],
-        unless: 'whoami',
+        unless: ['whoami'],
       },
-      { text: ' None delete or overwrite data.' },
     ],
   },
   {
@@ -139,7 +155,7 @@ export function buildServerInstructions(
 ): string {
   const registered = new Set(tools.map((tool) => tool.name));
   const keep = (segment: Segment) =>
-    (!segment.unless || !registered.has(segment.unless)) &&
+    !segment.unless?.some((name) => registered.has(name)) &&
     [...(segment.requires ?? []), ...mentionedTools(segment.text)].every(
       (name) => registered.has(name),
     );
