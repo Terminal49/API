@@ -12,8 +12,8 @@ import type { Toolset } from './registry.js';
 export interface WhoamiTrackingSlots {
   limit: number;
   used: number;
-  active_containers: number;
-  pending_tracking_requests: number;
+  active_containers?: number;
+  pending_tracking_requests?: number;
   remaining: number;
 }
 
@@ -89,8 +89,12 @@ function trackingSlots(account: CurrentAccount): WhoamiTrackingSlots | null {
   return {
     limit: slots.limit,
     used: slots.used,
-    active_containers: slots.activeContainers,
-    pending_tracking_requests: slots.pendingTrackingRequests,
+    ...(slots.activeContainers !== undefined && {
+      active_containers: slots.activeContainers,
+    }),
+    ...(slots.pendingTrackingRequests !== undefined && {
+      pending_tracking_requests: slots.pendingTrackingRequests,
+    }),
     remaining: slots.remaining,
   };
 }

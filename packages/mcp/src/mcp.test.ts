@@ -514,6 +514,35 @@ describe('MCP server wiring', () => {
     );
   });
 
+  it('whoami stays schema-valid when the SDK omits the slot breakdown', async () => {
+    me.mockResolvedValue({
+      id: 'key-1',
+      kind: 'api_key',
+      channel: 'mcp',
+      name: 'Connector key',
+      features: {},
+      account: {
+        id: 'b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a',
+        companyName: 'Acme Logistics',
+        plan: 'in_trial',
+        trackingSlots: { limit: 10, used: 4, remaining: 6 },
+      },
+      user: null,
+    });
+    const server = createTerminal49McpServer('token');
+    const tool = (server as any)._registeredTools.whoami;
+    const result = await tool.handler({}, {});
+
+    expect(result.structuredContent.account.tracking_slots).toEqual({
+      limit: 10,
+      used: 4,
+      remaining: 6,
+    });
+    expect(tool.outputSchema.safeParse(result.structuredContent).success).toBe(
+      true,
+    );
+  });
+
   it('summarize_containers returns schema-valid counts from one summary call', async () => {
     containersSummary.mockResolvedValue({
       total: 3,
