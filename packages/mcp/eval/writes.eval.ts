@@ -44,6 +44,7 @@ import {
   evalPartyNameIsFree,
   selectEvalDefinition,
   selectEvalParty,
+  selectEvalPartyRoles,
   selectFixtureDocument,
   selectFixtureShipment,
   type FixtureShipment,
@@ -245,37 +246,47 @@ if (!cfg) {
       }
       const target = { entity_type: 'shipment', entity_id: fixture.id };
 
-      // The first run creates the eval party; later runs find it by name.
-      const assigned = structured(
-        await client.callTool('assign_party', {
-          ...target,
-          role: 'notify_party',
-          ...(partyId
-            ? { party_id: partyId }
-            : { party_name: EVAL_PARTY_NAME, create_party_if_missing: true }),
-        }),
-      );
-      const role = isRecord(assigned.party_role) ? assigned.party_role : {};
-      // A role this run created, or one an earlier run left on the fixture.
-      const ours =
-        typeof role.id === 'string' &&
-        (assigned.status === 'assigned' ||
-          (role.party_name === EVAL_PARTY_NAME &&
-            (!partyId || role.party_id === partyId)));
-      const unassign = () =>
-        confirmed('unassign_party', { ...target, party_role_id: role.id });
+      // Every eval party role on the fixture, found by reading the shipment,
+      // so a role whose assign response was lost is still removed.
+      const evalRoles = async () => {
+        const details = structured(
+          await client.callTool('get_shipment_details', {
+            id: target.entity_id,
+            include_party_roles: true,
+          }),
+        );
+        return selectEvalPartyRoles(details.party_roles, partyId);
+      };
 
       let unassigned = false;
       try {
+        // The first run creates the eval party; later runs find it by name.
+        const assigned = structured(
+          await client.callTool('assign_party', {
+            ...target,
+            role: 'notify_party',
+            ...(partyId
+              ? { party_id: partyId }
+              : { party_name: EVAL_PARTY_NAME, create_party_if_missing: true }),
+          }),
+        );
+        const role = isRecord(assigned.party_role) ? assigned.party_role : {};
         expect(assigned.status).toBe('assigned');
         expect(role.party_name).toBe(EVAL_PARTY_NAME);
         if (partyId) expect(role.party_id).toBe(partyId);
-        const result = await unassign();
+        const result = await confirmed('unassign_party', {
+          ...target,
+          party_role_id: role.id,
+        });
         unassigned = result.status === 'unassigned';
         expect(result.status).toBe('unassigned');
         expect(result.undo).toBe('assign_party');
       } finally {
-        if (ours && !unassigned) await unassign();
+        if (!unassigned) {
+          for (const party_role_id of await evalRoles()) {
+            await confirmed('unassign_party', { ...target, party_role_id });
+          }
+        }
       }
     });
 

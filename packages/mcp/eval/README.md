@@ -122,7 +122,9 @@ block, so the change is undone even when an assertion fails:
 - add a reference number to the fixture shipment, then remove it with a
   confirmed preview;
 - assign the eval party as `notify_party` on the fixture shipment, then
-  unassign it with a confirmed preview;
+  unassign it with a confirmed preview. When the case fails, it reads the
+  shipment's party roles and unassigns every eval party role it finds, so a
+  role whose assign response was lost is removed too;
 - set `mcp_eval_fixture` on the fixture shipment, then overwrite it and clear
   it with confirmed previews. Terminal49 accepts custom field changes only
   from a signed-in user, never from an API key. So this case runs as the user

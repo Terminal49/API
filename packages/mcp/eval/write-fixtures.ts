@@ -67,6 +67,27 @@ export function selectEvalParty(parties: unknown): string | undefined {
 }
 
 /**
+ * The ids of the eval party's notify_party roles in a get_shipment_details
+ * party_roles list. Only the write eval assigns that party, so each one is a
+ * role an eval run created.
+ */
+export function selectEvalPartyRoles(
+  roles: unknown,
+  partyId: string | undefined,
+): string[] {
+  return (Array.isArray(roles) ? roles : [])
+    .filter(isRecord)
+    .filter(
+      (row) =>
+        typeof row.id === 'string' &&
+        row.role === 'notify_party' &&
+        row.party_name === EVAL_PARTY_NAME &&
+        (partyId === undefined || row.party_id === partyId),
+    )
+    .map((row) => String(row.id));
+}
+
+/**
  * Whether assign_party may create the eval party: the list_parties search for
  * EVAL_PARTY_NAME found no party at all. assign_party links any party whose
  * name or nickname matches ignoring case and punctuation, and list_parties
