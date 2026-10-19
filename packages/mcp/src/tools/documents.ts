@@ -6,6 +6,7 @@
 import type { Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
 import {
+  includedList,
   nullableNumber,
   nullableString,
   relationshipList,
@@ -71,33 +72,19 @@ const packetSegmentSchema = z
  */
 export const rawDocumentSchema = z.object({
   id: z.string(),
-  attributes: z
-    .object({
-      name: boundedString,
-      document_type: nullableString,
-      document_type_source: nullableString,
-      classification_notes: boundedString,
-      source: nullableString,
-      file_name: boundedString,
-      file_content_type: nullableString,
-      file_size_bytes: nullableNumber,
-      parsed: packetSegmentSchema,
-      created_at: nullableString,
-      updated_at: nullableString,
-    })
-    .catch({
-      name: null,
-      document_type: null,
-      document_type_source: null,
-      classification_notes: null,
-      source: null,
-      file_name: null,
-      file_content_type: null,
-      file_size_bytes: null,
-      parsed: null,
-      created_at: null,
-      updated_at: null,
-    }),
+  attributes: z.object({
+    name: boundedString,
+    document_type: nullableString,
+    document_type_source: nullableString,
+    classification_notes: boundedString,
+    source: nullableString,
+    file_name: boundedString,
+    file_content_type: nullableString,
+    file_size_bytes: nullableNumber,
+    parsed: packetSegmentSchema,
+    created_at: nullableString,
+    updated_at: nullableString,
+  }),
   relationships: z
     .object({
       shipments: relationshipList,
@@ -196,7 +183,7 @@ export type DocumentState = z.infer<typeof documentStateSchema>;
 
 const rawDocumentResponseSchema = z.object({
   data: rawDocumentSchema,
-  included: z.array(z.unknown()).catch([]),
+  included: includedList,
 });
 
 /** Parses a GET or PATCH /documents/{id} body. */

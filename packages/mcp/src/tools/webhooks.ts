@@ -145,23 +145,15 @@ const headerNames = z
  */
 export const rawWebhookSchema = z.object({
   id: z.string(),
-  attributes: z
-    .object({
-      url: nullableString,
-      active: nullableBoolean,
-      events: boundedNames,
-      secret: z
-        .unknown()
-        .transform((secret) => z.string().min(1).safeParse(secret).success),
-      headers: headerNames,
-    })
-    .catch({
-      url: null,
-      active: null,
-      events: [],
-      secret: false,
-      headers: [],
-    }),
+  attributes: z.object({
+    url: nullableString,
+    active: nullableBoolean,
+    events: boundedNames,
+    secret: z
+      .unknown()
+      .transform((secret) => z.string().min(1).safeParse(secret).success),
+    headers: headerNames,
+  }),
 });
 
 export function toWebhookSummary(

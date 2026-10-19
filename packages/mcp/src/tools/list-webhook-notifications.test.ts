@@ -77,6 +77,8 @@ describe('list_webhook_notifications', () => {
   it.each([
     ['no data', { meta: { total: 0 } }],
     ['data that is not a list', { data: { id: NOTIFICATION_ID } }],
+    ['links that are not an object', { data: [], links: 'next' }],
+    ['meta that is not an object', { data: [], meta: 1 }],
   ])(
     'fails instead of reporting no notifications for a list with %s',
     async (_case, body) => {
@@ -89,6 +91,21 @@ describe('list_webhook_notifications', () => {
       ).rejects.toThrow();
     },
   );
+
+  it('fails instead of reporting an empty notification when its attributes are not an object', async () => {
+    const { client } = fakeApiClient({
+      [`GET /webhook_notifications/${NOTIFICATION_ID}`]: {
+        body: { data: { id: NOTIFICATION_ID, type: 'webhook_notification' } },
+      },
+    });
+
+    await expect(
+      executeListWebhookNotifications(
+        { notification_id: NOTIFICATION_ID },
+        client,
+      ),
+    ).rejects.toThrow();
+  });
 
   it('reads a notification with no relationships as null links', async () => {
     const { client } = fakeApiClient({

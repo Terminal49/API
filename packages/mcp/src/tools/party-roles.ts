@@ -9,7 +9,7 @@
 
 import type { Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
-import { nullableString, relationshipRef } from './api-fields.js';
+import { includedList, nullableString, relationshipRef } from './api-fields.js';
 import { isFeatureNotEnabled, isNotAuthorized } from './soft-results.js';
 
 export const partyRoleSchema = z.object({
@@ -29,13 +29,11 @@ export interface PartyRolesResult {
 export const PARTY_ROLES_NOTE =
   'The party roles request was not authorized or is not enabled for this account. Check the connector sign-in and account permissions.';
 
-export const partyAttributesSchema = z
-  .object({
-    company_name: nullableString,
-    name: nullableString,
-    nickname: nullableString,
-  })
-  .catch({ company_name: null, name: null, nickname: null });
+export const partyAttributesSchema = z.object({
+  company_name: nullableString,
+  name: nullableString,
+  nickname: nullableString,
+});
 
 /** A party's non-empty names, in the order its display name is chosen. */
 export function partyNames(
@@ -64,23 +62,24 @@ const rawPartyRolesSchema = z.object({
         .catch({ party: null }),
     }),
   ),
-  included: z
-    .array(
-      z.object({
-        id: z.string(),
-        type: z.string(),
-        attributes: partyAttributesSchema,
-      }),
-    )
-    .catch([]),
+  included: includedList,
+});
+
+const rawIncludedPartySchema = z.object({
+  id: z.string(),
+  type: z.literal('party'),
+  attributes: partyAttributesSchema,
 });
 
 export function formatPartyRoles(raw: unknown): PartyRole[] {
   const { data, included } = rawPartyRolesSchema.parse(raw);
   const names = new Map(
-    included
-      .filter((item) => item.type === 'party')
-      .map((party) => [party.id, partyName(party.attributes)]),
+    included.flatMap((item) => {
+      const party = rawIncludedPartySchema.safeParse(item);
+      return party.success
+        ? [[party.data.id, partyName(party.data.attributes)] as const]
+        : [];
+    }),
   );
   return data.map((row) => {
     const partyId = row.relationships.party?.data?.id ?? null;

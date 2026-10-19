@@ -8,7 +8,12 @@
 
 import type { Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
-import { nullableString, relationshipRef, stringLinks } from './api-fields.js';
+import {
+  nullableString,
+  relationshipRef,
+  stringLinks,
+  topLevelObject,
+} from './api-fields.js';
 import { isFeatureNotEnabled, type SoftResult } from './soft-results.js';
 import { WEBHOOKS_NOT_ENABLED } from './webhooks.js';
 
@@ -74,13 +79,11 @@ const MAX_EVENT_CHARS = 100;
 
 const rawNotificationSchema = z.object({
   id: z.string(),
-  attributes: z
-    .object({
-      event: nullableString,
-      delivery_status: nullableString,
-      created_at: nullableString,
-    })
-    .catch({ event: null, delivery_status: null, created_at: null }),
+  attributes: z.object({
+    event: nullableString,
+    delivery_status: nullableString,
+    created_at: nullableString,
+  }),
   relationships: z
     .object({ webhook: relationshipRef, reference_object: relationshipRef })
     .catch({ webhook: null, reference_object: null }),
@@ -100,8 +103,8 @@ function toRow(record: z.infer<typeof rawNotificationSchema>): NotificationRow {
 
 const rawListSchema = z.object({
   data: z.array(z.unknown()),
-  links: z.record(z.string(), z.unknown()).catch({}),
-  meta: z.record(z.string(), z.unknown()).catch({}),
+  links: topLevelObject,
+  meta: topLevelObject,
 });
 
 const rawSingleSchema = z.object({ data: rawNotificationSchema });

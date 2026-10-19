@@ -598,6 +598,60 @@ describe('update_document', () => {
     expect(updateDocumentOutputSchema.parse(result)).toEqual(result);
   });
 
+  it('accepts the same token again after Terminal49 refuses the change with 422', async () => {
+    const stored = storedDocument();
+    let refuse = true;
+    const { client, requests } = fakeApiClient({
+      ...stored.routes,
+      [`POST ${DOCUMENT_PATH}/reclassify`]: () => {
+        if (refuse) {
+          refuse = false;
+          return { status: 422 };
+        }
+        return { status: 202, body: { status: 'accepted' } };
+      },
+    });
+    const context = writeContext(client);
+    const args = { id: DOCUMENT_ID, action: 'reclassify' } as const;
+    const token = tokenOf(await executeUpdateDocument(args, client, context));
+
+    const first = await executeUpdateDocument(
+      { ...args, confirmation_token: token },
+      client,
+      context,
+    );
+    const retry = await executeUpdateDocument(
+      { ...args, confirmation_token: token },
+      client,
+      context,
+    );
+
+    expect(first).toMatchObject({ status: 'noop' });
+    expect(retry).toMatchObject({ status: 'accepted', action: 'reclassify' });
+    expect(
+      requests.filter((request) => request.method === 'POST'),
+    ).toHaveLength(2);
+  });
+
+  it('fails instead of previewing when the document read has included that is not a list', async () => {
+    const stored = storedDocument();
+    const { client, requests } = fakeApiClient({
+      ...stored.routes,
+      [`GET ${DOCUMENT_PATH}`]: {
+        body: { ...documentBody({}), included: { id: DOCUMENT_ID } },
+      },
+    });
+
+    await expect(
+      executeUpdateDocument(
+        { id: DOCUMENT_ID, action: 'reextract' },
+        client,
+        writeContext(client),
+      ),
+    ).rejects.toThrow();
+    expect(requests.every((request) => request.method === 'GET')).toBe(true);
+  });
+
   it('returns FeatureNotEnabled and no token when documents are gated', async () => {
     const { client } = fakeApiClient({
       [`GET ${DOCUMENT_PATH}`]: documentsGated,
