@@ -60,7 +60,9 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (28 by default)
+## 🛠️ Available Tools (39 by default)
+
+The default toolsets serve 39 tools. Twelve of them change account data: `track_container` and the eleven write tools below. To serve only the 27 read-only tools, set `T49_MCP_READ_ONLY=true` or send the `X-T49-MCP-Read-Only: true` header.
 
 | Tool | Description |
 |------|-------------|
@@ -93,7 +95,7 @@ Search for bill of lading 123456789
 | `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
 | `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
 
-The `operations` toolset adds seven write tools and is in the default toolsets. `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, and a destructive `set_party_role` or `set_custom_field` call return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+The `operations` toolset adds seven write tools and the `documents_write` toolset two more; both are in the default toolsets. Of the write tools, `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers` and `update_document` never change data on their first call, and `set_party_role` and `set_custom_field` do the same on a call in which a record would lose a party or a value: the user approves a preview first, in a confirmation dialog the client shows (MCP 2026-07-28 form elicitation) or, on other clients, by approving the preview in the chat so the model can call again with the confirmation token from it. See [Confirming writes](packages/mcp/README.md#confirming-writes).
 
 | Tool | Description |
 |------|-------------|
@@ -105,7 +107,7 @@ The `operations` toolset adds seven write tools and is in the default toolsets. 
 | `set_party_role` | Attach, replace, or detach a party on up to 50 containers or shipments; a call that detaches a party shows a preview first |
 | `set_custom_field` | Set or clear a custom field on up to 50 containers or shipments; a call that overwrites or clears a value shows a preview first |
 
-Two more opt-in toolsets add four tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists them.
+The `documents_write` toolset adds two tools and is in the default toolsets. The `developer` toolset adds two reads. It is opt-in, so a deployment serves it only when `T49_MCP_TOOLSETS` lists `developer`.
 
 | Tool | Toolset | Description |
 |------|---------|-------------|
@@ -232,6 +234,7 @@ vercel deploy --prod
 **Environment Variables:**
 - `T49_API_TOKEN` - Your Terminal49 API token (required)
 - `T49_API_BASE_URL` - Optional (defaults to https://api.terminal49.com)
+- `T49_MCP_CONFIRMATION_SECRET` - At least 32 random characters. Required for the write tools that need the user's approval of a preview, which the default toolsets serve; it signs the approval on both the elicitation and the token channel
 - `SENTRY_DSN` - Optional; enables Sentry MCP Monitoring
 - `SENTRY_TRACES_SAMPLE_RATE` - Optional trace sample rate (`1.0` by default)
 - `SENTRY_MCP_RECORD_INPUTS` / `SENTRY_MCP_RECORD_OUTPUTS` - Optional; disabled by default to avoid storing shipment/customer payloads in Sentry

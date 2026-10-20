@@ -60,6 +60,8 @@ curl -X POST https://mcp.terminal49.com \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
 ```
 
+The list includes write tools that change your account, such as `add_reference_numbers`. To connect without them, add the header `X-T49-MCP-Read-Only: true`. See [Limit the tools](/mcp/home#limit-the-tools).
+
 <Note>
 Use the `Token` scheme for API keys. The `Bearer` scheme is used for OAuth access tokens, which OAuth-capable clients obtain automatically during sign-in.
 </Note>

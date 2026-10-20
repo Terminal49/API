@@ -112,6 +112,9 @@ describe('server instructions', () => {
 
     const withoutTierC = [
       buildServerInstructions(
+        selectTools({ toolsets: ['core', 'documents'], readOnly: false }),
+      ),
+      buildServerInstructions(
         selectTools({ toolsets: TOOLSETS, readOnly: true }),
       ),
       buildServerInstructions(
@@ -125,6 +128,17 @@ describe('server instructions', () => {
       expect(instructions).not.toMatch(rule);
       expect(instructions).not.toMatch(stale);
     }
+  });
+
+  it('asks the model to report each write and its undo tool only when writes are served', () => {
+    const rule = /When the result has an undo field, name that tool/;
+
+    expect(buildServerInstructions(defaultTools())).toMatch(rule);
+    expect(
+      buildServerInstructions(
+        selectTools({ toolsets: TOOLSETS, readOnly: true }),
+      ),
+    ).not.toMatch(rule);
   });
 
   it('describes list_webhooks URLs as redacted the way the tool returns them', () => {

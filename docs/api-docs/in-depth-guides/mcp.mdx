@@ -170,7 +170,7 @@ Once configured, verify everything works:
   <Step title="Ask Claude to list tools">
     > "List the tools available in the Terminal49 MCP server."
 
-    Claude should respond with a list of 35 tools including `search_container`, `track_container`, the list tools, and the trade intelligence tools.
+    Claude should respond with a list of 37 tools including `search_container`, `track_container`, the list tools, the write tools, and the trade intelligence tools.
   </Step>
   <Step title="Search for a test container">
     > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
@@ -217,6 +217,8 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 
 ### Tools
 
+The default toolsets are `core`, `documents`, `operations`, `documents_write`, and `trade`: 39 tools. Twelve of them change account data: `track_container` and the eleven write tools below. To serve only the 27 read-only tools, set `T49_MCP_READ_ONLY=true` or send the `X-T49-MCP-Read-Only: true` header.
+
 | Tool | Description | Parameters |
 |------|-------------|------------|
 | `search_container` | Find containers by number, BL, booking, or ref | `query: string` |
@@ -241,7 +243,9 @@ T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
 | `search_docs` | Search the public Terminal49 documentation | `query: string`, `limit?` (1-10, default 5) |
 | `whoami` | Identify the credential, its account, available features, and the session's toolsets | none |
 
-The `operations` toolset adds seven write tools and is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to leave them out.
+The `trade` toolset adds the seven read-only [trade intelligence tools](/mcp/home#trade-intelligence-tools). It is served by default.
+
+The `operations` toolset adds seven write tools. It is served by default.
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
@@ -253,7 +257,7 @@ The `operations` toolset adds seven write tools and is in the default toolsets. 
 | `set_party_role` | Attach, replace, or detach a party on up to 50 containers or shipments. `add` runs at once; `remove`, and a `replace` that detaches another party, ask you to approve a preview of every record that changes. | `container_ids?` or `shipment_ids?` (1 to 50), `role`, `party_id: uuid`, `action` (`add`, `replace`, or `remove`), `confirmation_token?: string` |
 | `set_custom_field` | Set or clear a custom field on up to 50 containers or shipments. Filling empty fields runs at once; overwriting or clearing a value asks you to approve a preview of every record that changes. | `entity` (`container` or `shipment`), `ids` (1 to 50), `api_slug`, `value` (string, number, boolean, string array, or `null` to clear), `confirmation_token?: string` |
 
-Two more toolsets are opt-in. The hosted server does not serve them yet. A self-hosted server serves each one when `T49_MCP_TOOLSETS` lists it.
+The `documents_write` toolset adds two document write tools and is served by default. The `developer` toolset is opt-in. The hosted server does not serve it. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists `developer`.
 
 | Tool | Toolset | Description | Parameters |
 |------|---------|-------------|------------|
@@ -382,10 +386,10 @@ The `vercel.json` configures the MCP server (excerpt):
 | `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
 | `T49_MCP_ALLOWED_HOSTS` | No | Comma-separated host allowlist for request Host validation |
 | `T49_MCP_ALLOWED_ORIGINS` | No | Comma-separated origin allowlist for request Origin validation |
-| `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,operations,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
+| `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,operations,documents_write,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
 | `T49_MCP_READ_ONLY` | No | Serves only read-only tools when set to `true` or `1`; defaults to `false` |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | Serves toolsets other than `core` and `trade` when callers share `T49_API_TOKEN`; defaults to `false` |
-| `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `update_document`, and a destructive `set_party_role` or `set_custom_field` call need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
+| `T49_MCP_CONFIRMATION_SECRET` | Over HTTP, unless the server is read-only | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `update_document`, and a destructive `set_party_role` or `set_custom_field` call need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
 | `SENTRY_DSN` | No | Enables Sentry MCP Monitoring |
 | `SENTRY_ENVIRONMENT` | No | Sentry environment name; defaults to `NODE_ENV` |
 | `SENTRY_RELEASE` | No | Sentry release identifier; defaults to `VERCEL_GIT_COMMIT_SHA` |
