@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.Terminal49/terminal49",
   "title": "Terminal49",
-  "description": "Find and monitor ocean shipments and containers, and create new tracking requests.",
-  "version": "1.0.0",
+  "description": "Track ocean containers, stop or resume tracking, and edit references, parties, fields, and docs.",
+  "version": "1.1.0",
   "websiteUrl": "https://docs.terminal49.com/mcp/home",
   "repository": {
     "url": "https://github.com/Terminal49/API",

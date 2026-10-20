@@ -98,6 +98,16 @@ import {
   getDocumentOutputSchema,
   MAX_EXTRACTED_DATA_CHARS,
 } from './tools/get-document.js';
+import {
+  executeListWebhookNotifications,
+  listWebhookNotificationsInputSchema,
+  listWebhookNotificationsOutputSchema,
+} from './tools/list-webhook-notifications.js';
+import {
+  executeListWebhooks,
+  listWebhooksInputSchema,
+  listWebhooksOutputSchema,
+} from './tools/list-webhooks.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
 import {
@@ -110,6 +120,16 @@ import {
   removeReferenceNumbersInputSchema,
   removeReferenceNumbersOutputSchema,
 } from './tools/remove-reference-numbers.js';
+import {
+  executeRelinkDocument,
+  relinkDocumentInputSchema,
+  relinkDocumentOutputSchema,
+} from './tools/relink-document.js';
+import {
+  executeUpdateDocument,
+  updateDocumentInputSchema,
+  updateDocumentOutputSchema,
+} from './tools/update-document.js';
 import {
   cancelTrackingRequestInputSchema,
   cancelTrackingRequestOutputSchema,
@@ -1104,6 +1124,8 @@ function formatToolError(
       case 'get_tracking_request':
         return `No tracking request found with id ${id ?? '(missing)'}.`;
       case 'get_document':
+      case 'relink_document':
+      case 'update_document':
         return `No document found with id ${id ?? '(missing)'}.`;
       case 'get_vessel':
         return `No vessel found with id ${id ?? '(missing)'}.`;
@@ -1114,6 +1136,10 @@ function formatToolError(
         return `No tracking request found with id ${typeof input.tracking_request_id === 'string' ? input.tracking_request_id : '(missing)'}.`;
       case 'add_reference_numbers':
       case 'remove_reference_numbers':
+      case 'list_webhooks':
+        return `No webhook found with id ${typeof input.webhook_id === 'string' ? input.webhook_id : '(missing)'}.`;
+      case 'list_webhook_notifications':
+        return `No webhook notification found with id ${typeof input.notification_id === 'string' ? input.notification_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
@@ -1942,6 +1968,31 @@ export function createTerminal49McpServer(
       async (args, context) =>
         executeRemoveReferenceNumbers(args, client, context),
     ),
+    relink_document: tool(
+      {
+        description:
+          'Ask Terminal49 to match a document to shipments and containers again, for example after a shipment or container it names starts being tracked. ' +
+          'It runs in the background: the result is accepted, and the links can take a minute to change. document_before_relink shows the links before the call. ' +
+          'Calling it again only repeats the matching. Returns noop when Terminal49 will not relink the document in its current state.',
+        inputSchema: relinkDocumentInputSchema,
+        outputSchema: relinkDocumentOutputSchema,
+      },
+      async (args, context) => executeRelinkDocument(args, client, context),
+    ),
+    update_document: tool(
+      {
+        description:
+          'Fix a misclassified document. action set_type sets document_type to a code you pass, and Terminal49 records that the account set it. ' +
+          'action reclassify has Terminal49 choose the type again, and reextract has it read the fields from the file again; both run in the background and return accepted. ' +
+          'Each action can replace the type or the extracted data, and Terminal49 keeps no copy of the old one. ' +
+          'The preview shows the document now and the change. The approval stops working if the document changes in the meantime. ' +
+          'set_type checks the code against the account document types first and returns unknown_document_type with allowed_types when it is not one of them, or unchanged when the account already set that type and the notes would not change. ' +
+          'Returns updated with previous_document_type for set_type, or noop when Terminal49 refuses the change.',
+        inputSchema: updateDocumentInputSchema,
+        outputSchema: updateDocumentOutputSchema,
+      },
+      async (args, context) => executeUpdateDocument(args, client, context),
+    ),
     search_docs: tool(
       {
         description:
@@ -1984,6 +2035,30 @@ export function createTerminal49McpServer(
           { query, limit },
           { assistantApiKey: process.env.MINTLIFY_ASSISTANT_API_KEY },
         ),
+    ),
+    list_webhooks: tool(
+      {
+        description:
+          "List the account's webhooks, or read one by webhook_id: whether each is active, the events it receives, and the scheme, host, and path of its URL. " +
+          'The query string is never shown. The host keeps only its last two labels, such as example.com; every other host label and every path segment is replaced with [redacted]. has_query, host_redacted and path_redacted say when that happened. ' +
+          'The signing secret and header values are never shown: has_secret says whether a secret is set, and header_names lists the custom headers by name. ' +
+          'Set include_event_catalog for every event a webhook can subscribe to, with a description. Page size is capped at 25; if links.next exists, request the next page.',
+        inputSchema: listWebhooksInputSchema,
+        outputSchema: listWebhooksOutputSchema,
+      },
+      async (args) => executeListWebhooks(args, client),
+    ),
+    list_webhook_notifications: tool(
+      {
+        description:
+          'List the webhook notifications Terminal49 created for this account, in the order the API returns them, or read one by notification_id. ' +
+          'Each row has the event, delivery_status (pending, succeeded, or failed), created_at, the webhook_id it was sent to, and the type and id of the record it is about. ' +
+          'Use it to check whether Terminal49 sent a notification for an event and whether the receiver accepted it. ' +
+          'It returns no payloads, and the API offers no filters: scan the rows, and if links.next exists, request the next page. Page size is capped at 25.',
+        inputSchema: listWebhookNotificationsInputSchema,
+        outputSchema: listWebhookNotificationsOutputSchema,
+      },
+      async (args) => executeListWebhookNotifications(args, client),
     ),
     whoami: tool(
       {

@@ -19,6 +19,7 @@ import {
   isRecord,
   resolveConfig,
   type ToolResult,
+  writesEnabled,
 } from './client.js';
 import {
   hasArray,
@@ -99,12 +100,11 @@ if (!cfg) {
     process.env.MCP_EVAL_ALLOW_SPARSE === '1' ||
     process.env.MCP_EVAL_ALLOW_SPARSE === 'true';
 
-  // The only mutating tool (track_container) is opt-in: on an arbitrary account
-  // the idempotent search-match path is not guaranteed, so a call could create a
-  // real tracking request. Enable explicitly with MCP_EVAL_ENABLE_WRITE=1.
-  const enableWrite =
-    process.env.MCP_EVAL_ENABLE_WRITE === '1' ||
-    process.env.MCP_EVAL_ENABLE_WRITE === 'true';
+  // track_container is the only mutating tool this suite calls, and it is
+  // opt-in: on an arbitrary account the idempotent search-match path is not
+  // guaranteed, so a call could create a real tracking request. Enable it with
+  // MCP_EVAL_ENABLE_WRITE=1. writes.eval.ts covers the other write tools.
+  const enableWrite = writesEnabled();
 
   describe('Terminal49 MCP tool eval', () => {
     beforeAll(async () => {
@@ -725,6 +725,73 @@ if (!cfg) {
                 ((isRecord(p.download) &&
                   p.download.delivered_as === 'resource_link') ||
                   typeof p.download_note === 'string'),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    // ---- webhook reads (opt-in developer toolset) ----
+
+    const servedTools = async () =>
+      (await client.listTools()).map((tool) => tool.name);
+
+    it('list_webhooks returns no secret, header value or URL query string', async ({
+      skip,
+    }) => {
+      // The gateway lists it only when its toolsets include developer.
+      if (!(await servedTools()).includes('list_webhooks')) return skip();
+      const { result, score } = await evaluate(
+        'list_webhooks',
+        { page_size: 5, include_event_catalog: true },
+        {
+          predicates: [
+            {
+              name: 'webhooks carry only safe fields, or an explained gate',
+              test: (p) =>
+                isRecord(p) &&
+                (p.error === 'FeatureNotEnabled' ||
+                  (Array.isArray(p.webhooks) &&
+                    p.webhooks.every(
+                      (webhook) =>
+                        isRecord(webhook) &&
+                        !('secret' in webhook) &&
+                        !('headers' in webhook) &&
+                        typeof webhook.has_secret === 'boolean' &&
+                        isRecord(webhook.url) &&
+                        (webhook.url.path === null ||
+                          !String(webhook.url.path).includes('?')),
+                    ))),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('list_webhook_notifications returns delivery rows or explains the gate', async ({
+      skip,
+    }) => {
+      if (!(await servedTools()).includes('list_webhook_notifications')) {
+        return skip();
+      }
+      const { result, score } = await evaluate(
+        'list_webhook_notifications',
+        { page_size: 5 },
+        {
+          predicates: [
+            {
+              name: 'rows with a delivery status, or an explained gate',
+              test: (p) =>
+                isRecord(p) &&
+                (p.error === 'FeatureNotEnabled' ||
+                  (Array.isArray(p.notifications) &&
+                    p.notifications.every(
+                      (row) => isRecord(row) && 'delivery_status' in row,
+                    ))),
             },
           ],
         },

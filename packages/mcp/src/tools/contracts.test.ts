@@ -20,6 +20,20 @@ import { executeResumeShipmentTracking } from './resume-shipment-tracking.js';
 import { executeSearchContainer } from './search-container.js';
 import { executeStopShipmentTracking } from './stop-shipment-tracking.js';
 import { executeTrackContainer } from './track-container.js';
+import { executeRelinkDocument } from './relink-document.js';
+import { executeUpdateDocument } from './update-document.js';
+import { executeListWebhooks } from './list-webhooks.js';
+import { executeListWebhookNotifications } from './list-webhook-notifications.js';
+import {
+  DOCUMENT_ID,
+  documentBody,
+  documentTypesRoute,
+} from '../test/document-fixtures.js';
+import {
+  notificationListBody,
+  WEBHOOK_ID,
+  webhookListBody,
+} from '../test/webhook-fixtures.js';
 import { buildListContract } from '../server.js';
 import { EXPECTED_ROUTE_SUMMARY, routeFixture } from '../test/route-fixture.js';
 
@@ -2071,6 +2085,142 @@ describe('MCP write tool contracts', () => {
       removed: ['PO-2'],
       ref_numbers: ['PO-1'],
       undo: 'add_reference_numbers',
+    });
+  });
+});
+
+describe('MCP document fix tool contracts', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('relink_document reads the document, then calls documents.relink', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const relink = vi.fn().mockResolvedValue({ status: 'accepted' });
+    const get = vi.fn().mockResolvedValue(documentBody());
+    const client = asClient({ documents: { get, relink } });
+
+    const result = await executeRelinkDocument(
+      { id: DOCUMENT_ID },
+      client,
+      writeContext(client),
+    );
+
+    expect(get).toHaveBeenCalledWith(DOCUMENT_ID, { format: 'raw' });
+    expect(relink).toHaveBeenCalledWith(DOCUMENT_ID, { format: 'raw' });
+    expect(result).toMatchObject({ status: 'accepted' });
+  });
+
+  it('update_document set_type previews, then calls documents.update with the token', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const update = vi
+      .fn()
+      .mockResolvedValue(documentBody({ documentType: 'delivery_order' }));
+    const client = asClient({
+      documents: {
+        get: vi.fn().mockResolvedValue(documentBody()),
+        types: vi.fn().mockResolvedValue(documentTypesRoute.body),
+        update,
+      },
+    });
+    const args = {
+      id: DOCUMENT_ID,
+      action: 'set_type' as const,
+      document_type: 'delivery_order',
+    };
+
+    const preview = await executeUpdateDocument(
+      args,
+      client,
+      writeContext(client),
+    );
+    expect(update).not.toHaveBeenCalled();
+    const result = await executeUpdateDocument(
+      { ...args, confirmation_token: tokenOf(preview) },
+      client,
+      writeContext(client),
+    );
+
+    expect(update).toHaveBeenCalledWith(
+      DOCUMENT_ID,
+      { documentType: 'delivery_order' },
+      { format: 'raw' },
+    );
+    expect(result).toMatchObject({
+      status: 'updated',
+      previous_document_type: 'commercial_invoice',
+      document: { document_type: 'delivery_order' },
+    });
+  });
+
+  it('update_document reextract calls documents.reextract with the token', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const reextract = vi.fn().mockResolvedValue({ status: 'accepted' });
+    const types = vi.fn();
+    const client = asClient({
+      documents: {
+        get: vi.fn().mockResolvedValue(documentBody()),
+        types,
+        reextract,
+      },
+    });
+    const args = { id: DOCUMENT_ID, action: 'reextract' as const };
+
+    const preview = await executeUpdateDocument(
+      args,
+      client,
+      writeContext(client),
+    );
+    const result = await executeUpdateDocument(
+      { ...args, confirmation_token: tokenOf(preview) },
+      client,
+      writeContext(client),
+    );
+
+    expect(types).not.toHaveBeenCalled();
+    expect(reextract).toHaveBeenCalledWith(DOCUMENT_ID, { format: 'raw' });
+    expect(result).toMatchObject({ status: 'accepted', action: 'reextract' });
+  });
+});
+
+describe('MCP webhook read tool contracts', () => {
+  it('list_webhooks calls webhooks.list with the page', async () => {
+    const list = vi.fn().mockResolvedValue(webhookListBody);
+    const client = asClient({ webhooks: { list } });
+
+    await executeListWebhooks({ page: 2, page_size: 10 }, client);
+
+    expect(list).toHaveBeenCalledWith({
+      format: 'raw',
+      page: 2,
+      pageSize: 10,
+    });
+  });
+
+  it('list_webhooks calls webhooks.get and webhooks.events for one webhook with the catalog', async () => {
+    const get = vi.fn().mockResolvedValue({ data: webhookListBody.data[0] });
+    const events = vi.fn().mockResolvedValue({ data: [] });
+    const client = asClient({ webhooks: { get, events } });
+
+    await executeListWebhooks(
+      { webhook_id: WEBHOOK_ID, include_event_catalog: true },
+      client,
+    );
+
+    expect(get).toHaveBeenCalledWith(WEBHOOK_ID, { format: 'raw' });
+    expect(events).toHaveBeenCalledWith({ format: 'raw' });
+  });
+
+  it('list_webhook_notifications calls webhookNotifications.list without includes', async () => {
+    const list = vi.fn().mockResolvedValue(notificationListBody);
+    const client = asClient({ webhookNotifications: { list } });
+
+    await executeListWebhookNotifications({}, client);
+
+    expect(list).toHaveBeenCalledWith({
+      format: 'raw',
+      page: undefined,
+      pageSize: 25,
     });
   });
 });

@@ -156,12 +156,14 @@ describe('MCP tool annotations', () => {
     expect(writes.sort()).toEqual([
       'add_reference_numbers',
       'cancel_tracking_request',
+      'relink_document',
       'remove_reference_numbers',
       'resume_shipment_tracking',
       'set_custom_field',
       'set_party_role',
       'stop_shipment_tracking',
       'track_container',
+      'update_document',
     ]);
     expect(destructiveTools.sort()).toEqual([
       'cancel_tracking_request',
@@ -169,6 +171,7 @@ describe('MCP tool annotations', () => {
       'set_custom_field',
       'set_party_role',
       'stop_shipment_tracking',
+      'update_document',
     ]);
   });
 
@@ -205,6 +208,38 @@ describe('MCP tool annotations', () => {
         (tool) => tool.name,
       ),
     ).toEqual(['search_docs']);
+  });
+
+  it('never names a tool from an opt-in toolset in the store submissions', () => {
+    const optIn = REGISTRY.filter(
+      (tool) => !DEFAULT_TOOLSETS.includes(tool.toolset),
+    ).map((tool) => tool.name);
+    expect(optIn).toEqual(['list_webhooks', 'list_webhook_notifications']);
+
+    for (const file of [
+      'chatgpt-app-submission.json',
+      'claude-connector-submission.json',
+    ]) {
+      const text = readFileSync(
+        new URL(`../../../${file}`, import.meta.url),
+        'utf8',
+      );
+      for (const name of optIn) {
+        expect(text, `${name} in ${file}`).not.toMatch(
+          new RegExp(`\\b${name}\\b`),
+        );
+      }
+    }
+  });
+
+  it('describes the default write tools in the MCP Registry listing', () => {
+    const server = JSON.parse(
+      readFileSync(new URL('../../../server.json', import.meta.url), 'utf8'),
+    ) as { description: string };
+    // The registry schema caps the description at 100 characters.
+    expect(server.description.length).toBeLessThanOrEqual(100);
+    expect(server.description).toContain('stop or resume tracking');
+    expect(server.description).toContain('edit references, parties');
   });
 
   it('lists exactly the default toolset tools, with live annotations, in the store submissions', () => {
@@ -273,6 +308,13 @@ describe('MCP tool annotations', () => {
     );
     expect(triggered).toContain('summarize_containers');
     expect(triggered).toContain('list_parties');
+    // Reviewers check that a write which removes data waits for approval.
+    const confirmedWrite = chatGpt.test_cases.find((testCase) =>
+      testCase.tools_triggered.includes('remove_reference_numbers'),
+    );
+    expect(confirmedWrite?.expected_output).toContain(
+      'only after the user approves',
+    );
     for (const testCase of chatGpt.test_cases) {
       expect(testCase.description.trim()).not.toBe('');
       expect(testCase.user_prompt.trim()).not.toBe('');

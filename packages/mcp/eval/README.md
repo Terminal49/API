@@ -23,14 +23,15 @@ MCP_EVAL_ENDPOINT="http://localhost:4000/mcp" \
 MCP_EVAL_TOKEN="<key>" npm run eval --workspace @terminal49/mcp
 ```
 
-| Env var                  | Meaning                                                 | Default                          |
-| ------------------------ | ------------------------------------------------------- | -------------------------------- |
-| `MCP_EVAL_BEARER`        | OAuth 2.1 access token → `Authorization: Bearer`        | —                                |
-| `MCP_EVAL_TOKEN`         | Terminal49 API key → `Authorization: Token`             | —                                |
-| `MCP_EVAL_ENDPOINT`      | Gateway `/mcp` URL                                      | `https://mcp.terminal49.com/mcp` |
-| `MCP_EVAL_ENABLE_WRITE`  | Opt in to `track_container` and the write evals         | unset (skipped)                  |
-| `MCP_EVAL_ALLOW_SPARSE`  | Allow detail cases to skip when the account has no data | unset (strict)                   |
-| `MCP_EVAL_SANDBOX_TOKEN` | API key of the sandbox account for the write evals      | unset (write evals skipped)      |
+| Env var                   | Meaning                                                                       | Default                           |
+| ------------------------- | ----------------------------------------------------------------------------- | --------------------------------- |
+| `MCP_EVAL_BEARER`         | OAuth 2.1 access token → `Authorization: Bearer`                              | —                                 |
+| `MCP_EVAL_TOKEN`          | Terminal49 API key → `Authorization: Token`                                   | —                                 |
+| `MCP_EVAL_ENDPOINT`       | Gateway `/mcp` URL                                                            | `https://mcp.terminal49.com/mcp`  |
+| `MCP_EVAL_ENABLE_WRITE`   | Opt in to `track_container` and the write evals                               | unset (skipped)                   |
+| `MCP_EVAL_ALLOW_SPARSE`   | Allow cases to skip when the account has no data or the gateway lacks tools   | unset (strict)                    |
+| `MCP_EVAL_SANDBOX_TOKEN`  | API key of the sandbox account for the write evals                            | unset (write evals skipped)       |
+| `MCP_EVAL_SANDBOX_BEARER` | OAuth access token of a sandbox account user, for the custom field write eval | unset (custom field case skipped) |
 
 > OAuth access tokens are short-lived (~5 min). For repeatable/CI runs, prefer a
 > `MCP_EVAL_TOKEN` API key — it does not expire.
@@ -59,12 +60,18 @@ all pass (`contractPass`) — a single failure fails the test:
 **Latency** is a _soft_ check: recorded in the score and the report, but a slow
 response alone never fails the suite.
 
+The webhook read cases check that `list_webhooks` returns no secret, header
+value, or URL query string, and that `list_webhook_notifications` returns
+delivery rows. Both skip when the gateway does not list the opt-in `developer`
+toolset.
+
 Negative cases assert error behavior: an unknown id and a missing required
 argument must produce tool errors, while a gibberish search must return an empty
 result set (not an error).
 
-`track_container` — the only mutating tool — is **skipped by default**. Set
-`MCP_EVAL_ENABLE_WRITE=1` to include it: it is driven with an already-tracked
+`track_container` is the only mutating tool that `tools.eval.ts` calls, and it
+is **skipped by default**. The other write tools run in the
+[write evals](#write-evals). Set `MCP_EVAL_ENABLE_WRITE=1` to include it: it is driven with an already-tracked
 number so it takes the idempotent search-match path and asserts
 `tracking_request_created === false`. Only enable it against an account you know
 already tracks the discovered container, since on an arbitrary account the call
@@ -72,28 +79,80 @@ could create a real tracking request.
 
 ## Write evals
 
-[`writes.eval.ts`](./writes.eval.ts) runs the write tools against a dedicated
-sandbox account. It runs only when `MCP_EVAL_ENABLE_WRITE=1` and
+[`writes.eval.ts`](./writes.eval.ts) runs the write tools against the sandbox
+account. It runs only when `MCP_EVAL_ENABLE_WRITE=1` and
 `MCP_EVAL_SANDBOX_TOKEN` are both set, and it uses that token, never
-`MCP_EVAL_TOKEN`. Each case is a round trip that leaves the record as it found
-it:
+`MCP_EVAL_TOKEN`.
 
-- stop a shipment with a confirmed preview, then resume it;
+The sandbox account also holds demo data, so the suite changes only three
+eval fixtures. [`write-fixtures.ts`](./write-fixtures.ts) names them and picks
+each one by exact match:
+
+- the one shipment whose reference numbers include `MCP-EVAL-FIXTURE`;
+- the party named `MCP Eval (do not use)`;
+- the shipment custom field with API slug `mcp_eval_fixture` and type
+  `short_text`.
+
+A case skips when its fixture is missing. It never falls back to another
+record. Unit tests in [`write-fixtures.test.ts`](./write-fixtures.test.ts)
+check that each selector refuses a near match, such as another reference
+number, another party name, or another custom field.
+
+### One-time setup
+
+Do these steps once in the sandbox account before the first run:
+
+1. Add the reference number `MCP-EVAL-FIXTURE` to one demo shipment. Pick a
+   shipment that is still tracked. Do not add it to a second shipment. The
+   suite skips when two shipments carry it.
+2. Create a shipment custom field with the API slug `mcp_eval_fixture` and the
+   type short text. Use it for nothing else.
+
+3. Create a party named exactly `MCP Eval (do not use)`. `set_party_role`
+   never creates a party, so the party case skips until it exists. Do not
+   rename it or use it on other records.
+
+### Cases
+
+Each case is a round trip on the fixtures. It undoes its write in a `finally`
+block, so the change is undone even when an assertion fails:
+
+- stop the fixture shipment with a confirmed preview, then resume it;
 - refuse a stop with an edited confirmation token;
-- add a reference number to a shipment, then remove it with a confirmed
-  preview;
-  with a confirmed preview.
+- add a reference number to the fixture shipment, then remove it with a
+  confirmed preview;
+- attach the eval party as `notify_party` on the fixture shipment with
+  `set_party_role` (`add` writes at once), then detach it with `remove`,
+  which returns a preview the case confirms with the token. When the case
+  fails, it detaches the party again; a party no longer in the role comes
+  back unchanged;
+- fill `mcp_eval_fixture` on the fixture shipment with `set_custom_field`,
+  which writes at once on an empty field, then overwrite it and clear it,
+  each after confirming the preview with the token. Terminal49 accepts custom field changes only
+  from a signed-in user, never from an API key. So this case runs as the user
+  in `MCP_EVAL_SANDBOX_BEARER` and skips when it is unset. That token is
+  short-lived, so set it just before the run. Before it writes, the case
+  calls `whoami` with both credentials and fails when the bearer's account is
+  not the `MCP_EVAL_SANDBOX_TOKEN` account. The case always clears the field
+  when it ends.
+- preview a `reextract` with `update_document` on a document attached to the
+  fixture shipment, without confirming it. Nothing is written. The case
+  finds the document by the fixture shipment's bill of lading and skips when
+  none is attached.
 
-Every case skips when the gateway does not list the write tools, which
-happens when its toolsets leave out `operations`, or when the sandbox account
-has no shipment. The two stop cases also skip when the sandbox key cannot stop
-tracking (`FeatureNotEnabled`) or the first shipment is already stopped. The
-reference number case does not check either, so it runs on a stopped shipment
-too.
-If an assertion fails after a change, the case still undoes the change before
-it ends. `cancel_tracking_request` has no live
-case: a cancel cannot be undone and each run would need a new, billable
-tracking request. Fixture tests cover it.
+The write suite is strict too. Its `beforeAll` fails when the gateway does not
+list every default write tool, so a gateway that lost `operations` or
+`documents_write` cannot pass with every case skipped.
+`MCP_EVAL_ALLOW_SPARSE=1` turns that failure into skips. The two stop cases
+also skip when the sandbox key cannot stop tracking (`FeatureNotEnabled`) or
+the fixture shipment is already stopped. A value an earlier run left in the custom
+field makes the first write an overwrite, which previews too; the cleanup
+clears the field for the next run.
+
+`cancel_tracking_request` and `relink_document` have no live case. A cancel
+cannot be undone, and each run would need a new, billable tracking request. A
+relink can add shipment or container links that nothing removes. Fixture
+tests cover both.
 
 ## Output
 
@@ -113,6 +172,23 @@ Terminal49 API key** stored as the `MCP_EVAL_TOKEN` repo secret.
 > (admin data skews latency/shape). Until the secret is set the step **skips and
 > exits 0** — CI stays green, so forks and unconfigured repos are unaffected. The
 > mutating `track_container` case stays off (no `MCP_EVAL_ENABLE_WRITE`).
+
+On pushes to `main`, the `mcp-sandbox-write-eval` job runs only
+`eval/writes.eval.ts` against production after the `mcp` job passes. It first
+waits until Vercel reports a successful production deployment of the pushed
+commit, so it never tests the build that production served before the push.
+Its concurrency group lets only one run edit the sandbox account at a time. It sets `MCP_EVAL_ENABLE_WRITE=1` and
+passes `MCP_EVAL_SANDBOX_TOKEN: ${{ secrets.MCP_EVAL_SANDBOX_TOKEN }}`. Store
+the sandbox account's API key in that secret, never a customer
+account's key. Until the secret is set, the write suite skips and the step
+exits 0. CI does not set `MCP_EVAL_SANDBOX_BEARER`, because OAuth tokens expire
+in minutes, so the custom field case skips there. Run it by hand with a fresh
+token.
+
+`resolveSandboxConfig` in [`client.ts`](./client.ts) decides whether the write
+suite runs. Unit tests in [`sandbox-config.test.ts`](./sandbox-config.test.ts)
+check that it skips unless both settings are present, and that it never uses
+`MCP_EVAL_TOKEN` or `MCP_EVAL_BEARER`.
 
 ## Not covered here: subjective quality
 

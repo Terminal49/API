@@ -191,6 +191,31 @@ export const TOOL_REGISTRY = [
     },
   },
   {
+    name: 'relink_document',
+    title: 'Relink Document',
+    toolset: 'documents_write',
+    tier: 'A',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
+    name: 'update_document',
+    title: 'Update Document',
+    toolset: 'documents_write',
+    tier: 'C',
+    confirms: 'always',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+  },
+  {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
     toolset: 'core',
@@ -201,6 +226,12 @@ export const TOOL_REGISTRY = [
       openWorldHint: true,
     },
   },
+  readTool('list_webhooks', 'List Webhooks', 'developer'),
+  readTool(
+    'list_webhook_notifications',
+    'List Webhook Notifications',
+    'developer',
+  ),
   readTool('whoami', 'Who Am I'),
   readTool('search_importers', 'Search US Importers', 'trade'),
   readTool('get_importer_profile', 'Get Importer Profile', 'trade'),
@@ -220,6 +251,7 @@ export const DEFAULT_TOOLSETS: readonly Toolset[] = [
   'core',
   'documents',
   'operations',
+  'documents_write',
   'trade',
 ];
 
