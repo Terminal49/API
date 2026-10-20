@@ -162,6 +162,7 @@
     "mcp/setup/microsoft-copilot",
     "mcp/setup/other-clients",
     "mcp/setup/vs-code",
+    "mcp/sql-queries",
     "sdk/error-handling",
     "sdk/filtering-pagination",
     "sdk/introduction",
