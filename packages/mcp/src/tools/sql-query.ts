@@ -39,6 +39,12 @@ export function sqlScope(
 }
 
 /**
+ * Ends a stalled call with a tool error well before the hosting platform's
+ * 30-second function limit would cut the response off.
+ */
+const SQL_CALL_TIMEOUT_MS = 20_000;
+
+/**
  * The SQL tools' client never retries: a retried query can run twice, and a
  * rate limit must stop the turn rather than be retried around.
  */
@@ -52,11 +58,13 @@ export function createSqlClient(
     apiBaseUrl,
     accountId,
     maxRetries: 0,
+    timeoutMs: SQL_CALL_TIMEOUT_MS,
   });
 }
 
 // Share only concurrent work, never completed results: a model that sends the
-// same query twice in parallel runs it once. Each caller gets its own copy.
+// same query twice in parallel runs it once when both calls reach the same
+// server instance. Each caller gets its own copy.
 const pendingQueries = new Map<string, Promise<AssistantQueryPreview>>();
 
 export async function executeSqlQuery(
@@ -132,7 +140,7 @@ export function formatSqlToolError(error: unknown): string {
     case 400:
       return 'Invalid SQL tool request or missing account context. Check the arguments and reconnect with an active account.';
     case 401:
-      return 'SQL tools need a signed-in Terminal49 user. API keys are not supported.';
+      return 'Terminal49 did not accept this session for SQL tools. Ask the user to reconnect Terminal49 and sign in again.';
     case 403:
       return 'SQL access is not enabled for this user and account.';
     case 404:
@@ -188,48 +196,76 @@ function isTransientDiscoveryError(error: unknown): boolean {
   );
 }
 
+const PROBE_TIMEOUT_MS = 5000;
+/** Time left for the tool call itself once the probe has used its share. */
+const PROBE_RESERVE_MS = 3000;
+
 async function probeAssistantSql(
   apiToken: string,
   apiBaseUrl: string | undefined,
   accountId: string,
+  timeoutMs: number,
 ): Promise<boolean> {
   const client = new Terminal49Client({
     apiToken,
     apiBaseUrl,
     accountId,
     maxRetries: 0,
-    timeoutMs: 5000,
+    timeoutMs,
   });
   const result = await client.assistantQueries.views();
   return Array.isArray(result.views);
 }
 
+export interface DiscoveryOptions {
+  /**
+   * What identifies the caller across requests, for the cache key. The
+   * gateway mints a new API token on every request, so it passes the
+   * caller's own token here. Defaults to the API token.
+   */
+  identity?: string;
+  /** Epoch ms by which the request must finish; the probe stops in time. */
+  deadlineAt?: number;
+}
+
 /**
  * Whether this credential and account may use the SQL tools, read from the
  * same endpoint and authorization the tools use. Decisions are cached for a
- * minute per credential, account and API base. A denial (401, 403, 404 or a
- * malformed response) hides the tools; a transient failure keeps them listed
- * and is not cached.
+ * minute per caller, account and API base. A denial (401, 403, 404 or a
+ * malformed response) hides the tools; a transient failure, including too
+ * little time left to ask, keeps them listed and is not cached.
  */
 export function discoverAssistantSql(
   apiToken: string,
   apiBaseUrl: string | undefined,
   accountId: string | undefined,
+  options: DiscoveryOptions = {},
 ): Promise<boolean> {
   if (!accountId) {
     return Promise.resolve(false);
   }
-  const key = sqlScope(apiToken, apiBaseUrl, accountId);
+  const key = sqlScope(options.identity ?? apiToken, apiBaseUrl, accountId);
   const now = Date.now();
   const cached = discoveryCache.get(key);
   if (cached && cached.expiresAt > now) {
     return cached.decision;
   }
 
+  const timeoutMs = Math.min(
+    PROBE_TIMEOUT_MS,
+    options.deadlineAt === undefined
+      ? PROBE_TIMEOUT_MS
+      : options.deadlineAt - now - PROBE_RESERVE_MS,
+  );
+  if (timeoutMs <= 0) {
+    return Promise.resolve(true);
+  }
+
   const decision: Promise<boolean> = probeAssistantSql(
     apiToken,
     apiBaseUrl,
     accountId,
+    timeoutMs,
   ).catch((error: unknown) => {
     if (!isTransientDiscoveryError(error)) {
       return false;

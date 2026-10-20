@@ -141,6 +141,28 @@ describe('discoverAssistantSql', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it("reuses the answer across requests by the caller's identity, not the per-request token", async () => {
+    const fetch = stubViews(() => Response.json({ views: [] }));
+    for (const minted of ['Bearer jwt-1', 'Bearer jwt-2', 'Bearer jwt-3']) {
+      await expect(
+        discoverAssistantSql(minted, 'https://api.test/v2', 'acct', {
+          identity: 'Bearer oauth-token',
+        }),
+      ).resolves.toBe(true);
+    }
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the tools listed without asking when too little time is left', async () => {
+    const fetch = stubViews(() => Response.json({ views: [] }));
+    await expect(
+      discoverAssistantSql('Bearer user', 'https://api.test/v2', 'acct', {
+        deadlineAt: Date.now() + 1000,
+      }),
+    ).resolves.toBe(true);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it('keeps answers apart per account', async () => {
     const fetch = stubViews(() => Response.json({ views: [] }));
     await discoverAssistantSql('Bearer user', 'https://api.test/v2', 'acct-a');
@@ -277,5 +299,144 @@ describe('SQL tools over the MCP transport', () => {
     expect(result.isError).toBe(true);
     expect(JSON.stringify(result.content)).toContain('Retry after 30 seconds');
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects SQL over 8,000 bytes before calling the API', async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal('fetch', fetch);
+
+    // 3,000 three-byte characters: under 8,000 characters, over 8,000 bytes.
+    const { result } = await call('sql_query', {
+      sql: `select '${'€'.repeat(3000)}'`,
+    });
+
+    expect(result.isError).toBe(true);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  // Payloads shaped like the API's responses, so an output schema that no
+  // longer matches them fails here.
+  it.each([
+    [
+      'describe_views',
+      { view: null },
+      '/v2/assistant_views',
+      {
+        views: [
+          {
+            name: 'assistant_containers',
+            label: 'Containers',
+            description: 'One row per container.',
+            columns: ['container_number', 'pod_arrived_at'],
+            metrics: ['dwell_days'],
+          },
+        ],
+      },
+    ],
+    [
+      'describe_views',
+      { view: 'assistant_containers', columns: ['pod_arrived_at'] },
+      '/v2/assistant_views/assistant_containers',
+      {
+        name: 'assistant_containers',
+        label: 'Containers',
+        description: 'One row per container.',
+        columns: [
+          {
+            name: 'pod_arrived_at',
+            type: 'timestamp with time zone',
+            description: 'When the vessel arrived at the port of discharge.',
+          },
+        ],
+        metrics: [
+          {
+            name: 'dwell_days',
+            description: 'Days from discharge to pickup.',
+            sql: 'extract(epoch from x) / 86400',
+          },
+        ],
+      },
+    ],
+    [
+      'query_guide',
+      { topic: null },
+      '/v2/assistant_guides',
+      {
+        guides: [
+          { topic: 'method', title: 'Method', summary: 'How to measure.' },
+        ],
+      },
+    ],
+    [
+      'query_guide',
+      { topic: 'Last Free Day' },
+      '/v2/assistant_guides/Last%20Free%20Day',
+      { topic: 'last-free-days', body: '# Last free days\n…' },
+    ],
+    [
+      'get_query_result',
+      { result_id: PREVIEW.result_id, offset: 20, limit: 10 },
+      `/v2/assistant_queries/${PREVIEW.result_id}`,
+      {
+        result_id: PREVIEW.result_id,
+        expires_at: PREVIEW.expires_at,
+        columns: ['pod'],
+        column_types: ['text'],
+        rows: [['USLAX']],
+        offset: 20,
+        page_row_count: 1,
+        next_offset: null,
+        row_count: 21,
+        total_count: 21,
+        truncated: false,
+        row_limit: 500,
+      },
+    ],
+  ])('%s returns the API payload (%j)', async (name, args, path, body) => {
+    const requests: Request[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | Request, init?: RequestInit) => {
+        requests.push(
+          input instanceof Request ? input : new Request(input, init),
+        );
+        return Response.json(body);
+      }),
+    );
+
+    const { result } = await call(name, args);
+
+    expect(result.isError).toBeFalsy();
+    expect(result.structuredContent).toEqual(body);
+    expect(new URL(requests[0]!.url).pathname).toBe(path);
+  });
+
+  it('passes through the message when access to a stored result changed', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json(
+          {
+            errors: [
+              {
+                status: '409',
+                detail:
+                  'Data access has changed. Run the query again to view its result.',
+              },
+            ],
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+
+    const { result } = await call('get_query_result', {
+      result_id: PREVIEW.result_id,
+    });
+
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.content)).toContain(
+      'Data access has changed. Run the query again to view its result.',
+    );
   });
 });

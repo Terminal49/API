@@ -521,6 +521,45 @@ describe('api/mcp handler lifecycle', () => {
     });
   });
 
+  it('skips the SQL access check when the toolsets header leaves analytics out', async () => {
+    process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
+    process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
+    process.env.T49_API_BASE_URL = 'https://api.test/v2';
+    process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
+    const urls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | Request) => {
+        urls.push(typeof input === 'string' ? input : input.url);
+        return Response.json({
+          data: {
+            attributes: {
+              access_token: 'terminal49-local-jwt',
+              account_id: 'account-123',
+            },
+          },
+        });
+      }),
+    );
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    await handler(
+      createRequest({
+        headers: {
+          host: 'localhost',
+          authorization: 'Bearer workos-mcp-token',
+          'x-t49-mcp-toolsets': 'core',
+        },
+      }) as any,
+      new MockResponse() as any,
+    );
+
+    expect(urls.some((url) => url.includes('assistant_views'))).toBe(false);
+    expect(mockState.serverCreateArgs[0]).toMatchObject({
+      options: { toolsets: ['core'], callerIdentity: 'workos-mcp-token' },
+    });
+  });
+
   it.each([
     [200, { views: [] }, true],
     [403, { error: 'Assistant SQL is not enabled for this account' }, false],

@@ -698,6 +698,13 @@ export default async function handler(
       return;
     }
 
+    // Resolving a signed-in user mints a new API token per request, so caches
+    // that span requests key on the caller's own token instead.
+    const callerIdentity =
+      resolvedTerminal49Auth.credentialType === 'user'
+        ? callerToken
+        : undefined;
+
     // SQL analysis is enabled per account, so list its tools only when the
     // API confirms this user and account can use them.
     if (
@@ -706,6 +713,7 @@ export default async function handler(
         resolvedTerminal49Auth.apiToken,
         process.env.T49_API_BASE_URL,
         resolvedTerminal49Auth.accountId,
+        { identity: callerIdentity, deadlineAt },
       ))
     ) {
       toolSelection = {
@@ -749,6 +757,7 @@ export default async function handler(
             toolsets: toolSelection.toolsets,
             readOnly: toolSelection.readOnly,
             writeDeadlineAt: deadlineAt,
+            callerIdentity,
           },
         ),
       {
