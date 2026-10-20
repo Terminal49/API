@@ -19,6 +19,12 @@ export const READ_ONLY_HEADER = 'X-T49-MCP-Read-Only';
 /** Toolsets the shared env token gets without T49_MCP_ALLOW_SHARED_TOKEN_WRITES. */
 const SHARED_TOKEN_TOOLSETS: readonly Toolset[] = ['core', 'trade'];
 
+/**
+ * Credentials the API accepts for SQL analysis; API keys never are. The
+ * dashboard agent keeps its own SQL tools until it moves to these.
+ */
+const ANALYTICS_CREDENTIAL_TYPES: readonly McpCredentialType[] = ['user'];
+
 /** A request header that the gateway answers with 400. */
 export class ToolSelectionRequestError extends Error {
   constructor(message: string) {
@@ -76,8 +82,13 @@ function allowedToolsets(
   env: NodeJS.ProcessEnv,
   credentialType: McpCredentialType,
 ): readonly Toolset[] {
+  const analytics = ANALYTICS_CREDENTIAL_TYPES.includes(credentialType);
   const configured = env.T49_MCP_TOOLSETS?.trim();
-  const allowed = configured ? parseToolsetList(configured) : DEFAULT_TOOLSETS;
+  // Unset, a credential gets every toolset it can use; the gateway still
+  // checks that the account has SQL access before listing analytics.
+  const allowed = configured
+    ? parseToolsetList(configured)
+    : [...DEFAULT_TOOLSETS, ...(analytics ? ['analytics' as const] : [])];
   if (!allowed) {
     throw new Error(
       `T49_MCP_TOOLSETS must list only these toolsets: ${TOOLSETS.join(', ')}.`,
@@ -92,7 +103,9 @@ function allowedToolsets(
   ) {
     return allowed.filter((toolset) => SHARED_TOKEN_TOOLSETS.includes(toolset));
   }
-  return allowed;
+  return analytics
+    ? allowed
+    : allowed.filter((toolset) => toolset !== 'analytics');
 }
 
 /**

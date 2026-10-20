@@ -14,6 +14,7 @@ export const TOOLSETS = [
   'documents_write',
   'developer',
   'trade',
+  'analytics',
 ] as const;
 
 export type Toolset = (typeof TOOLSETS)[number];
@@ -134,13 +135,34 @@ export const TOOL_REGISTRY = [
   readTool('get_trade_trends', 'Get Trade Trends', 'trade'),
   readTool('get_trade_breakdown', 'Get Trade Breakdown', 'trade'),
   readTool('get_trade_data_coverage', 'Get Trade Data Coverage', 'trade'),
+  // Each query stores a short-lived result snapshot but changes no account
+  // record, so it is read-only; the same SQL can return new rows, so it is
+  // not idempotent.
+  {
+    name: 'sql_query',
+    title: 'Query Account Data',
+    toolset: 'analytics',
+    tier: 'read',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+  },
+  readTool('describe_views', 'Describe Queryable Views', 'analytics'),
+  readTool('query_guide', 'Read Query Guidance', 'analytics'),
+  readTool('get_query_result', 'Read Stored Query Rows', 'analytics'),
 ] as const satisfies readonly ToolDefinition[];
 
 export type RegisteredTool = (typeof TOOL_REGISTRY)[number];
 
 export type ToolName = RegisteredTool['name'];
 
-/** Toolsets served when the operator sets no `T49_MCP_TOOLSETS`. */
+/**
+ * Toolsets served when the operator sets no `T49_MCP_TOOLSETS`. Signed-in
+ * users also get `analytics` when their account has SQL access.
+ */
 export const DEFAULT_TOOLSETS: readonly Toolset[] = [
   'core',
   'documents',

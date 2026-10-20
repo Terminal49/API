@@ -16,6 +16,7 @@ import { toNodeHandler } from '@modelcontextprotocol/node';
 import * as Sentry from '@sentry/node';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 import { CALL_BUDGET_MS } from '../packages/mcp/src/tools/record-writes.js';
+import { discoverAssistantSql } from '../packages/mcp/src/tools/sql-query.js';
 import { flushPostHogEvents } from '../packages/mcp/src/posthog.js';
 import { captureMcpException } from '../packages/mcp/src/sentry.js';
 import { protectedResourceMetadataUrl } from '../packages/mcp/src/resource.js';
@@ -695,6 +696,24 @@ export default async function handler(
         reason: 'invalid_tool_selection',
       });
       return;
+    }
+
+    // SQL analysis is enabled per account, so list its tools only when the
+    // API confirms this user and account can use them.
+    if (
+      toolSelection.toolsets.includes('analytics') &&
+      !(await discoverAssistantSql(
+        resolvedTerminal49Auth.apiToken,
+        process.env.T49_API_BASE_URL,
+        resolvedTerminal49Auth.accountId,
+      ))
+    ) {
+      toolSelection = {
+        ...toolSelection,
+        toolsets: toolSelection.toolsets.filter(
+          (toolset) => toolset !== 'analytics',
+        ),
+      };
     }
 
     logLifecycle('mcp.request.auth', requestId, {
