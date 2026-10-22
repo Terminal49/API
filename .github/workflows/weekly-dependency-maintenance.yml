@@ -3,8 +3,10 @@ name: Weekly Dependency Maintenance
 # Covers the surface Dependabot version updates do not: the npm workspace
 # (.github/dependabot.yml runs npm and GitHub Actions in security-only mode,
 # open-pull-requests-limit: 0). Dependabot security PRs stay as they are, and
-# workflow files are out of scope here. The token is scoped to what the job
-# does: push a branch and open a draft PR.
+# workflow files are out of scope here. The job's GITHUB_TOKEN is read-only:
+# the branch push and draft PR use the short-lived GitHub App token that
+# claude-code-action exchanges for via OIDC (its default permissions are
+# contents, pull_requests and issues write).
 
 on:
   schedule:
@@ -23,8 +25,7 @@ jobs:
   maintenance:
     name: Security and package updates
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
       id-token: write # claude-code-action exchanges a GitHub OIDC token for its app token
     runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
     timeout-minutes: 60
@@ -34,8 +35,10 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: false
 
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: npm
@@ -47,15 +50,20 @@ jobs:
       # Bill API credits when ANTHROPIC_API_KEY is set, else the subscription
       # OAuth token. The action forwards both to the CLI and does not choose
       # between them, so pass only one. Secrets cannot be tested in `if:`.
+      # Fail here, before any agent time is spent, when neither is configured.
       - name: Choose Claude credential
         id: claude-auth
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           if [ -n "$ANTHROPIC_API_KEY" ]; then
             echo "use_api_key=true" >> "$GITHUB_OUTPUT"
-          else
+          elif [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
             echo "use_api_key=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error title=Missing Claude credential::Set the ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN repository secret; the weekly dependency sweep cannot run without one."
+            exit 1
           fi
 
       - name: Run Claude dependency maintenance
@@ -63,10 +71,6 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_code_oauth_token: ${{ steps.claude-auth.outputs.use_api_key != 'true' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
-
-          additional_permissions: |
-            contents: write
-            pull-requests: write
 
           prompt: |
             REPO: ${{ github.repository }}
@@ -77,7 +81,7 @@ jobs:
 
             Goal:
             - Create at most one draft pull request against `main` when there are safe dependency/security updates.
-            - If an open PR from a `claude/weekly-dependency-maintenance-*` branch already exists, do nothing except write a one-line summary to `$GITHUB_STEP_SUMMARY`.
+            - If an open sweep PR already exists, do nothing except write a one-line summary to `$GITHUB_STEP_SUMMARY`. A sweep PR is one whose head branch starts with `claude/weekly-dependency-maintenance-`, whose head repository is `${{ github.repository }}` (not a fork), and whose author is `claude[bot]`. Check with REST, not GraphQL: `gh api "repos/${{ github.repository }}/pulls?state=open&per_page=100" --jq '.[] | select(.user.login == "claude[bot]" and .head.repo.full_name == "${{ github.repository }}" and (.head.ref | startswith("claude/weekly-dependency-maintenance-"))) | .html_url'`. A branch name match alone does not count.
             - If there are no useful updates, write a concise no-op summary to `$GITHUB_STEP_SUMMARY` and do not create a PR.
 
             Dependency surface (only this; GitHub Actions and workflow files belong to Dependabot and must not be touched):
@@ -89,15 +93,19 @@ jobs:
 
             Update policy:
             - Prioritize known vulnerabilities and low-risk patch/minor updates.
+            - Do not bump to a version published fewer than 7 days ago (check with `npm view PACKAGE@VERSION time --json`), unless that version fixes a high or critical advisory.
+            - Preserve each dependency's existing range style or exact pin: keep `~4.3.6` as `~`, `^` as `^`, and exact pins exact (for example `zod` stays `~4.3.6`). Never loosen or tighten a range.
+            - release-please owns the `@terminal49/sdk` pin in `packages/mcp`, the CLI's pin on the SDK, and the workspace package versions recorded in `package-lock.json`. Do not edit them, including via `npm install` side effects: revert any such lockfile hunks.
             - Avoid major upgrades unless required to resolve a high/critical vulnerability.
             - Move `vite-plus`, the `vite` override, the exact `vitest` pin, `@oxlint/plugins`, and each workspace's `@vitest/coverage-v8` together or not at all (see AGENTS.md).
             - Do not change `engines`, `.tool-versions`, package `version` fields, the `@terminal49/sdk` pin in `packages/mcp`, or the Node 20/22/24 support the SDK and CLI have in CI. Published packages (SDK, CLI) must not gain a higher Node floor.
             - Do not hand-edit generated files (`sdks/typescript-sdk/src/generated/**`, `packages/mcp/src/generated/**`, `docs/sdk/reference/**`, the Postman collection). If an update changes their regenerated output, drop that update and note it in the PR.
             - Do not make unrelated code changes. Manifests, `package-lock.json`, and narrowly required compatibility fixes are allowed. Do not touch `docs/`, `.github/`, or `skills/`.
             - Prefer targeted `npm update PACKAGE_NAME` or `npm install PACKAGE_NAME@VERSION --workspace WORKSPACE` over broad all-dependency updates. Keep the lockfile consistent with `npm ci`.
+            - Run every `npm ci`, `npm install`, and `npm update` with `npm_config_ignore_scripts=true` (for example `npm_config_ignore_scripts=true npm install PACKAGE@VERSION --workspace WORKSPACE`) so lifecycle scripts of newly bumped packages never run. The repo does not need them: the only packages with install scripts are `esbuild` (its binary ships via optional dependencies) and macOS-only `fsevents`.
 
             If changes are made:
-            1. Run validation: `npm ci && npm run agent-verify` (the repo's completion gate; it needs Node 24.11+). If a step cannot run in this environment, record what was skipped and why.
+            1. Run validation: `npm_config_ignore_scripts=true npm ci && npm run agent-verify` (the repo's completion gate; it needs Node 24.11+), then the SDK docs drift check that `ci.yml` also runs: `npm run sdk:docs && git diff --exit-code -- docs/sdk/reference`. If it reports a diff, drop the update that caused it, restore `docs/sdk/reference` with `git checkout -- docs/sdk/reference`, and note it in the PR. Never hand-edit `docs/sdk/reference`. If a step cannot run in this environment, record what was skipped and why.
             2. Create branch `claude/weekly-dependency-maintenance-${{ github.run_id }}`.
             3. Commit with message `chore(deps): weekly dependency maintenance`.
             4. Open a draft PR against `main` with a summary of updates, security findings, validation, and any risk.
