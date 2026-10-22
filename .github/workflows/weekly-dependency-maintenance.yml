@@ -1,0 +1,111 @@
+name: Weekly Dependency Maintenance
+
+# Covers the surface Dependabot version updates do not: the npm workspace
+# (.github/dependabot.yml runs npm and GitHub Actions in security-only mode,
+# open-pull-requests-limit: 0). Dependabot security PRs stay as they are, and
+# workflow files are out of scope here. The token is scoped to what the job
+# does: push a branch and open a draft PR.
+
+on:
+  schedule:
+    # Mondays at 14:00 UTC, early Pacific business hours.
+    - cron: "0 14 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: weekly-dependency-maintenance
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  maintenance:
+    name: Security and package updates
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write # claude-code-action exchanges a GitHub OIDC token for its app token
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install workspace dependencies
+        run: npm ci
+
+      # Bill API credits when ANTHROPIC_API_KEY is set, else the subscription
+      # OAuth token. The action forwards both to the CLI and does not choose
+      # between them, so pass only one. Secrets cannot be tested in `if:`.
+      - name: Choose Claude credential
+        id: claude-auth
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "use_api_key=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "use_api_key=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Claude dependency maintenance
+        uses: anthropics/claude-code-action@a26b07d8c778b0c43f64618e5fd29fd0f8af72e8 # v1.0.250
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ steps.claude-auth.outputs.use_api_key != 'true' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
+
+          additional_permissions: |
+            contents: write
+            pull-requests: write
+
+          prompt: |
+            REPO: ${{ github.repository }}
+            BASE BRANCH: main
+            RUN ID: ${{ github.run_id }}
+
+            You are running weekly dependency and security maintenance for the Terminal49 API monorepo (npm workspaces: MCP server, TypeScript SDK, CLI). This is a public repository: never put secrets, internal URLs, or customer data in commits or PR text.
+
+            Goal:
+            - Create at most one draft pull request against `main` when there are safe dependency/security updates.
+            - If an open PR from a `claude/weekly-dependency-maintenance-*` branch already exists, do nothing except write a one-line summary to `$GITHUB_STEP_SUMMARY`.
+            - If there are no useful updates, write a concise no-op summary to `$GITHUB_STEP_SUMMARY` and do not create a PR.
+
+            Dependency surface (only this; GitHub Actions and workflow files belong to Dependabot and must not be touched):
+            - npm workspace: root `package.json`, `packages/mcp/package.json`, `sdks/typescript-sdk/package.json`, `sdks/typescript-sdk-cli/package.json`, and the single root `package-lock.json`.
+
+            Required inspection (dependencies are already installed with `npm ci`):
+            - `npm audit --audit-level=moderate || true`
+            - `npm outdated --workspaces --include-workspace-root || true`
+
+            Update policy:
+            - Prioritize known vulnerabilities and low-risk patch/minor updates.
+            - Avoid major upgrades unless required to resolve a high/critical vulnerability.
+            - Move `vite-plus`, the `vite` override, the exact `vitest` pin, `@oxlint/plugins`, and each workspace's `@vitest/coverage-v8` together or not at all (see AGENTS.md).
+            - Do not change `engines`, `.tool-versions`, package `version` fields, the `@terminal49/sdk` pin in `packages/mcp`, or the Node 20/22/24 support the SDK and CLI have in CI. Published packages (SDK, CLI) must not gain a higher Node floor.
+            - Do not hand-edit generated files (`sdks/typescript-sdk/src/generated/**`, `packages/mcp/src/generated/**`, `docs/sdk/reference/**`, the Postman collection). If an update changes their regenerated output, drop that update and note it in the PR.
+            - Do not make unrelated code changes. Manifests, `package-lock.json`, and narrowly required compatibility fixes are allowed. Do not touch `docs/`, `.github/`, or `skills/`.
+            - Prefer targeted `npm update PACKAGE_NAME` or `npm install PACKAGE_NAME@VERSION --workspace WORKSPACE` over broad all-dependency updates. Keep the lockfile consistent with `npm ci`.
+
+            If changes are made:
+            1. Run validation: `npm ci && npm run agent-verify` (the repo's completion gate; it needs Node 24.11+). If a step cannot run in this environment, record what was skipped and why.
+            2. Create branch `claude/weekly-dependency-maintenance-${{ github.run_id }}`.
+            3. Commit with message `chore(deps): weekly dependency maintenance`.
+            4. Open a draft PR against `main` with a summary of updates, security findings, validation, and any risk.
+
+            If no changes are made:
+            - Write the audits run and a brief conclusion to `$GITHUB_STEP_SUMMARY`.
+            - Do not open a PR.
+
+          claude_args: |
+            --model claude-sonnet-5-5
+            --allowedTools Bash,Glob,Grep,Read,Write,Edit
