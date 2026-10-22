@@ -3444,31 +3444,6 @@
       "smdgCode": "VIG"
     },
     {
-      "name": "Port of Wilmington Container Terminal",
-      "port": "Wilmington (NC)",
-      "locode": "USILM",
-      "country": "United States",
-      "region": "US East Coast",
-      "firmsCode": "L194",
-      "features": {
-        "importMilestones": "supported",
-        "availableForPickup": "unknown",
-        "lastFreeDay": "unknown",
-        "holds": "unknown",
-        "feeType": "unknown",
-        "feeAmount": "unknown",
-        "pickupAppointment": "unknown",
-        "yardLocation": "unknown",
-        "vesselDischarged": "unknown",
-        "fullOut": "unknown",
-        "chassisNumber": "unknown",
-        "onRail": "unknown",
-        "emptyReturned": "unknown"
-      },
-      "terminalCode": "L194",
-      "smdgCode": "NCSPA"
-    },
-    {
       "name": "Lyttelton Port Company",
       "port": "Lyttelton",
       "locode": "NZLYT",
