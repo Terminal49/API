@@ -1,6 +1,6 @@
 {
   "name": "@terminal49/cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Terminal49 container tracking CLI — for LLM agents, chat interfaces, and humans",
   "keywords": [
     "agent",
@@ -54,7 +54,7 @@
     "prepublishOnly": "npm run build && npm run lint && npm run test"
   },
   "dependencies": {
-    "@terminal49/sdk": "0.6.0",
+    "@terminal49/sdk": "0.7.0",
     "cli-table3": "^0.6.5",
     "commander": "^13.0.0"
   },

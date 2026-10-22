@@ -33,7 +33,7 @@
     "@modelcontextprotocol/server": "^2.3.1",
     "@posthog/mcp": "^0.16.4",
     "@sentry/node": "^10.76.2",
-    "@terminal49/sdk": "0.6.0",
+    "@terminal49/sdk": "0.7.0",
     "posthog-node": "^5.56.2",
     "zod": "~4.3.6"
   },
