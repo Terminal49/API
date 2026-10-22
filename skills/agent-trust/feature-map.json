@@ -120,6 +120,22 @@
     {
       "name": "get_trade_data_coverage",
       "implementation": "packages/mcp/src/tools/trade-intel.ts"
+    },
+    {
+      "name": "sql_query",
+      "implementation": "packages/mcp/src/tools/sql-query.ts"
+    },
+    {
+      "name": "describe_views",
+      "implementation": "packages/mcp/src/tools/sql-query.ts"
+    },
+    {
+      "name": "query_guide",
+      "implementation": "packages/mcp/src/tools/sql-query.ts"
+    },
+    {
+      "name": "get_query_result",
+      "implementation": "packages/mcp/src/tools/sql-query.ts"
     }
   ],
   "sdkEntrypoints": [
@@ -146,6 +162,7 @@
     "mcp/setup/microsoft-copilot",
     "mcp/setup/other-clients",
     "mcp/setup/vs-code",
+    "mcp/sql-queries",
     "sdk/error-handling",
     "sdk/filtering-pagination",
     "sdk/introduction",
