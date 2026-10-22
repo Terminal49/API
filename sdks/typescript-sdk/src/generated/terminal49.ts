@@ -7197,6 +7197,8 @@ export interface operations {
                             group_by: "current_status" | "pod_terminal" | "shipping_line" | "port_of_discharge" | "hold_type" | "pickup_lfd_date" | "pod_arrival_date";
                             /** @description True when more than 200 groups exist; only the first 200 are returned. */
                             truncated: boolean;
+                            /** @description Requested filter keys that were not applied. Omitted when all filters are recognized; the response remains HTTP 200 for compatibility. */
+                            ignored_filters?: string[];
                         };
                     };
                 };
