@@ -64,7 +64,7 @@ For ChatGPT, Claude Code, Cursor, VS Code, and other clients, see the [MCP serve
 
 ## Develop in this repository
 
-This is an npm workspaces monorepo that uses [Vite+](https://viteplus.dev) (`vp`) as its toolchain. You need Node 24.11 or later (`.tool-versions` pins `24.11.0`).
+This is an npm workspaces monorepo that uses [Vite+](https://viteplus.dev) (`vp`) as its toolchain. Use Node 24.22.1 or a newer Node 24 patch (`.tool-versions` pins `24.22.1`).
 
 ```bash
 vp install      # or: npm ci
