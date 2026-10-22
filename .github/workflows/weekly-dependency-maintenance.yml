@@ -44,8 +44,9 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      # Lifecycle scripts stay off: this runs on merged main before the agent, and the repo needs none.
       - name: Install workspace dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       # Bill API credits when ANTHROPIC_API_KEY is set, else the subscription
       # OAuth token. The action forwards both to the CLI and does not choose
