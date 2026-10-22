@@ -52,7 +52,7 @@ Before you begin, make sure you have:
 **Authentication**: OAuth 2.1 (recommended) or API key.
 
 - **OAuth 2.1** – no API key needed. Add `https://mcp.terminal49.com` to your client; it discovers the authorization server (`https://auth.terminal49.com`) via protected resource metadata, registers itself with Dynamic Client Registration, and opens your browser so you can sign in with your Terminal49 credentials. Tokens are stored and refreshed by the client.
-- **API key** – for clients that can't run a browser OAuth flow, pass `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys; the `Bearer` scheme is used for OAuth access tokens, which OAuth clients obtain automatically.
+- **API key** – for clients that can't run a browser OAuth flow, pass `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys. OAuth clients use the `Bearer` scheme for OAuth access tokens, which they obtain automatically.
 
 Only the [local stdio server](#local-stdio-development) reads the `T49_API_TOKEN` environment variable instead of a header.
 
