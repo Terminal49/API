@@ -122,14 +122,24 @@ Add to `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` for all proje
 
 ### Local stdio (development)
 
-For local development without a hosted server:
+`@terminal49/mcp` is a private workspace in this repository. Build it from a clone when you want a local stdio process instead of the hosted server. Use Node.js 24.22.1 or a newer Node 24 release (`.tool-versions` pins `24.22.1`).
+
+```bash
+git clone https://github.com/Terminal49/API.git
+cd API
+npm ci
+npm run build --workspace @terminal49/sdk
+npm run build --workspace @terminal49/mcp
+```
+
+The stdio entrypoint is `packages/mcp/dist/index.js`. It reads `T49_API_TOKEN` and exits if that variable is unset. Create the key in the [developer portal](https://app.terminal49.com/developers/api-keys).
 
 ```json
 {
   "mcpServers": {
     "terminal49": {
       "command": "node",
-      "args": ["/path/to/API/packages/mcp/dist/index.js"],
+      "args": ["/absolute/path/to/API/packages/mcp/dist/index.js"],
       "env": {
         "T49_API_TOKEN": "YOUR_API_KEY"
       }
@@ -138,24 +148,7 @@ For local development without a hosted server:
 }
 ```
 
-<Warning>
-Build the MCP server first:
-`cd packages/mcp && npm install && T49_SDK_SOURCE=published npm run sdk:setup && npm run build`
-</Warning>
-
-<Accordion title="Contributor mode: switch SDK source">
-Use published SDK by default:
-```bash
-cd packages/mcp
-T49_SDK_SOURCE=published npm run sdk:setup
-```
-
-Use local SDK build during development:
-```bash
-cd packages/mcp
-T49_SDK_SOURCE=local npm run sdk:setup
-```
-</Accordion>
+The MCP server depends on the workspace package `@terminal49/sdk`. The build above compiles that package first.
 
 ---
 
@@ -204,10 +197,13 @@ Need test container numbers? See [Test Numbers](/api-docs/useful-info/test-numbe
 <Accordion title="Check MCP server logs">
 If using the hosted server, check your Terminal49 dashboard for API logs.
 
-If running locally:
+If running locally, from the repository root after the build above:
 ```bash
-cd packages/mcp
-T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio 2>&1 | head -20
+printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"smoke","version":"1.0"}}}' \
+  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+  | T49_API_TOKEN=YOUR_API_KEY node packages/mcp/dist/index.js
 ```
 </Accordion>
 
@@ -377,16 +373,19 @@ Clients can remove tools per request with the `X-T49-MCP-Toolsets` and `X-T49-MC
 ## Testing locally
 
 ```bash
-# Build the MCP server
-cd packages/mcp
-npm install
-npm run build
+# Build the MCP server from a clone (Node.js 24.22.1 or a newer Node 24 release)
+git clone https://github.com/Terminal49/API.git
+cd API
+npm ci
+npm run build --workspace @terminal49/sdk
+npm run build --workspace @terminal49/mcp
 
-# Test tools/list
-echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio
-
-# Test search_container
-echo '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"search_container","arguments":{"query":"CAIU1234567"}},"id":2}' | T49_API_TOKEN=YOUR_API_KEY npm run mcp:stdio
+# initialize, then tools/list, on the built stdio entrypoint
+printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"smoke","version":"1.0"}}}' \
+  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+  | T49_API_TOKEN=YOUR_API_KEY node packages/mcp/dist/index.js
 
 # Test the hosted endpoint
 curl -X POST https://mcp.terminal49.com \
