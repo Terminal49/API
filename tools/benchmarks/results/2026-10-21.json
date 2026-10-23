@@ -1,0 +1,97 @@
+{
+  "measurement_date": "2026-10-21 America/Los_Angeles",
+  "source_sha": "80e227ec2402f72a86778a2b76cb82b761576009",
+  "package_lock_sha256": "7d24032002d08a9047958429e036d583f013e28783647c650dea22a6dcaf2859",
+  "environment": {
+    "os": "Ubuntu 26.04",
+    "architecture": "amd64",
+    "vcpus": 4,
+    "memory_gib": 8
+  },
+  "versions": {
+    "node24": "24.22.1",
+    "node26": "26.12.1",
+    "bun": "1.4.3",
+    "npm_installer_for_both_node_versions": "11.19.1"
+  },
+  "full_suite": {
+    "baseline": "npm run test:agent-trust && npm run test:risk-policy && vp run -r test",
+    "optimized": "npm run test:agent-trust && npm run test:risk-policy && vp run --filter './packages/*' --filter './sdks/*' --fail-if-no-match test",
+    "trials": [
+      {"variant":"exclude-root","trial":-1,"warmup":true,"wall_seconds":38.27107794199998,"cpu_seconds":93.88657699999999,"exit":0,"valid":true,"policy_counts":[99,50],"workspace_counts":[153,422,741],"log":"test-script-exclude-root--1.log","load":[2.3251953125,0.85595703125,0.3173828125]},
+      {"variant":"baseline","trial":-1,"warmup":true,"wall_seconds":58.12775528599997,"cpu_seconds":141.072635,"exit":0,"valid":true,"policy_counts":[99,50,99,50],"workspace_counts":[153,422,741],"log":"test-script-baseline--1.log","load":[3.8671875,1.56884765625,0.5986328125]},
+      {"variant":"baseline","trial":0,"warmup":false,"wall_seconds":58.64475149399999,"cpu_seconds":142.60920399999995,"exit":0,"valid":true,"policy_counts":[99,50,99,50],"workspace_counts":[153,422,741],"log":"test-script-baseline-0.log","load":[4.41015625,2.15087890625,0.86279296875]},
+      {"variant":"exclude-root","trial":0,"warmup":false,"wall_seconds":38.46311178100001,"cpu_seconds":94.67327200000003,"exit":0,"valid":true,"policy_counts":[99,50],"workspace_counts":[153,422,741],"log":"test-script-exclude-root-0.log","load":[4.46240234375,2.392578125,0.99169921875]},
+      {"variant":"exclude-root","trial":1,"warmup":false,"wall_seconds":37.522313638000014,"cpu_seconds":92.37219099999999,"exit":0,"valid":true,"policy_counts":[99,50],"workspace_counts":[153,422,741],"log":"test-script-exclude-root-1.log","load":[4.40869140625,2.615234375,1.125]},
+      {"variant":"baseline","trial":1,"warmup":false,"wall_seconds":58.984743278999986,"cpu_seconds":143.360596,"exit":0,"valid":true,"policy_counts":[99,50,99,50],"workspace_counts":[153,422,741],"log":"test-script-baseline-1.log","load":[4.3955078125,2.9931640625,1.3515625]},
+      {"variant":"baseline","trial":2,"warmup":false,"wall_seconds":58.84471857599999,"cpu_seconds":143.84812200000002,"exit":0,"valid":true,"policy_counts":[99,50,99,50],"workspace_counts":[153,422,741],"log":"test-script-baseline-2.log","load":[4.55810546875,3.28466796875,1.5458984375]},
+      {"variant":"exclude-root","trial":2,"warmup":false,"wall_seconds":39.81200339899999,"cpu_seconds":97.75699599999992,"exit":0,"valid":true,"policy_counts":[99,50],"workspace_counts":[153,422,741],"log":"test-script-exclude-root-2.log","load":[4.38525390625,3.3916015625,1.6552734375]},
+      {"variant":"exclude-root","trial":3,"warmup":false,"wall_seconds":39.03207674499993,"cpu_seconds":95.86013399999996,"exit":0,"valid":true,"policy_counts":[99,50],"workspace_counts":[153,422,741],"log":"test-script-exclude-root-3.log","load":[4.2958984375,3.47216796875,1.7548828125]},
+      {"variant":"baseline","trial":3,"warmup":false,"wall_seconds":59.56482565800002,"cpu_seconds":145.15509099999977,"exit":0,"valid":true,"policy_counts":[99,50,99,50],"workspace_counts":[153,422,741],"log":"test-script-baseline-3.log","load":[3.94873046875,3.5361328125,1.88525390625]},
+      {"variant":"baseline","trial":4,"warmup":false,"wall_seconds":58.947283752999965,"cpu_seconds":142.63705200000018,"exit":0,"valid":true,"policy_counts":[99,50,99,50],"workspace_counts":[153,422,741],"log":"test-script-baseline-4.log","load":[4.6005859375,3.8046875,2.08251953125]},
+      {"variant":"exclude-root","trial":4,"warmup":false,"wall_seconds":38.159625474999984,"cpu_seconds":93.801849,"exit":0,"valid":true,"policy_counts":[99,50],"workspace_counts":[153,422,741],"log":"test-script-exclude-root-4.log","load":[4.05419921875,3.7490234375,2.12744140625]}
+    ]
+  },
+  "runtime": {
+    "measured_trials_per_group": 5,
+    "warmups_per_group": 1,
+    "cli_launches_per_sample": 10,
+    "mcp_iterations_per_sample": 30,
+    "source_state_unchanged": true,
+    "summary": [
+      {"runtime":"node24","workload":"sdk","measured_trials":5,"failed_samples_including_warmup":0,"valid_comparison":true,"wall_seconds":{"median":3.5899717589999227,"min":3.5862537289999636,"max":3.6127740880000374},"wall_seconds_per_launch":{"median":3.5899717589999227,"min":3.5862537289999636,"max":3.6127740880000374},"child_user_cpu_seconds":{"median":4.754745999999997,"min":4.654930999999998,"max":4.955021999999998},"child_system_cpu_seconds":{"median":0.5838040000000007,"min":0.4624289999999993,"max":0.5978010000000005}},
+      {"runtime":"node26","workload":"sdk","measured_trials":5,"failed_samples_including_warmup":0,"valid_comparison":true,"wall_seconds":{"median":3.5796832019999556,"min":3.5593353230000275,"max":3.625261767999973},"wall_seconds_per_launch":{"median":3.5796832019999556,"min":3.5593353230000275,"max":3.625261767999973},"child_user_cpu_seconds":{"median":4.557842000000001,"min":4.507051000000004,"max":4.779060000000001},"child_system_cpu_seconds":{"median":0.5514099999999997,"min":0.5220889999999994,"max":0.5691579999999998}},
+      {"runtime":"bun","workload":"sdk","measured_trials":5,"failed_samples_including_warmup":0,"valid_comparison":true,"wall_seconds":{"median":3.4395918920000668,"min":3.430524954999896,"max":3.44245687800003},"wall_seconds_per_launch":{"median":3.4395918920000668,"min":3.430524954999896,"max":3.44245687800003},"child_user_cpu_seconds":{"median":4.296611999999996,"min":4.264636000000003,"max":4.4242740000000005},"child_system_cpu_seconds":{"median":0.43811199999999983,"min":0.40660200000000035,"max":0.4575969999999998}},
+      {"runtime":"node24","workload":"cli","measured_trials":5,"failed_samples_including_warmup":0,"valid_comparison":true,"wall_seconds":{"median":0.7320854070001133,"min":0.7126962590000403,"max":0.76908924199995},"wall_seconds_per_launch":{"median":0.07320854070001133,"min":0.07126962590000403,"max":0.076908924199995},"child_user_cpu_seconds":{"median":0.7187490000000025,"min":0.6939729999999997,"max":0.748974000000004},"child_system_cpu_seconds":{"median":0.11633800000000072,"min":0.09594500000000039,"max":0.15281599999999962}},
+      {"runtime":"node26","workload":"cli","measured_trials":5,"failed_samples_including_warmup":0,"valid_comparison":true,"wall_seconds":{"median":0.7101925769998161,"min":0.69808174100001,"max":0.7181074470000794},"wall_seconds_per_launch":{"median":0.0710192576999816,"min":0.069808174100001,"max":0.07181074470000795},"child_user_cpu_seconds":{"median":0.6854169999999868,"min":0.662549999999996,"max":0.7218659999999915},"child_system_cpu_seconds":{"median":0.12054599999999915,"min":0.09808699999999959,"max":0.13737199999999916}},
+      {"runtime":"bun","workload":"cli","measured_trials":5,"failed_samples_including_warmup":0,"valid_comparison":true,"wall_seconds":{"median":0.3408869540002115,"min":0.3318816749997495,"max":0.3531474490000619},"wall_seconds_per_launch":{"median":0.03408869540002115,"min":0.033188167499974955,"max":0.03531474490000619},"child_user_cpu_seconds":{"median":0.35803199999999435,"min":0.3360569999999967,"max":0.37386000000000763},"child_system_cpu_seconds":{"median":0.07227100000000064,"min":0.0643760000000011,"max":0.09362899999999996}},
+      {"runtime":"node24","workload":"mcp","measured_trials":5,"failed_samples_including_warmup":0,"valid_comparison":true,"wall_seconds":{"median":4.224597113999948,"min":4.108033674000012,"max":4.286980123000035},"wall_seconds_per_launch":{"median":4.224597113999948,"min":4.108033674000012,"max":4.286980123000035},"child_user_cpu_seconds":{"median":5.352181999999999,"min":5.0164450000000045,"max":5.564390000000003},"child_system_cpu_seconds":{"median":0.31995799999999974,"min":0.2606559999999991,"max":0.3453610000000005},"application_operation_ms":{"median":3558.7151719999997,"min":3470.537827,"max":3600.8245290000004}},
+      {"runtime":"node26","workload":"mcp","measured_trials":5,"failed_samples_including_warmup":0,"valid_comparison":true,"wall_seconds":{"median":3.973520805000021,"min":3.94727896400002,"max":4.053891561},"wall_seconds_per_launch":{"median":3.973520805000021,"min":3.94727896400002,"max":4.053891561},"child_user_cpu_seconds":{"median":4.790089999999992,"min":4.740763999999984,"max":5.148720999999995},"child_system_cpu_seconds":{"median":0.30020000000000024,"min":0.24035800000000052,"max":0.34278999999999904},"application_operation_ms":{"median":3357.2694300000003,"min":3332.1965010000004,"max":3433.684492}},
+      {"runtime":"bun","workload":"mcp","measured_trials":5,"failed_samples_including_warmup":0,"valid_comparison":true,"wall_seconds":{"median":3.644796614000029,"min":3.6160006750000093,"max":3.895433259000015},"wall_seconds_per_launch":{"median":3.644796614000029,"min":3.6160006750000093,"max":3.895433259000015},"child_user_cpu_seconds":{"median":5.202176000000009,"min":5.127289000000019,"max":5.459299999999999},"child_system_cpu_seconds":{"median":0.2698469999999986,"min":0.23616099999999918,"max":0.31426200000000115},"application_operation_ms":{"median":3269.868593,"min":3241.512909,"max":3473.634117}}
+    ]
+  },
+  "dependency_materialization": {
+    "scope": "Dependency materialization only; all lifecycle scripts disabled on every side. Validate every unique installed package name/version across root and workspace dependency directories, allowing physical deduplication. Logical dependency edges are checked separately. Cold means empty package cache; warm means populated cache with a fresh dependency tree. OS/network caches are not purged.",
+    "trials": [
+      {"runtime":"node24","trial":0,"cache":"cold","wall_seconds":5.235283846000129,"cpu_seconds":7.801809,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node24","trial":0,"cache":"warm","wall_seconds":3.9865906520001317,"cpu_seconds":6.365020000000001,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node26","trial":0,"cache":"cold","wall_seconds":5.026542816000074,"cpu_seconds":7.6091750000000005,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node26","trial":0,"cache":"warm","wall_seconds":3.87730795199991,"cpu_seconds":6.196531,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"bun","trial":0,"cache":"cold","wall_seconds":0.5177087839999786,"cpu_seconds":1.463512999999999,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"bun","trial":0,"cache":"warm","wall_seconds":0.16400332100010928,"cpu_seconds":0.112563999999999,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node26","trial":1,"cache":"cold","wall_seconds":4.825944070000105,"cpu_seconds":7.371805999999999,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node26","trial":1,"cache":"warm","wall_seconds":3.920756327000163,"cpu_seconds":6.381016000000001,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"bun","trial":1,"cache":"cold","wall_seconds":0.48906513399992946,"cpu_seconds":1.4436549999999997,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"bun","trial":1,"cache":"warm","wall_seconds":0.16393149900000026,"cpu_seconds":0.11513799999999463,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node24","trial":1,"cache":"cold","wall_seconds":5.124973690999923,"cpu_seconds":7.835192000000003,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node24","trial":1,"cache":"warm","wall_seconds":3.9735640149999654,"cpu_seconds":6.4105409999999985,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"bun","trial":2,"cache":"cold","wall_seconds":0.5190037810000376,"cpu_seconds":1.4729739999999971,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"bun","trial":2,"cache":"warm","wall_seconds":0.16416404599999623,"cpu_seconds":0.11236799999999647,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node24","trial":2,"cache":"cold","wall_seconds":5.226153631999978,"cpu_seconds":7.809231000000008,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node24","trial":2,"cache":"warm","wall_seconds":4.076069090999908,"cpu_seconds":6.383023999999992,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node26","trial":2,"cache":"cold","wall_seconds":4.978716028000008,"cpu_seconds":7.627870999999992,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node26","trial":2,"cache":"warm","wall_seconds":3.882715312999835,"cpu_seconds":6.306976000000002,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node24","trial":3,"cache":"cold","wall_seconds":5.130365698000105,"cpu_seconds":7.640432000000008,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node24","trial":3,"cache":"warm","wall_seconds":3.927774139999883,"cpu_seconds":6.336235000000006,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node26","trial":3,"cache":"cold","wall_seconds":5.030772419999948,"cpu_seconds":7.5827170000000095,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node26","trial":3,"cache":"warm","wall_seconds":3.975075241000013,"cpu_seconds":6.373513000000003,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"bun","trial":3,"cache":"cold","wall_seconds":0.5152579260000039,"cpu_seconds":1.4932739999999924,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"bun","trial":3,"cache":"warm","wall_seconds":0.16412168399983784,"cpu_seconds":0.11772499999999297,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node26","trial":4,"cache":"cold","wall_seconds":5.025904547999971,"cpu_seconds":7.666774000000004,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node26","trial":4,"cache":"warm","wall_seconds":3.8836123250000583,"cpu_seconds":6.263766000000018,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"bun","trial":4,"cache":"cold","wall_seconds":0.5694878110000445,"cpu_seconds":1.4950630000000018,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"bun","trial":4,"cache":"warm","wall_seconds":0.16422048999993422,"cpu_seconds":0.11636300000000688,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node24","trial":4,"cache":"cold","wall_seconds":5.22607038000001,"cpu_seconds":7.943358999999994,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true},
+      {"runtime":"node24","trial":4,"cache":"warm","wall_seconds":4.026078918999929,"cpu_seconds":6.48883,"exit":0,"valid":true,"lock_unchanged":true,"same_versions_as_npm24":true}
+    ]
+  },
+  "dependency_graph": {
+    "logical_edges_identical": true,
+    "npm_edges": 577,
+    "bun_edges": 577,
+    "npm_only": [],
+    "bun_only": [],
+    "npm_lock_unchanged": true,
+    "scope": "Untimed Node-style dependency resolution edges for every installed package plus root and workspace manifests; physical duplicate copies ignored"
+  }
+}
