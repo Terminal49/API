@@ -16,52 +16,45 @@ on:
       - 'tools/generate-postman.mjs'
       - 'tools/postman-generation.test.mjs'
 
-jobs:
-  generate-postman-collection:
-    runs-on: ${{ (startsWith(vars.CI_RUNNER_SMALL, 'blacksmith-') && vars.CI_RUNNER_SMALL) || 'blacksmith-2vcpu-ubuntu-2404' }}
-    permissions:
-      contents: write # Needed for committing back to the repo
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Full history for proper diffing
+permissions:
+  contents: read
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
+jobs:
+  validate-postman-collection:
+    runs-on: ${{ (startsWith(vars.CI_RUNNER_SMALL, 'blacksmith-') && vars.CI_RUNNER_SMALL) || 'blacksmith-2vcpu-ubuntu-2404' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: .tool-versions
+      - run: npm ci
+      - run: node tools/generate-postman.mjs
+      - run: node --test tools/postman-generation.test.mjs
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Postman Collection
-        run: node tools/generate-postman.mjs
-
-      - name: Test Postman generation
-        run: node --test tools/postman-generation.test.mjs
-
-      # Only main commits the collection. The generator is deterministic, so a
-      # diff here is a real spec change, and a push made with GITHUB_TOKEN does
-      # not start another workflow run.
-      - name: Commit changes
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        id: commit
+  publish-postman-collection:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate-postman-collection
+    runs-on: ${{ (startsWith(vars.CI_RUNNER_SMALL, 'blacksmith-') && vars.CI_RUNNER_SMALL) || 'blacksmith-2vcpu-ubuntu-2404' }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .tool-versions
+      - run: npm ci
+      - run: node tools/generate-postman.mjs
+      - run: node --test tools/postman-generation.test.mjs
+      - name: Commit collection
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add Terminal49-API.postman_collection.json
-          if git diff --quiet --cached; then
-            echo "No changes detected in generated collection."
-            echo "committed=false" >> $GITHUB_OUTPUT
-          else
-            echo "Generated collection changed. Committing..."
-            git commit -m "chore: Auto-generate Postman collection from openapi.json"
-            echo "committed=true" >> $GITHUB_OUTPUT
+          if ! git diff --quiet --cached; then
+            git commit -m "chore: regenerate Postman collection"
+            git push origin HEAD:main
           fi
-
-      - name: Push changes
-        if: steps.commit.outputs.committed == 'true'
-        run: |
-          echo "Pushing updated collection to ${{ github.ref_name }}..."
-          git push origin HEAD:${{ github.ref_name }}
