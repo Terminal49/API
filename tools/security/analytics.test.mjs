@@ -50,7 +50,13 @@ test('docs source middleware removes navigation data added by the analytics SDK'
   const payload = {
     obj: {
       type: 'page',
-      context: { page: { ...page } },
+      context: {
+        page: { ...page },
+        referrer: {
+          type: 'link',
+          url: 'https://portal.example.test/private/account?key=PRIVATE#PRIVATE',
+        },
+      },
       properties: { ...page },
     },
   };
@@ -72,4 +78,5 @@ test('docs source middleware removes navigation data added by the analytics SDK'
     payload.obj.context.page.referrer,
     'https://portal.example.test',
   );
+  assert.equal(payload.obj.context.referrer.url, 'https://portal.example.test');
 });

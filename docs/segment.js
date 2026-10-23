@@ -130,6 +130,11 @@
     var data = event.payload.obj;
     if (data.context) {
       minimizePage(data.context.page);
+      if (typeof data.context.referrer === 'string') {
+        data.context.referrer = referrerOrigin(data.context.referrer);
+      } else if (data.context.referrer) {
+        data.context.referrer.url = referrerOrigin(data.context.referrer.url);
+      }
       delete data.context.campaign;
     }
     if (data.type === 'page') minimizePage(data.properties);
