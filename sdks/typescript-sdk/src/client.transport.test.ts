@@ -337,9 +337,14 @@ describe('Terminal49Client transport resilience', () => {
 });
 
 describe('SDK cancellation boundaries', () => {
-  it.each(['typed', 'manual'] as const)(
-    'times out %s body consumption',
-    async (kind) => {
+  it.each([
+    ['typed', 200],
+    ['manual', 200],
+    ['typed', 503],
+    ['manual', 503],
+  ] as const)(
+    'times out %s status %i body consumption',
+    async (kind, status) => {
       vi.useFakeTimers();
       try {
         const cancel = vi.fn();
@@ -350,6 +355,7 @@ describe('SDK cancellation boundaries', () => {
           timeoutMs: 50,
           fetchImpl: async () =>
             new Response(new ReadableStream({ cancel }), {
+              status,
               headers: { 'content-type': 'application/json' },
             }),
         });
