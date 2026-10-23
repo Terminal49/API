@@ -139,19 +139,20 @@ npm run smoke
 
 ## Fixtures
 
-Generate sanitized, production-based fixtures for tests:
+Generate deterministic, synthetic fixtures for tests without an API key or network access:
+
 ```bash
 cd sdks/typescript-sdk
-export T49_API_TOKEN=your_token
-export T49_API_BASE_URL=https://api.terminal49.com/v2
 npm run fixtures:generate
 ```
 
-This writes JSON:API fixtures to `src/fixtures/` with redacted IDs and numbers.
-Numeric identifiers keep their original prefix while the last few characters are
-obfuscated to preserve shape without exposing real values.
-List endpoints are captured without `include` for performance guidance. Single-resource
-fixtures include both base and `include` variants where supported.
+The generator authors JSON:API resources in `scripts/generate-fixtures.mjs` and
+writes them to `src/fixtures/`. All shipment identifiers, aliases, names, references,
+and URLs are invented. Edit the synthetic source, then regenerate the fixtures.
+Do not capture customer responses into public test files.
+
+Base and included variants cover relationship resolution. Separate fixtures cover
+pickup facilities, route ports and vessels, credentials, and trade intelligence.
 
 ## Documentation generation
 

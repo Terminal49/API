@@ -1,0 +1,87 @@
+{
+  "ok": true,
+  "data": {
+    "ports": [
+      {
+        "locationId": "route-port-1",
+        "name": "Example Route Port 1",
+        "countryCode": "ZZ",
+        "label": "POL",
+        "sequence": 1,
+        "coordinates": {
+          "longitude": 20,
+          "latitude": 10
+        },
+        "inbound": {
+          "eta": null,
+          "ata": null
+        },
+        "outbound": {
+          "etd": null,
+          "atd": "2026-01-10T12:00:00Z"
+        }
+      },
+      {
+        "locationId": "route-port-2",
+        "name": "Example Route Port 2",
+        "countryCode": "ZZ",
+        "label": "TS1",
+        "sequence": 2,
+        "coordinates": {
+          "longitude": 30,
+          "latitude": 20
+        },
+        "inbound": {
+          "eta": null,
+          "ata": "2026-01-10T12:00:00Z"
+        },
+        "outbound": {
+          "etd": null,
+          "atd": "2026-01-10T12:00:00Z"
+        }
+      },
+      {
+        "locationId": "route-port-3",
+        "name": "Example Route Port 3",
+        "countryCode": "ZZ",
+        "label": "POD",
+        "sequence": 3,
+        "coordinates": {
+          "longitude": 40,
+          "latitude": 30
+        },
+        "inbound": {
+          "eta": "2026-01-10T12:00:00Z",
+          "ata": null
+        },
+        "outbound": {
+          "etd": null,
+          "atd": null
+        }
+      }
+    ],
+    "currentVessel": {
+      "name": "EXAMPLE VESSEL",
+      "imo": "0000001",
+      "voyage": "SYNTH01",
+      "coordinates": {
+        "longitude": 35,
+        "latitude": 25
+      },
+      "heading": 90,
+      "speed": 12,
+      "positionAt": "2026-01-10T12:00:00Z",
+      "departurePort": {
+        "locationId": "route-port-2",
+        "name": "Example Route Port 2",
+        "label": "TS1"
+      },
+      "arrivalPort": {
+        "locationId": "route-port-3",
+        "name": "Example Route Port 3",
+        "label": "POD"
+      }
+    },
+    "totalPorts": 3
+  }
+}

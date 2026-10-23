@@ -15,7 +15,7 @@ export async function readSuccessBody<T = unknown>(
 ): Promise<T | string | undefined> {
   if (response.status === 204) return undefined;
 
-  const text = await response.clone().text();
+  const text = await response.text();
   if (text === '') return undefined;
 
   try {
