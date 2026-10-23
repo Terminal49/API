@@ -113,16 +113,22 @@ function parseCookies(header) {
       .split(';')
       .map((item) => item.trim())
       .filter(Boolean)
-      .map((item) => {
+      .flatMap((item) => {
         const separator = item.indexOf('=');
         if (separator === -1) {
-          return [item, ''];
+          return [[item, '']];
         }
 
-        return [
-          decodeURIComponent(item.slice(0, separator)),
-          decodeURIComponent(item.slice(separator + 1)),
-        ];
+        try {
+          return [
+            [
+              decodeURIComponent(item.slice(0, separator)),
+              decodeURIComponent(item.slice(separator + 1)),
+            ],
+          ];
+        } catch {
+          return [];
+        }
       }),
   );
 }
@@ -135,6 +141,8 @@ function getSession(req, res) {
 
   if (!sessions.has(sessionId)) {
     sessions.set(sessionId, {
+      epoch: 0,
+      refreshInFlight: undefined,
       pendingStates: new Map(),
       tokenResponse: undefined,
       discovery: undefined,
@@ -546,14 +554,21 @@ function redactToken(value) {
 }
 
 function redactedTokenResponse(tokenResponse) {
-  if (!tokenResponse) {
-    return undefined;
+  if (Array.isArray(tokenResponse)) {
+    return tokenResponse.map(redactedTokenResponse);
+  }
+  if (!tokenResponse || typeof tokenResponse !== 'object') {
+    return tokenResponse;
   }
 
   return Object.fromEntries(
     Object.entries(tokenResponse).map(([key, value]) => [
       key,
-      key.endsWith('token') ? redactToken(value) : value,
+      key === 'client_secret'
+        ? '[redacted]'
+        : key.endsWith('token') && typeof value === 'string'
+          ? redactToken(value)
+          : redactedTokenResponse(value),
     ]),
   );
 }
@@ -975,8 +990,11 @@ function visibleSettings() {
 }
 
 async function handleAuthorize(res, session) {
+  const epoch = session.epoch;
   const discovery = await discoverOAuthMetadata();
+  assertSessionEpoch(session, epoch);
   const client = await resolveOAuthClient(discovery);
+  assertSessionEpoch(session, epoch);
   const state = randomUrlToken(32);
   const codeVerifier = randomUrlToken(64);
   const codeChallenge = base64Url(sha256(codeVerifier));
@@ -992,6 +1010,7 @@ async function handleAuthorize(res, session) {
 }
 
 async function handleCallback(url, res, session) {
+  const epoch = session.epoch;
   const error = url.searchParams.get('error');
   if (error) {
     const description = url.searchParams.get('error_description') || error;
@@ -1015,13 +1034,16 @@ async function handleCallback(url, res, session) {
   }
 
   const discovery = session.discovery ?? (await discoverOAuthMetadata());
+  assertSessionEpoch(session, epoch);
   const client = session.client ?? (await resolveOAuthClient(discovery));
+  assertSessionEpoch(session, epoch);
   const tokenResponse = await exchangeAuthorizationCode(
     discovery,
     client,
     code,
     pending.codeVerifier,
   );
+  assertSessionEpoch(session, epoch);
 
   session.discovery = discovery;
   session.client = client;
@@ -1031,13 +1053,40 @@ async function handleCallback(url, res, session) {
 }
 
 async function handleRefresh(res, session) {
+  if (session.refreshInFlight) {
+    const error = new Error(
+      'A refresh is already in progress for this session.',
+    );
+    error.statusCode = 409;
+    throw error;
+  }
+  const epoch = session.epoch;
+  session.refreshInFlight = refreshSession(session, epoch);
+  const inFlight = session.refreshInFlight;
+  try {
+    await inFlight;
+    assertSessionEpoch(session, epoch);
+    sendJson(res, 200, {
+      token: redactedTokenResponse(session.tokenResponse),
+      token_payload: decodeJwtPayload(session.tokenResponse.access_token),
+    });
+  } finally {
+    if (session.refreshInFlight === inFlight)
+      session.refreshInFlight = undefined;
+  }
+}
+
+async function refreshSession(session, epoch) {
   const discovery = session.discovery ?? (await discoverOAuthMetadata());
+  assertSessionEpoch(session, epoch);
   const client = session.client ?? (await resolveOAuthClient(discovery));
+  assertSessionEpoch(session, epoch);
   const tokenResponse = await refreshToken(
     discovery,
     client,
     session.tokenResponse,
   );
+  assertSessionEpoch(session, epoch);
 
   session.discovery = discovery;
   session.client = client;
@@ -1047,10 +1096,6 @@ async function handleRefresh(res, session) {
     refresh_token:
       tokenResponse.refresh_token ?? session.tokenResponse?.refresh_token,
   };
-  sendJson(res, 200, {
-    token: redactedTokenResponse(session.tokenResponse),
-    token_payload: decodeJwtPayload(session.tokenResponse.access_token),
-  });
 }
 
 async function handleMcpCall(req, res, session) {
@@ -1062,18 +1107,33 @@ async function handleMcpCall(req, res, session) {
 }
 
 function clearSession(session) {
+  session.epoch += 1;
+  session.refreshInFlight = undefined;
   session.pendingStates.clear();
   session.tokenResponse = undefined;
   session.discovery = undefined;
   session.client = undefined;
+  session.lastError = undefined;
   session.messages.push('Session cleared.');
 }
 
-async function route(req, res) {
-  const session = getSession(req, res);
-  const url = new URL(req.url, settings.baseUrl);
+function assertSessionEpoch(session, epoch) {
+  if (session.epoch !== epoch) {
+    const error = new Error(
+      'Session was cleared while the request was in flight.',
+    );
+    error.statusCode = 409;
+    throw error;
+  }
+}
 
+async function route(req, res) {
+  let session;
+  let epoch;
   try {
+    session = getSession(req, res);
+    epoch = session.epoch;
+    const url = new URL(req.url, settings.baseUrl);
     if (req.method === 'GET' && url.pathname === '/') {
       sendHtml(res, 200, page(session));
       return;
@@ -1091,6 +1151,7 @@ async function route(req, res) {
 
     if (req.method === 'GET' && url.pathname === '/api/discovery') {
       const discovery = await discoverOAuthMetadata();
+      assertSessionEpoch(session, epoch);
       session.discovery = discovery;
       sendJson(res, 200, discovery);
       return;
@@ -1127,25 +1188,39 @@ async function route(req, res) {
     const payload = {
       error: error.message,
       status_code: error.statusCode,
-      payload: error.payload,
+      payload: redactedTokenResponse(error.payload),
     };
-    session.lastError = payload;
+    if (session && session.epoch === epoch) session.lastError = payload;
     console.error(
       JSON.stringify({ event: 'oauth_test_client.error', ...payload }),
     );
 
-    if (req.headers.accept?.includes('text/html')) {
+    if (
+      session &&
+      session.epoch === epoch &&
+      req.headers.accept?.includes('text/html')
+    ) {
       session.messages.push(error.message);
-      sendHtml(res, 500, page(session));
+      sendHtml(res, error.statusCode === 409 ? 409 : 500, page(session));
       return;
     }
 
-    sendJson(res, 500, payload);
+    sendJson(res, error.statusCode === 409 ? 409 : 500, payload);
   }
 }
 
 const server = createServer((req, res) => {
-  void route(req, res);
+  void route(req, res).catch(() => {
+    console.error(
+      JSON.stringify({ event: 'oauth_test_client.request_failed' }),
+    );
+    if (res.destroyed || res.writableEnded) return;
+    if (res.headersSent) {
+      res.destroy();
+      return;
+    }
+    sendJson(res, 500, { error: 'Request failed.' });
+  });
 });
 
 server.listen(settings.port, settings.host, () => {
