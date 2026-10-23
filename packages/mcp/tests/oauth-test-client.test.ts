@@ -47,9 +47,14 @@ async function startClient() {
     void (async () => {
       const path = req.url ?? '';
       requests.push(path);
+      let body = '';
+      for await (const chunk of req) body += chunk.toString();
+      const form = new URLSearchParams(body);
       if (blocked?.path === path) {
-        blocked.reached.resolve();
-        await blocked.release.promise;
+        const gate = blocked;
+        blocked = undefined;
+        gate.reached.resolve();
+        await gate.release.promise;
       }
       res.setHeader('Content-Type', 'application/json');
       if (path === '/resource-metadata') {
@@ -90,8 +95,12 @@ async function startClient() {
                   nested: { client_secret: 'dummy-error-secret' },
                 }
               : {
-                  access_token: 'dummy-access-token',
-                  refresh_token: 'dummy-refresh-token',
+                  access_token: `dummy.${Buffer.from(
+                    JSON.stringify({
+                      sub: form.get('code') ?? form.get('refresh_token'),
+                    }),
+                  ).toString('base64url')}.signature`,
+                  refresh_token: `dummy-refresh-${form.get('code') ?? form.get('refresh_token')}`,
                   token_type: 'Bearer',
                 },
           ),
@@ -186,14 +195,16 @@ async function startClient() {
     login,
     requests,
     output: () => output,
-    rejectToken: () => {
-      rejectToken = true;
+    rejectToken: (value = true) => {
+      rejectToken = value;
     },
     block(path: string) {
       blocked = { path, reached: deferred(), release: deferred() };
+      const gate = blocked;
+      cleanup.push(async () => gate.release.resolve());
       return {
-        reached: blocked.reached.promise,
-        release: blocked.release.resolve,
+        reached: gate.reached.promise,
+        release: gate.release.resolve,
       };
     },
   };
@@ -248,6 +259,101 @@ describe('local OAuth test client', () => {
     gate.release();
     expect((await first).status).toBe(200);
     expect(client.requests.filter((path) => path === '/token')).toHaveLength(2);
+  });
+
+  it('keeps a new login when an older refresh finishes afterward', async () => {
+    const client = await startClient();
+    await client.login();
+    const gate = client.block('/token');
+    const refresh = client.request('/api/refresh', 'POST');
+    await gate.reached;
+    const state = await client.authorize();
+    expect(
+      (await client.request(`/callback?code=dummy-new-login&state=${state}`))
+        .status,
+    ).toBe(302);
+    gate.release();
+    expect.soft((await refresh).status).toBe(409);
+    const page = await (await client.request('/')).text();
+    expect(page).toContain('dummy-new-login');
+    expect(page).not.toContain('dummy-refresh-dummy-code');
+  });
+
+  it('keeps a new login when its callback finishes after an older refresh', async () => {
+    const client = await startClient();
+    await client.login();
+    const state = await client.authorize();
+    const gate = client.block('/token');
+    const callback = client.request(
+      `/callback?code=dummy-new-login&state=${state}`,
+    );
+    await gate.reached;
+    expect((await client.request('/api/refresh', 'POST')).status).toBe(200);
+    gate.release();
+    expect((await callback).status).toBe(302);
+    expect(await (await client.request('/')).text()).toContain(
+      'dummy-new-login',
+    );
+  });
+
+  it('refreshes a normal login and preserves its token in the session', async () => {
+    const client = await startClient();
+    await client.login();
+    expect(await (await client.request('/')).text()).toContain('dummy-code');
+    const response = await client.request('/api/refresh', 'POST');
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      token_payload: { sub: 'dummy-refresh-dummy-code' },
+    });
+    expect(await (await client.request('/')).text()).toContain(
+      'dummy-refresh-dummy-code',
+    );
+  });
+
+  it('allows the new login to refresh while an old refresh is still pending', async () => {
+    const client = await startClient();
+    await client.login();
+    const oldGate = client.block('/token');
+    const oldRefresh = client.request('/api/refresh', 'POST');
+    await oldGate.reached;
+    await client.login();
+    const newGate = client.block('/token');
+    const newRefresh = client.request('/api/refresh', 'POST');
+    const started = await Promise.race([
+      newGate.reached.then(() => 'started'),
+      newRefresh.then((response) => response.status),
+    ]);
+    oldGate.release();
+    const oldResponse = await oldRefresh;
+    expect(started).toBe('started');
+    expect(oldResponse.status).toBe(409);
+    expect((await client.request('/api/refresh', 'POST')).status).toBe(409);
+    newGate.release();
+    expect((await newRefresh).status).toBe(200);
+  });
+
+  it('preserves a pending refresh when a new login fails', async () => {
+    const client = await startClient();
+    await client.login();
+    const gate = client.block('/token');
+    const refresh = client.request('/api/refresh', 'POST');
+    await gate.reached;
+    const state = await client.authorize();
+    client.rejectToken();
+    expect(
+      (await client.request(`/callback?code=dummy-failed-login&state=${state}`))
+        .status,
+    ).toBe(500);
+    client.rejectToken(false);
+    gate.release();
+    const response = await refresh;
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      token_payload: { sub: 'dummy-refresh-dummy-code' },
+    });
+    expect(await (await client.request('/')).text()).not.toContain(
+      'dummy-failed-login',
+    );
   });
 
   it.each([
