@@ -44,6 +44,34 @@ jobs:
       - name: Build every workspace
         run: npx vp run build
 
+  node26-compat:
+    name: Node 26 compatibility
+    runs-on: ${{ (startsWith(vars.CI_RUNNER, 'blacksmith-') && vars.CI_RUNNER) || 'blacksmith-4vcpu-ubuntu-2404' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '26.12.1'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Check agent trust guards
+        run: node bin/check-agent-trust.mjs
+      - name: Check root and every workspace
+        run: npx --no-install vp run check
+      - name: Build every workspace
+        run: npx --no-install vp run build
+      - name: Test policy and every workspace
+        run: npm test
+      - name: Check generated OpenAPI artifacts
+        run: node bin/check-openapi-types.mjs
+      - name: Smoke all supported MCP protocols
+        run: |
+          for version in 2026-07-28 2025-11-25 2025-06-18 2025-03-26 2024-11-05 2024-10-07; do
+            MCP_PROTOCOL_VERSION="$version" npm run test:protocol --workspace @terminal49/mcp
+          done
+
   # Consumer compatibility: the SDK on every supported Node version. npm ci
   # from the SDK directory installs from the root workspace lockfile.
   sdk:
