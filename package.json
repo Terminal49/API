@@ -16,7 +16,7 @@
     "check": "vp check && npm run build --workspace @terminal49/sdk && npm run type-check:api && vp run -r type-check",
     "format": "vp fmt --write api packages sdks",
     "lint:api": "vp lint api && vp fmt --check api",
-    "test": "npm run test:agent-trust && npm run test:risk-policy && vp run -r test",
+    "test": "npm run test:agent-trust && npm run test:risk-policy && vp run --filter './packages/*' --filter './sdks/*' --fail-if-no-match test",
     "test:coverage": "node --test tools/generate-coverage.test.mjs tools/generate-rail-terminals.test.mjs tools/verify-deployed-coverage.test.mjs && node tools/generate-coverage.mjs --check && node tools/generate-rail-terminals.mjs --check",
     "test:agent-trust": "node --test bin/check-agent-trust.test.mjs bin/check-openapi-types.test.mjs",
     "test:risk-policy": "node --test scripts/ci/*.test.mjs",
