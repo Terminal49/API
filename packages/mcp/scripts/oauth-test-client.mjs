@@ -1045,6 +1045,8 @@ async function handleCallback(url, res, session) {
   );
   assertSessionEpoch(session, epoch);
 
+  session.epoch += 1;
+  session.refreshInFlight = undefined;
   session.discovery = discovery;
   session.client = client;
   session.tokenResponse = tokenResponse;
@@ -1119,9 +1121,7 @@ function clearSession(session) {
 
 function assertSessionEpoch(session, epoch) {
   if (session.epoch !== epoch) {
-    const error = new Error(
-      'Session was cleared while the request was in flight.',
-    );
+    const error = new Error('Session changed while the request was in flight.');
     error.statusCode = 409;
     throw error;
   }
