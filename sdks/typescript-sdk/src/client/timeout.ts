@@ -1,6 +1,5 @@
 import { TimeoutError } from './errors.js';
 
-/** Bound each fetch attempt, including response consumption, by the configured deadline. */
 export function withTimeout(
   fetchImpl: typeof fetch,
   timeoutMs: number,
@@ -55,7 +54,6 @@ export function withTimeout(
           controller.signal.addEventListener('abort', onAbort, { once: true });
           if (controller.signal.aborted) onAbort();
           else {
-            // The reader remains demand-driven so callers retain streaming and cancellation.
             finishBody = dispose;
           }
         },
