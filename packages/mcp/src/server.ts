@@ -1826,11 +1826,10 @@ export function createTerminal49McpServer(
           ),
         }),
       },
-      async ({ query, limit }) =>
-        executeSearchDocs(
-          { query, limit },
-          { assistantApiKey: process.env.MINTLIFY_ASSISTANT_API_KEY },
-        ),
+      async ({ query, limit }, context) =>
+        executeSearchDocs({ query, limit }, context, {
+          assistantApiKey: process.env.MINTLIFY_ASSISTANT_API_KEY,
+        }),
     ),
     whoami: tool(
       {
