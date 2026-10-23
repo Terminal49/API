@@ -16,12 +16,13 @@
     "check": "vp check && npm run build --workspace @terminal49/sdk && npm run type-check:api && vp run -r type-check",
     "format": "vp fmt --write api packages sdks",
     "lint:api": "vp lint api && vp fmt --check api",
-    "test": "npm run test:agent-trust && npm run test:risk-policy && vp run -r test",
+    "test": "npm run test:security && npm run test:agent-trust && npm run test:risk-policy && vp run -r test",
     "test:coverage": "node --test tools/generate-coverage.test.mjs tools/generate-rail-terminals.test.mjs tools/verify-deployed-coverage.test.mjs && node tools/generate-coverage.mjs --check && node tools/generate-rail-terminals.mjs --check",
     "test:agent-trust": "node --test bin/check-agent-trust.test.mjs bin/check-openapi-types.test.mjs",
     "test:risk-policy": "node --test scripts/ci/*.test.mjs",
     "type-check:api": "tsc --noEmit -p tsconfig.json",
-    "sdk:docs": "npm run docs --workspace @terminal49/sdk"
+    "sdk:docs": "npm run docs --workspace @terminal49/sdk",
+    "test:security": "node --test tools/security/*.test.mjs && npm run test:fixtures --workspace @terminal49/sdk"
   },
   "devDependencies": {
     "@oxlint/plugins": "1.88.0",
