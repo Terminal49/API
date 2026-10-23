@@ -1,0 +1,7 @@
+{
+  "ok": false,
+  "error": {
+    "code": "UPSTREAM_ERROR",
+    "message": "Synthetic map unavailable"
+  }
+}

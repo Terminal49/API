@@ -120,25 +120,25 @@ describe('Terminal49Client mapping helpers', () => {
       fetchImpl,
     });
 
-    const byName = (await client.listShippingLines('Hapag', {
+    const byName = (await client.listShippingLines('Ocean', {
       format: 'mapped',
     })) as any[];
-    const byAlternativeScac = (await client.shippingLines.list('medu', {
+    const byAlternativeScac = (await client.shippingLines.list('syna', {
       format: 'mapped',
     })) as any[];
-    const byScac = (await client.shippingLines.list('hlcu', {
+    const byScac = (await client.shippingLines.list('synu', {
       format: 'mapped',
     })) as any[];
-    const byShortName = (await client.shippingLines.list('culines', {
+    const byShortName = (await client.shippingLines.list('coastal', {
       format: 'mapped',
     })) as any[];
-    const raw = await client.listShippingLines('hapag');
+    const raw = await client.listShippingLines('ocean');
 
-    expect(byName.map((line) => line.scac)).toEqual(['HLCU']);
-    expect(byAlternativeScac.map((line) => line.scac)).toEqual(['MSCU']);
-    expect(byScac.map((line) => line.scac)).toEqual(['HLCU']);
-    expect(byShortName.map((line) => line.scac)).toEqual(['CULU']);
-    expect(raw.data.map((line: any) => line.attributes.scac)).toEqual(['HLCU']);
+    expect(byName.map((line) => line.scac)).toEqual(['SYNU']);
+    expect(byAlternativeScac.map((line) => line.scac)).toEqual(['SYNU']);
+    expect(byScac.map((line) => line.scac)).toEqual(['SYNU']);
+    expect(byShortName.map((line) => line.scac)).toEqual(['SYCU']);
+    expect(raw.data.map((line: any) => line.attributes.scac)).toEqual(['SYNU']);
     expect(raw.links).toEqual(fixture.links);
     expect(calls.map((call) => call.url.search)).toEqual(['', '', '', '', '']);
   });
@@ -200,15 +200,15 @@ describe('Terminal49Client mapping helpers', () => {
     expect(result).toMatchObject({
       id: 'tracking_request-1',
       requestType: 'bill_of_lading',
-      requestNumber: 'HLCUSEL251063157',
+      requestNumber: 'SYNTHBOL000001',
       status: 'created',
-      scac: 'HLCU',
-      refNumbers: [],
+      scac: 'SYNU',
+      refNumbers: ['SYNTHREF000001'],
     });
     expect(result.shipment).toEqual({
       id: 'shipment-1',
-      billOfLading: 'HLCUSEL251063ad5',
-      shippingLineScac: 'HLCU',
+      billOfLading: 'SYNTHBOL000001',
+      shippingLineScac: 'SYNU',
     });
   });
 
@@ -231,8 +231,8 @@ describe('Terminal49Client mapping helpers', () => {
     expect(result.items.map((item: any) => item.shipment)).toEqual([
       {
         id: 'shipment-1',
-        billOfLading: 'HLCUSEL251063ad5',
-        shippingLineScac: 'HLCU',
+        billOfLading: 'SYNTHBOL000001',
+        shippingLineScac: 'SYNU',
       },
     ]);
   });
@@ -483,7 +483,7 @@ describe('Terminal49Client mapping helpers', () => {
     });
 
     expect(withContainers.containers).toEqual([
-      { id: 'container-1', number: 'RMCU74210c6' },
+      { id: 'container-1', number: 'SYNX0000001' },
     ]);
     expect(withoutContainers.items[0].containers).toEqual([
       { id: 'container-1' },
@@ -612,7 +612,7 @@ describe('Terminal49Client mapping helpers', () => {
 
     const expected = {
       id: 'container-1',
-      number: 'RMCU74210c6',
+      number: 'SYNX0000001',
       currentStatus: 'picked_up',
       equipment: expect.objectContaining({ type: 'tank' }),
       shipment: expect.objectContaining({ id: 'shipment-1' }),
@@ -803,52 +803,52 @@ describe('Terminal49Client mapping helpers', () => {
     expect(result).toEqual({
       ports: [
         {
-          locationId: 'c5adae24-6fd4-4720-8813-976cf206feb1',
-          name: 'Laem Chabang',
-          countryCode: 'TH',
+          locationId: 'route-port-1',
+          name: 'Example Route Port 1',
+          countryCode: 'ZZ',
           label: 'POL',
           sequence: 1,
-          coordinates: { longitude: 100.896831042, latitude: 13.065302386 },
+          coordinates: { longitude: 20, latitude: 10 },
           inbound: { eta: null, ata: null },
-          outbound: { etd: null, atd: '2025-11-08T00:44:52Z' },
+          outbound: { etd: null, atd: '2026-01-10T12:00:00Z' },
         },
         {
-          locationId: 'ed64d446-9098-420c-ab08-c127e62509fe',
-          name: 'Xiamen',
-          countryCode: 'CN',
+          locationId: 'route-port-2',
+          name: 'Example Route Port 2',
+          countryCode: 'ZZ',
           label: 'TS1',
           sequence: 2,
-          coordinates: { longitude: 118.0293, latitude: 24.50318 },
-          inbound: { eta: null, ata: '2025-11-15T16:00:00Z' },
-          outbound: { etd: null, atd: '2025-11-19T16:00:00Z' },
+          coordinates: { longitude: 30, latitude: 20 },
+          inbound: { eta: null, ata: '2026-01-10T12:00:00Z' },
+          outbound: { etd: null, atd: '2026-01-10T12:00:00Z' },
         },
         {
-          locationId: '6129528d-846e-4571-ae16-b5328a4285ab',
-          name: 'Savannah',
-          countryCode: 'US',
+          locationId: 'route-port-3',
+          name: 'Example Route Port 3',
+          countryCode: 'ZZ',
           label: 'POD',
           sequence: 3,
-          coordinates: { longitude: -81.140998396, latitude: 32.128923976 },
-          inbound: { eta: '2025-12-31T05:00:00Z', ata: null },
+          coordinates: { longitude: 40, latitude: 30 },
+          inbound: { eta: '2026-01-10T12:00:00Z', ata: null },
           outbound: { etd: null, atd: null },
         },
       ],
       currentVessel: {
-        name: 'ZIM BANGKOK',
-        imo: '9936525',
-        voyage: '13E',
-        coordinates: { longitude: -131.128473333, latitude: 31.023033333 },
-        heading: 108,
-        speed: 21,
-        positionAt: '2025-12-11T11:46:03Z',
+        name: 'EXAMPLE VESSEL',
+        imo: '0000001',
+        voyage: 'SYNTH01',
+        coordinates: { longitude: 35, latitude: 25 },
+        heading: 90,
+        speed: 12,
+        positionAt: '2026-01-10T12:00:00Z',
         departurePort: {
-          locationId: 'ed64d446-9098-420c-ab08-c127e62509fe',
-          name: 'Xiamen',
+          locationId: 'route-port-2',
+          name: 'Example Route Port 2',
           label: 'TS1',
         },
         arrivalPort: {
-          locationId: '6129528d-846e-4571-ae16-b5328a4285ab',
-          name: 'Savannah',
+          locationId: 'route-port-3',
+          name: 'Example Route Port 3',
           label: 'POD',
         },
       },
@@ -1013,8 +1013,8 @@ describe('Terminal49Client mapping helpers', () => {
     expect(result.currentStatus).toBe(attrs.current_status);
 
     // pod terminal resolves as before.
-    expect(result.terminals?.podTerminal?.name).toBe('APM Terminals Pier 400');
-    expect(result.terminals?.podTerminal?.firmsCode).toBe('Y258');
+    expect(result.terminals?.podTerminal?.name).toBe('Example Ocean Terminal');
+    expect(result.terminals?.podTerminal?.firmsCode).toBe('EX01');
 
     // pickup_facility (the real inland/destination facility relationship) must
     // be surfaced; the legacy non-existent `destination_terminal` relationship
