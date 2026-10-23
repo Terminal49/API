@@ -79,7 +79,7 @@ describe('TradeIntelManager', () => {
       limit: 5,
     });
     expect(result).toEqual(body);
-    expect(result.results[0].company_name).toBe('EXAMPLE OUTDOOR SUPPLY');
+    expect(result.results[0].company_name).toBe('EXAMPLE FIXTURE SUPPLY');
   });
 
   it('searchCompanies sends an empty object when called without arguments', async () => {
@@ -100,13 +100,13 @@ describe('TradeIntelManager', () => {
     });
 
     const result = await client.tradeIntel.companyProfile({
-      company_name: 'EXAMPLE OUTDOOR SUPPLY',
+      company_name: 'EXAMPLE FIXTURE SUPPLY',
       months: 24,
     });
 
     expect(calls[0].init?.method).toBe('POST');
     expect(sentBody(calls[0])).toEqual({
-      company_name: 'EXAMPLE OUTDOOR SUPPLY',
+      company_name: 'EXAMPLE FIXTURE SUPPLY',
       months: 24,
     });
     expect(result).toEqual(body);
@@ -175,7 +175,7 @@ describe('TradeIntelManager', () => {
       notes: [],
       importers: [
         {
-          company_name: 'EXAMPLE OUTDOOR SUPPLY',
+          company_name: 'EXAMPLE FIXTURE SUPPLY',
           states: null,
           containers: 800,
           teus: 1500.0,
@@ -262,7 +262,7 @@ describe('TradeIntelManager', () => {
     expect(sentBody(calls[0])).toEqual({ container_number: 'MSCU1234567' });
     expect(result).toEqual(body);
     expect(result.found).toBe(true);
-    expect(result.bills_of_lading?.[0].scac).toBe('MSCU');
+    expect(result.bills_of_lading?.[0].scac).toBe('SYNU');
   });
 
   it('lookupContainer resolves (not rejects) a found: false body', async () => {
@@ -306,7 +306,7 @@ describe('TradeIntelManager', () => {
       months: 18,
     });
     expect(result).toEqual(body);
-    expect(result.containers?.[0].container_number).toBe('MSCU1234567');
+    expect(result.containers?.[0].container_number).toBe('SYNX0000001');
   });
 
   it('lookupBillOfLading rejects a blank number before any request', async () => {
@@ -483,7 +483,7 @@ describe('TradeIntelManager', () => {
         );
 
         const resultPromise = client.tradeIntel
-          .companyProfile({ company_name: 'EXAMPLE OUTDOOR SUPPLY' })
+          .companyProfile({ company_name: 'EXAMPLE FIXTURE SUPPLY' })
           .catch((e: unknown) => e);
         await vi.advanceTimersByTimeAsync(500);
         const error = await resultPromise;

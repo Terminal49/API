@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "data": {
+    "pickupLfd": "2026-01-20",
+    "fees": [
+      {
+        "name": "Example fee",
+        "amount": 25,
+        "currency": "USD"
+      }
+    ],
+    "holds": []
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "data": {
+    "data": {
+      "type": "port",
+      "id": "port-1",
+      "attributes": {
+        "id": "port-1",
+        "name": "Example Origin",
+        "code": "ZZORG",
+        "city": "Example City",
+        "country_code": "ZZ",
+        "latitude": "10",
+        "longitude": "20",
+        "time_zone": "Etc/UTC"
+      },
+      "relationships": {}
+    }
+  }
+}
