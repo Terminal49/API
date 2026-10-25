@@ -18,8 +18,19 @@ jobs:
   publish:
     runs-on: ubuntu-24.04
     steps:
+      - name: Select release family
+        id: release-family
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          case "$GITHUB_EVENT_NAME:$RELEASE_TAG" in
+            workflow_dispatch:*|release:cli-v*|release:v*|release:[0-9]*) echo "selected=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "selected=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
       - name: Resolve release tag
         id: release-tag
+        if: steps.release-family.outputs.selected == 'true'
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: |
@@ -30,12 +41,14 @@ jobs:
           printf 'tag=%s\n' "$RELEASE_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
+        if: steps.release-family.outputs.selected == 'true'
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: refs/tags/${{ steps.release-tag.outputs.tag }}
           persist-credentials: false
 
       - name: Setup Node
+        if: steps.release-family.outputs.selected == 'true'
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: .tool-versions
@@ -45,12 +58,14 @@ jobs:
 
       - name: Read CLI version
         id: cli-version
+        if: steps.release-family.outputs.selected == 'true'
         run: |
           version=$(node -p "require('./sdks/typescript-sdk-cli/package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Check release tag matches CLI version
         id: tag-check
+        if: steps.release-family.outputs.selected == 'true'
         env:
           RELEASE_TAG: ${{ steps.release-tag.outputs.tag }}
           PACKAGE_VERSION: ${{ steps.cli-version.outputs.version }}
