@@ -96,6 +96,7 @@
           __t: 'bpc',
           c: pageUrl(c && c.getAttribute('href')),
           p: location.pathname,
+          s: '',
           u: pageUrl(location.href),
           t: document.title,
           r: referrerOrigin(document.referrer),
