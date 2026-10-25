@@ -70,6 +70,76 @@ function releaseStep(workflow) {
 }
 
 for (const product of ['sdk', 'cli']) {
+  test(`${product} release workflow selects only its release family before checkout`, () => {
+    const workflow = read(
+      `.github/workflows/publish_typescript_${product}.yml`,
+    );
+    const selection = workflow
+      .split('- name: Select release family')[1]
+      ?.split('- name: Resolve release tag')[0];
+    assert.ok(selection);
+    const source = selection
+      .split(/\brun:\s*(?:\|\n)?/)[1]
+      .split('\n')
+      .map((line) => line.replace(/^ {10}/, ''))
+      .join('\n')
+      .trim();
+    const other = product === 'sdk' ? 'cli' : 'sdk';
+    const dir = mkdtempSync(path.join(os.tmpdir(), 't49-release-family-'));
+    try {
+      for (const [event, tag, selected] of [
+        ['release', `${product}-v0.6.0`, true],
+        ['release', `${product}-v-v0.6.0`, true],
+        ['release', 'v0.6.0', true],
+        ['release', '0.6.0', true],
+        ['release', `${product}-v-invalid`, true],
+        ['release', `${other}-v-v0.6.0`, false],
+        ['release', `${other}-v-invalid`, false],
+        ['release', 'mcp-v0.6.0', false],
+        ['workflow_dispatch', `${product}-v0.6.0`, true],
+        ['workflow_dispatch', `${other}-v-v0.6.0`, true],
+        ['workflow_dispatch', 'invalid-tag', true],
+      ]) {
+        const output = path.join(dir, 'output');
+        rmSync(output, { force: true });
+        const result = spawnSync('bash', ['-e', '-c', source], {
+          env: {
+            PATH: process.env.PATH,
+            GITHUB_EVENT_NAME: event,
+            RELEASE_TAG: tag,
+            GITHUB_OUTPUT: output,
+          },
+          encoding: 'utf8',
+        });
+        assert.equal(result.status, 0, `${event}: ${tag}: ${result.stderr}`);
+        assert.equal(
+          readFileSync(output, 'utf8'),
+          `selected=${selected}\n`,
+          `${event}: ${tag}`,
+        );
+      }
+      for (const name of [
+        'Resolve release tag',
+        'Checkout',
+        'Setup Node',
+        `Read ${product.toUpperCase()} version`,
+        `Check release tag matches ${product.toUpperCase()} version`,
+      ]) {
+        const section = workflow
+          .split(`- name: ${name}`)[1]
+          ?.split('\n      - name: ')[0];
+        assert.ok(section, name);
+        assert.match(
+          section,
+          /\n        if: steps\.release-family\.outputs\.selected == 'true'/,
+          name,
+        );
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   test(`${product} release tags remain data rather than shell instructions`, () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), 't49-release-test-'));
     try {
@@ -98,6 +168,8 @@ for (const product of ['sdk', 'cli']) {
         readFileSync(output, 'utf8'),
         new RegExp(`^tag=${product}-v0.6.0\\n$`),
       );
+      assert.notEqual(run(`${product}-v-invalid`).status, 0);
+      assert.notEqual(run('invalid-tag').status, 0);
       assert.notEqual(run(`v0.6.0$(touch ${marker})`).status, 0);
       assert.equal(existsSync(marker), false);
       assert.notEqual(run('v0.6.0\nOTHER=unexpected').status, 0);
