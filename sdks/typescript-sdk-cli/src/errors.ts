@@ -26,6 +26,7 @@ import {
   ValidationError,
 } from '@terminal49/sdk';
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
+import { encodeTerminalText } from './output/terminal-text.js';
 import { isOutputTTY } from './util/tty.js';
 
 export type CliExitCode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -157,7 +158,7 @@ export function printError(
 
   const hint = code === 'USAGE_ERROR' ? '(run --help for usage)\n' : '';
   process.stderr.write(
-    `${payload.error.code}: ${payload.error.message}\n${hint}`,
+    `${encodeTerminalText(payload.error.code)}: ${encodeTerminalText(payload.error.message)}\n${hint}`,
   );
 }
 

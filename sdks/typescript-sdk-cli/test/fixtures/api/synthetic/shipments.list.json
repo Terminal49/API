@@ -1,0 +1,66 @@
+{
+  "ok": true,
+  "data": [
+    {
+      "id": "shipment-1",
+      "billOfLading": "SYNTHBOL000001",
+      "shippingLineScac": "SYNU",
+      "customerName": "Example Fixture Shipper",
+      "containers": [
+        {
+          "id": "container-1"
+        }
+      ],
+      "createdAt": "2026-01-10T12:00:00Z",
+      "billOfLadingNumber": "SYNTHBOL000001",
+      "normalizedNumber": "SYNTHBOL000001",
+      "blNumber": "SYNTHBOL000001",
+      "bookingNumber": "SYNTHBOOK000001",
+      "shippingLineName": "Example Ocean Line",
+      "shippingLineShortName": "Example",
+      "refNumbers": [
+        "SYNTHREF000001"
+      ],
+      "tags": [
+        "synthetic"
+      ],
+      "podVesselName": "EXAMPLE VESSEL",
+      "podVesselImo": "0000001",
+      "podVoyageNumber": "SYNTH01",
+      "portOfLadingLocode": "ZZORG",
+      "portOfLadingName": "Example Origin",
+      "portOfDischargeLocode": "ZZDST",
+      "portOfDischargeName": "Example Destination",
+      "destinationLocode": null,
+      "destinationName": null,
+      "destinationTimezone": null,
+      "polEtdAt": "2026-01-10T12:00:00Z",
+      "polAtdAt": "2026-01-10T12:00:00Z",
+      "polTimezone": "Etc/UTC",
+      "podEtaAt": "2026-01-10T12:00:00Z",
+      "podOriginalEtaAt": "2026-01-10T12:00:00Z",
+      "podAtaAt": "2026-01-10T12:00:00Z",
+      "podTimezone": "Etc/UTC",
+      "lineTrackingLastAttemptedAt": "2026-01-10T12:00:00Z",
+      "lineTrackingLastSucceededAt": "2026-01-10T12:00:00Z",
+      "lineTrackingStoppedAt": null,
+      "lineTrackingStoppedReason": null,
+      "vesselAtPod": {
+        "name": "EXAMPLE VESSEL",
+        "imo": "0000001",
+        "voyageNumber": "SYNTH01"
+      },
+      "ports": {
+        "portOfLading": null,
+        "portOfDischarge": null,
+        "destination": null
+      },
+      "tracking": {
+        "lineTrackingLastAttemptedAt": "2026-01-10T12:00:00Z",
+        "lineTrackingLastSucceededAt": "2026-01-10T12:00:00Z",
+        "lineTrackingStoppedAt": null,
+        "lineTrackingStoppedReason": null
+      }
+    }
+  ]
+}
