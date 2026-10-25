@@ -1,13 +1,21 @@
 {
+  "measure": "containers",
+  "interval": "quarter",
+  "since": "2026-01",
+  "until": "2026-06",
+  "group_by": [
+    "origin_country"
+  ],
+  "filters": {
+    "hs4": "9401"
+  },
+  "fact": "synthetic_import_facts",
+  "notes": [],
   "series": [
     {
       "origin_country": "VIETNAM",
-      "periods": [
-        {
-          "period": "2026-Q1",
-          "containers": 12
-        }
-      ]
+      "period": "2026-01",
+      "value": 12
     }
   ]
 }

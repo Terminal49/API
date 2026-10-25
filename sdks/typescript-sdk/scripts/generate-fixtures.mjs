@@ -418,15 +418,34 @@ export function buildFixtures() {
       ],
     },
     'trade-intel.trends': {
+      measure: 'containers',
+      interval: 'quarter',
+      since: '2026-01',
+      until: '2026-06',
+      group_by: ['origin_country'],
+      filters: { hs4: '9401' },
+      fact: 'synthetic_import_facts',
+      notes: [],
       series: [
         {
           origin_country: 'VIETNAM',
-          periods: [{ period: '2026-Q1', containers: 12 }],
+          period: '2026-01',
+          value: 12,
         },
       ],
     },
     'trade-intel.breakdown': {
-      rows: [{ level: 0, pod_coast: 'example', containers: 12 }],
+      measure: 'containers',
+      dims: ['pod_coast', 'pod'],
+      filters: { hs4: '9401' },
+      since: '2026-01',
+      until: '2026-06',
+      fact: 'synthetic_import_facts',
+      notes: [],
+      rows: [
+        { level: 0, value: 12 },
+        { level: 1, pod_coast: 'example', value: 12 },
+      ],
     },
     'trade-intel.containers.lookup': {
       container_number: 'SYNX0000001',

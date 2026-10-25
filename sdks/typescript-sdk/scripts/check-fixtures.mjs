@@ -93,6 +93,44 @@ test('every JSON:API relationship resolves within the synthetic corpus', () => {
   }
 });
 
+test('trade intelligence fixtures retain required OpenAPI fields and point types', () => {
+  const schemas = JSON.parse(
+    fs.readFileSync(path.join(root, 'docs/openapi.json'), 'utf8'),
+  ).components.schemas;
+  const fixtures = buildFixtures();
+
+  function check(value, schemaName, location) {
+    const schema = schemas[schemaName];
+    assert.ok(
+      value && typeof value === 'object' && !Array.isArray(value),
+      location,
+    );
+    for (const key of schema.required ?? []) {
+      assert.ok(Object.hasOwn(value, key), `${location}.${key} is required`);
+    }
+    for (const [key, property] of Object.entries(schema.properties ?? {})) {
+      if (!Object.hasOwn(value, key)) continue;
+      const item = value[key];
+      if (property.type === 'array') {
+        assert.ok(Array.isArray(item), `${location}.${key} must be an array`);
+        if (property.items?.$ref) {
+          const itemSchema = property.items.$ref.split('/').at(-1);
+          if (schemas[itemSchema].type === 'object') {
+            item.forEach((entry, index) =>
+              check(entry, itemSchema, `${location}.${key}[${index}]`),
+            );
+          }
+        }
+      } else if (property.type === 'string' || property.type === 'number') {
+        assert.equal(typeof item, property.type, `${location}.${key} type`);
+      }
+    }
+  }
+
+  check(fixtures['trade-intel.trends'], 'TradeIntelTrends', 'trends');
+  check(fixtures['trade-intel.breakdown'], 'TradeIntelBreakdown', 'breakdown');
+});
+
 test('SDK generation succeeds with no credentials and disabled network', () =>
   temporary((directory) => {
     const result = spawnSync(
