@@ -16,6 +16,8 @@ import {
 import { renderTable } from '../src/output/table.ts';
 
 const sdk = buildFixtures();
+const container = sdk['containers.get.include'].data;
+const containerAttributes = container.attributes;
 const root = fileURLToPath(new URL('../test/fixtures/', import.meta.url));
 const ok = (data) => ({ ok: true, data });
 const resource = (type, id, attributes) => ({ type, id, attributes });
@@ -56,14 +58,26 @@ const fixtures = {
   'containers.events': ok(mapTransportEvents(sdk['containers.events'])),
   'containers.raw-events': ok(sdk['containers.raw-events']),
   'containers.demurrage': ok({
-    pickupLfd: '2026-01-20',
-    fees: [{ name: 'Example fee', amount: 25, currency: 'USD' }],
-    holds: [],
+    container_id: container.id,
+    pickup_lfd: containerAttributes.pickup_lfd,
+    pickup_appointment_at: containerAttributes.pickup_appointment_at,
+    available_for_pickup: containerAttributes.available_for_pickup,
+    fees_at_pod_terminal: containerAttributes.fees_at_pod_terminal,
+    holds_at_pod_terminal: containerAttributes.holds_at_pod_terminal,
+    pod_arrived_at: containerAttributes.pod_arrived_at,
+    pod_discharged_at: containerAttributes.pod_discharged_at,
   }),
   'containers.rail': ok({
-    carrierScac: 'SYNR',
-    eta: '2026-01-10T12:00:00Z',
-    status: 'in_transit',
+    container_id: container.id,
+    pod_rail_carrier_scac: containerAttributes.pod_rail_carrier_scac,
+    ind_rail_carrier_scac: containerAttributes.ind_rail_carrier_scac,
+    pod_rail_loaded_at: containerAttributes.pod_rail_loaded_at,
+    pod_rail_departed_at: containerAttributes.pod_rail_departed_at,
+    ind_rail_arrived_at: containerAttributes.ind_rail_arrived_at,
+    ind_rail_unloaded_at: containerAttributes.ind_rail_unloaded_at,
+    ind_eta_at: containerAttributes.ind_eta_at,
+    ind_ata_at: containerAttributes.ind_ata_at,
+    rail_events: [],
   }),
   'containers.route': ok(mapContainerRoute(sdk['containers.map_geojson'])),
   'containers.map.error': error('UPSTREAM_ERROR', 'Synthetic map unavailable'),

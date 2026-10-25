@@ -1,8 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { renderTable } from '../src/output/table.js';
+import { resetApiStub, runProgram, stubApi } from './helpers.js';
+
+afterEach(resetApiStub);
 
 const fixtureDir = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -73,6 +76,58 @@ describe('synthetic fixture smoke', () => {
     expect(output).toContain('type');
     expect(output).toContain(String(terminalId));
   });
+
+  for (const [name, value] of [
+    ['demurrage', '2026-01-20'],
+    ['rail', 'SYNR'],
+  ] as const) {
+    it(`matches the ${name} command output and renders its synthetic table`, async () => {
+      const raw = JSON.parse(
+        readFileSync(
+          new URL(
+            '../../typescript-sdk/src/fixtures/containers.get.include.json',
+            import.meta.url,
+          ),
+          'utf8',
+        ),
+      );
+      stubApi(() => raw);
+
+      const json = await runProgram([
+        '--json',
+        'containers',
+        name,
+        'container-1',
+      ]);
+      expect(json.status).toBe(0);
+      const output = JSON.parse(json.stdout);
+      expect(output.command).toBe(`containers.${name}`);
+      expect({ ok: output.ok, data: output.data }).toEqual(
+        readFixture(`containers.${name}.json`),
+      );
+
+      const table = await runProgram([
+        '--table',
+        'containers',
+        name,
+        'container-1',
+      ]);
+      expect(table.status).toBe(0);
+      expect(table.stdout).toContain(value);
+      expect(table.stdout).toBe(
+        readFileSync(
+          join(
+            dirname(fixtureDir),
+            '..',
+            'table',
+            'synthetic',
+            `containers.${name}.txt`,
+          ),
+          'utf8',
+        ),
+      );
+    });
+  }
 
   it('captures upstream and validation error envelope fixtures', () => {
     const upstream = readFixture<any>('custom-fields.list.error.json');

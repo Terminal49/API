@@ -1,8 +1,10 @@
 {
   "ok": true,
   "data": {
-    "carrierScac": "SYNR",
-    "eta": "2026-01-10T12:00:00Z",
-    "status": "in_transit"
+    "container_id": "container-1",
+    "pod_rail_carrier_scac": "SYNR",
+    "ind_rail_carrier_scac": "SYNR",
+    "ind_eta_at": "2026-01-10T12:00:00Z",
+    "rail_events": []
   }
 }
