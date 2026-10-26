@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "data": [
+    {
+      "scac": "SYNU",
+      "name": "Example Ocean Line",
+      "shortName": "Example",
+      "bolPrefix": "SYNTH",
+      "notes": "Synthetic carrier",
+      "alternativeScacs": [
+        "SYNA"
+      ],
+      "billOfLadingTrackingSupport": true,
+      "bookingNumberTrackingSupport": false,
+      "containerNumberTrackingSupport": true
+    },
+    {
+      "scac": "SYBU",
+      "name": "Example Backup Line",
+      "shortName": "Backup",
+      "alternativeScacs": [],
+      "billOfLadingTrackingSupport": true,
+      "bookingNumberTrackingSupport": false,
+      "containerNumberTrackingSupport": false
+    },
+    {
+      "scac": "SYCU",
+      "name": "Example Coastal Line",
+      "shortName": "Coastal"
+    }
+  ]
+}

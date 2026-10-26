@@ -1,69 +1,58 @@
 {
   "data": {
-    "id": "8c1d2f3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f",
     "type": "credential",
+    "id": "user-1",
     "attributes": {
       "kind": "user",
       "channel": "mcp",
       "name": null,
       "features": {
         "data_out_api": {
-          "status": "available"
+          "status": "requires_paid_plan"
         },
         "custom_fields": {
-          "status": "available"
-        },
-        "routing_data": {
-          "status": "available"
-        },
-        "rail_data": {
-          "status": "not_enabled"
-        },
-        "stop_tracking": {
-          "status": "available"
-        },
-        "trade_intel": {
-          "status": "not_enabled"
+          "status": "requires_user_credential"
         }
       }
     },
     "relationships": {
       "account": {
         "data": {
-          "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
-          "type": "account"
+          "type": "account",
+          "id": "account-1"
         }
       },
       "user": {
         "data": {
-          "id": "8c1d2f3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f",
-          "type": "user"
+          "type": "user",
+          "id": "user-1"
         }
       }
     }
   },
   "included": [
     {
-      "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
       "type": "account",
+      "id": "account-1",
       "attributes": {
-        "company_name": "Acme Logistics",
+        "company_name": "Example Fixture Shipper",
         "company_type": "freight_forwarder",
-        "scac": "ACML",
-        "abbr_name": "ACME",
-        "city": "Oakland",
-        "state_abbr": "CA",
-        "country": "United States",
+        "scac": "SYNU",
+        "abbr_name": "Example",
+        "city": "Example City",
+        "state_abbr": "EX",
+        "country": "ZZ",
         "plan": "customer",
         "tracking_slots": null
-      }
+      },
+      "relationships": {}
     },
     {
-      "id": "8c1d2f3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f",
       "type": "user",
+      "id": "user-1",
       "attributes": {
-        "email": "ops@example.com",
-        "name": "Jordan Lee",
+        "email": "fixture@example.test",
+        "name": "Example Operator",
         "role": "account_manager",
         "job_role": "forwarder",
         "job_title": "Operations lead",
@@ -73,8 +62,8 @@
         "accounts": {
           "data": [
             {
-              "id": "b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a",
-              "type": "account"
+              "type": "account",
+              "id": "account-1"
             }
           ]
         }

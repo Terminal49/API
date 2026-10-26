@@ -6,6 +6,7 @@ import {
   TimeoutError,
   UpstreamError,
 } from './client.js';
+import { Transport } from './client/transport.js';
 import { jsonResponse } from './test/mock-fetch.js';
 
 const baseUrl = 'https://api.test/v2';
@@ -333,4 +334,93 @@ describe('Terminal49Client transport resilience', () => {
       vi.useRealTimers();
     }
   });
+});
+
+describe('SDK cancellation boundaries', () => {
+  it.each([
+    ['typed', 200],
+    ['manual', 200],
+    ['typed', 503],
+    ['manual', 503],
+  ] as const)(
+    'times out %s status %i body consumption',
+    async (kind, status) => {
+      vi.useFakeTimers();
+      try {
+        const cancel = vi.fn();
+        const client = new Terminal49Client({
+          apiToken: 'dummy',
+          apiBaseUrl: baseUrl,
+          maxRetries: 0,
+          timeoutMs: 50,
+          fetchImpl: async () =>
+            new Response(new ReadableStream({ cancel }), {
+              status,
+              headers: { 'content-type': 'application/json' },
+            }),
+        });
+        const pending =
+          kind === 'manual'
+            ? client.getContainerRoute('dummy')
+            : client.listShippingLines();
+        const assertion = expect(pending).rejects.toBeInstanceOf(TimeoutError);
+        await vi.advanceTimersByTimeAsync(50);
+        await assertion;
+        expect(cancel).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+});
+
+it.each(['response', 'network'] as const)(
+  'stops %s retry backoff immediately when the caller aborts',
+  async (failure) => {
+    vi.useFakeTimers();
+    try {
+      const fetchImpl = vi.fn(async () => {
+        if (failure === 'network') throw new TypeError('fetch failed');
+        return jsonResponse({ errors: [] }, 503);
+      });
+      const transport = new Transport({
+        apiToken: 'dummy',
+        baseUrl,
+        fetchImpl,
+        maxRetries: 3,
+      });
+      const controller = new AbortController();
+      const pending = transport.executeManual(
+        new Request(`${baseUrl}/containers`, { signal: controller.signal }),
+      );
+      const assertion = expect(pending).rejects.toThrow();
+      await vi.advanceTimersByTimeAsync(1);
+      controller.abort();
+      await assertion;
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  },
+);
+
+it('honors a typed caller signal while reading a body', async () => {
+  const transport = new Transport({
+    apiToken: 'dummy',
+    baseUrl,
+    maxRetries: 0,
+    fetchImpl: async () =>
+      new Response(new ReadableStream(), {
+        headers: { 'content-type': 'application/json' },
+      }),
+  });
+  const controller = new AbortController();
+  const pending = transport.client.GET('/shipping_lines', {
+    signal: controller.signal,
+  });
+  const assertion = expect(pending).rejects.toThrow();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  controller.abort();
+  await assertion;
 });

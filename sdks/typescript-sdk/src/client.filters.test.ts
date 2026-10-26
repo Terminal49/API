@@ -569,3 +569,52 @@ describe('container summary response contract', () => {
     },
   );
 });
+
+describe('container ignored-filter diagnostics', () => {
+  for (const format of ['mapped', 'raw'] as const) {
+    it(`preserves summary diagnostics in ${format} format`, async () => {
+      const ignored = ['custom_fields.unknown'];
+      const { client } = clientFixture({
+        data: [{ key: 'available', label: 'available', count: 3 }],
+        meta: {
+          total: 3,
+          group_by: 'current_status',
+          truncated: false,
+          ignored_filters: ignored,
+        },
+      });
+      const result = await client.containers.summary(
+        'current_status',
+        {},
+        { format },
+      );
+      expect(
+        format === 'mapped'
+          ? result.ignored_filters
+          : result.meta.ignored_filters,
+      ).toEqual(ignored);
+    });
+    it(`preserves list diagnostics in ${format} format`, async () => {
+      const { client } = clientFixture({
+        data: [],
+        meta: { total: 0, ignored_filters: ['custom_fields.unknown'] },
+      });
+      const result = await client.containers.list({}, { format });
+      expect(result.meta.ignored_filters).toEqual(['custom_fields.unknown']);
+    });
+  }
+  it('rejects malformed summary diagnostics', async () => {
+    const { client } = clientFixture({
+      data: [],
+      meta: {
+        total: 0,
+        group_by: 'current_status',
+        truncated: false,
+        ignored_filters: 'unknown',
+      },
+    });
+    await expect(client.containers.summary('current_status')).rejects.toThrow(
+      'Invalid container summary response',
+    );
+  });
+});

@@ -8,10 +8,11 @@ let configHome: string;
 
 beforeEach(() => {
   configHome = mkdtempSync(join(tmpdir(), 't49-cli-config-'));
-  mkdirSync(join(configHome, 'terminal49'));
+  mkdirSync(join(configHome, 'terminal49'), { mode: 0o700 });
   writeFileSync(
     join(configHome, 'terminal49', 'config.json'),
     JSON.stringify({ baseUrl: 'https://api.test/v2', maxRetries: 2 }),
+    { mode: 0o600 },
   );
   process.env.XDG_CONFIG_HOME = configHome;
   process.env.T49_API_TOKEN = 'tok_abcdef123456';

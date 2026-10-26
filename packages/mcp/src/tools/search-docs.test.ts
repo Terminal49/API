@@ -1,9 +1,21 @@
+import type { ToolContext } from './context.js';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import {
   executeSearchDocs,
   MINTLIFY_DOCS_MCP_URL,
   MINTLIFY_SEARCH_API_URL,
 } from './search-docs.js';
+
+const context: Pick<ToolContext, 'me'> = {
+  me: async () => ({
+    id: 'dummy-key',
+    kind: 'api_key',
+    channel: 'api',
+    features: {},
+    account: { id: 'dummy-account', companyName: 'Example' },
+    user: null,
+  }),
+};
 
 function sse(result: unknown): string {
   return `event: message\ndata: ${JSON.stringify({ jsonrpc: '2.0', id: 1, result })}\n\n`;
@@ -22,6 +34,44 @@ function textResult(
 }
 
 describe('executeSearchDocs', () => {
+  it.each([undefined, '', '   '])(
+    'keeps the public fallback independent of identity with key %s',
+    async (assistantApiKey) => {
+      const me = vi
+        .fn<ToolContext['me']>()
+        .mockRejectedValue(new Error('Invalid credential'));
+      const fetchImpl = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(new Response(sse({ content: [] })));
+      await executeSearchDocs(
+        { query: 'q' },
+        { me },
+        { assistantApiKey, fetchImpl },
+      );
+      expect(me).not.toHaveBeenCalled();
+      expect(fetchImpl).toHaveBeenCalledWith(
+        MINTLIFY_DOCS_MCP_URL,
+        expect.anything(),
+      );
+    },
+  );
+
+  it('never sends the operator key when identity validation fails', async () => {
+    const me = vi
+      .fn<ToolContext['me']>()
+      .mockRejectedValue(new Error('Invalid credential'));
+    const fetchImpl = vi.fn<typeof fetch>();
+    await expect(
+      executeSearchDocs(
+        { query: 'q' },
+        { me },
+        { assistantApiKey: 'mint_dsc_dummy', fetchImpl },
+      ),
+    ).rejects.toThrow('Invalid credential');
+    expect(me).toHaveBeenCalledOnce();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it('forwards the query to the Mintlify docs MCP and parses results', async () => {
     const fetchImpl = vi.fn(
       async () =>
@@ -45,10 +95,9 @@ describe('executeSearchDocs', () => {
         ),
     );
 
-    const result = await executeSearchDocs(
-      { query: 'webhooks' },
-      { fetchImpl: fetchImpl as typeof fetch },
-    );
+    const result = await executeSearchDocs({ query: 'webhooks' }, context, {
+      fetchImpl: fetchImpl as typeof fetch,
+    });
 
     const [url, init] = fetchImpl.mock.calls[0] as unknown as [
       string,
@@ -91,10 +140,9 @@ describe('executeSearchDocs', () => {
     const fetchImpl = vi.fn(
       async () => new Response(notification + unrelated + response),
     );
-    const result = await executeSearchDocs(
-      { query: 'q' },
-      { fetchImpl: fetchImpl as typeof fetch },
-    );
+    const result = await executeSearchDocs({ query: 'q' }, context, {
+      fetchImpl: fetchImpl as typeof fetch,
+    });
     expect(result.results.map((item) => item.title)).toEqual(['Guide']);
   });
 
@@ -119,10 +167,10 @@ describe('executeSearchDocs', () => {
               }),
             ),
       );
-      const result = await executeSearchDocs(
-        { query: 'q' },
-        { assistantApiKey, fetchImpl: fetchImpl as typeof fetch },
-      );
+      const result = await executeSearchDocs({ query: 'q' }, context, {
+        assistantApiKey,
+        fetchImpl: fetchImpl as typeof fetch,
+      });
       expect(result.results.map((item) => item.url)).toEqual([
         'https://terminal49.com/docs/guide',
       ]);
@@ -140,10 +188,9 @@ describe('executeSearchDocs', () => {
     );
     const fetchImpl = vi.fn(async () => new Response(sse({ content: many })));
 
-    const result = await executeSearchDocs(
-      { query: 'q', limit: 2 },
-      { fetchImpl: fetchImpl as typeof fetch },
-    );
+    const result = await executeSearchDocs({ query: 'q', limit: 2 }, context, {
+      fetchImpl: fetchImpl as typeof fetch,
+    });
 
     expect(result.total_results).toBe(2);
     expect(result.results[0].content.length).toBe(1_201);
@@ -152,20 +199,18 @@ describe('executeSearchDocs', () => {
   it('throws on upstream HTTP and tool errors', async () => {
     const httpError = vi.fn(async () => new Response('nope', { status: 502 }));
     await expect(
-      executeSearchDocs(
-        { query: 'q' },
-        { fetchImpl: httpError as typeof fetch },
-      ),
+      executeSearchDocs({ query: 'q' }, context, {
+        fetchImpl: httpError as typeof fetch,
+      }),
     ).rejects.toThrow('HTTP 502');
 
     const toolError = vi.fn(
       async () => new Response(sse({ content: [], isError: true })),
     );
     await expect(
-      executeSearchDocs(
-        { query: 'q' },
-        { fetchImpl: toolError as typeof fetch },
-      ),
+      executeSearchDocs({ query: 'q' }, context, {
+        fetchImpl: toolError as typeof fetch,
+      }),
     ).rejects.toThrow('returned an error');
   });
 
@@ -189,6 +234,7 @@ describe('executeSearchDocs', () => {
 
       const result = await executeSearchDocs(
         { query: 'webhooks', limit: 3 },
+        context,
         {
           assistantApiKey: 'mint_dsc_test',
           fetchImpl: fetchImpl as typeof fetch,
@@ -232,13 +278,10 @@ describe('executeSearchDocs', () => {
       );
 
       await expect(
-        executeSearchDocs(
-          { query: 'q' },
-          {
-            assistantApiKey: 'mint_dsc_test',
-            fetchImpl: fetchImpl as typeof fetch,
-          },
-        ),
+        executeSearchDocs({ query: 'q' }, context, {
+          assistantApiKey: 'mint_dsc_test',
+          fetchImpl: fetchImpl as typeof fetch,
+        }),
       ).rejects.toMatchObject({
         message: 'Documentation search failed (HTTP 401).',
       });
