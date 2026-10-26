@@ -135,6 +135,20 @@ The response carries the tracking request ID. Its `customer` relationship refere
 }
 ```
 
+## Match customers in API responses and webhooks
+
+A customer has two possible IDs:
+
+- **Party ID:** the ID returned by [`GET /v2/parties`](/api-docs/api-reference/parties/list-parties) and [`POST /v2/parties`](/api-docs/api-reference/parties/create-a-party). You send this ID when you add a customer to a tracking request.
+- **Account ID:** the ID in `relationships.customer` (type `account`) on tracking requests and shipments, including webhook payloads. It identifies the account linked to the customer party, so it differs from the party ID.
+
+`relationships.customer` is `null` when the customer party has no linked account. Parties created through `POST /v2/parties` have no linked account.
+
+To match records to your customers, store the party ID:
+
+1. When you receive a shipment, call [`GET /v2/shipments/SHIPMENT_ID/party_roles`](/api-docs/api-reference/party-roles/list-shipment-party-roles). Find the role with `role` set to `customer`. The linked party is returned in `included`.
+2. To list shipments or containers for a customer, pass the party ID to `filter[customer_id]`. This filter accepts a customer party ID or a customer account ID. See [List filters](/api-docs/api-reference/list-filters).
+
 ## Create a party for a customer
 
 To add a customer to a tracking request, you first need to create a party. You can create a party through the [API](/api-docs/api-reference/parties/create-a-party).
