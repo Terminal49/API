@@ -1173,12 +1173,11 @@ export interface Terminal49McpServerOptions {
    */
   writeDeadlineAt?: number;
   /**
-   * What identifies the caller across requests, so parallel identical SQL
-   * queries from one conversation run once. The HTTP gateway mints a new API
-   * token per request and passes the caller's own token here. Defaults to
-   * the API token.
+   * Epoch ms by which the request must finish. The HTTP gateway sets it from
+   * the request start, so SQL tool calls time out with what sign-in and
+   * discovery left; without it each SQL call gets the full SQL timeout.
    */
-  callerIdentity?: string;
+  requestDeadlineAt?: number;
 }
 
 export function createTerminal49McpServer(
@@ -1207,12 +1206,13 @@ export function createTerminal49McpServer(
     ),
   };
   const completeCarrierScac = createCarrierScacCompleter(client);
-  const sqlClient = createSqlClient(apiToken, apiBaseUrl, accountId);
-  const sqlCallerScope = sqlScope(
-    options.callerIdentity ?? apiToken,
+  const sqlClient = createSqlClient(
+    apiToken,
     apiBaseUrl,
     accountId,
+    options.requestDeadlineAt,
   );
+  const sqlCallerScope = sqlScope(apiToken, apiBaseUrl, accountId);
 
   // Observability wrapping, outermost last. Sentry's wrapper returns a wrapped
   // server; PostHog's `instrument()` patches request handlers in place and also

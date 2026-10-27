@@ -25,6 +25,7 @@ import {
   executeSqlQuery,
   formatSqlToolError,
   resetSqlDiscoveryCache,
+  sqlCallTimeoutMs,
 } from './sql-query.js';
 
 const PREVIEW: AssistantQueryPreview = {
@@ -76,6 +77,16 @@ describe('executeSqlQuery', () => {
     await executeSqlQuery({ sql: 'select 1' }, client, 'scope-a');
 
     expect(query).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('sqlCallTimeoutMs', () => {
+  it('counts the time sign-in and discovery already used against the request deadline', () => {
+    const now = 1_000_000;
+    expect(sqlCallTimeoutMs(undefined, now)).toBe(20_000);
+    expect(sqlCallTimeoutMs(now + 60_000, now)).toBe(20_000);
+    expect(sqlCallTimeoutMs(now + 12_000, now)).toBe(10_000);
+    expect(sqlCallTimeoutMs(now - 5_000, now)).toBe(1_000);
   });
 });
 
@@ -180,6 +191,22 @@ describe('discoverAssistantSql', () => {
     await expect(
       discoverAssistantSql('Bearer user', 'https://api.test/v2', 'acct-b'),
     ).resolves.toBe(false);
+  });
+
+  it('stops waiting when the response body stalls, and keeps the tools listed', async () => {
+    stubViews(
+      () =>
+        new Response(new ReadableStream({ start() {} }), {
+          headers: { 'content-type': 'application/json' },
+        }),
+    );
+    const started = Date.now();
+    await expect(
+      discoverAssistantSql('Bearer user', 'https://api.test/v2', 'acct', {
+        deadlineAt: Date.now() + 3100,
+      }),
+    ).resolves.toBe(true);
+    expect(Date.now() - started).toBeLessThan(2000);
   });
 
   it('keeps the tools listed on a transient failure and asks again next time', async () => {

@@ -556,7 +556,7 @@ describe('api/mcp handler lifecycle', () => {
 
     expect(urls.some((url) => url.includes('assistant_views'))).toBe(false);
     expect(mockState.serverCreateArgs[0]).toMatchObject({
-      options: { toolsets: ['core'], callerIdentity: 'workos-mcp-token' },
+      options: { toolsets: ['core'] },
     });
   });
 

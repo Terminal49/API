@@ -698,8 +698,8 @@ export default async function handler(
       return;
     }
 
-    // Resolving a signed-in user mints a new API token per request, so caches
-    // that span requests key on the caller's own token instead.
+    // Resolving a signed-in user mints a new API token per request, so the
+    // discovery cache keys on the caller's own token instead.
     const callerIdentity =
       resolvedTerminal49Auth.credentialType === 'user'
         ? callerToken
@@ -757,7 +757,7 @@ export default async function handler(
             toolsets: toolSelection.toolsets,
             readOnly: toolSelection.readOnly,
             writeDeadlineAt: deadlineAt,
-            callerIdentity,
+            requestDeadlineAt: deadlineAt,
           },
         ),
       {

@@ -43,28 +43,49 @@ export function sqlScope(
  * 30-second function limit would cut the response off.
  */
 const SQL_CALL_TIMEOUT_MS = 20_000;
+/** Kept back from the request deadline so the error still reaches the client. */
+const SQL_DEADLINE_MARGIN_MS = 2_000;
+const SQL_MIN_TIMEOUT_MS = 1_000;
 
 /**
  * The SQL tools' client never retries: a retried query can run twice, and a
- * rate limit must stop the turn rather than be retried around.
+ * rate limit must stop the turn rather than be retried around. When the
+ * request has a deadline, the timeout counts what sign-in and discovery
+ * already used.
  */
 export function createSqlClient(
   apiToken: string,
   apiBaseUrl: string | undefined,
   accountId: string | undefined,
+  deadlineAt?: number,
 ): Terminal49Client {
   return new Terminal49Client({
     apiToken,
     apiBaseUrl,
     accountId,
     maxRetries: 0,
-    timeoutMs: SQL_CALL_TIMEOUT_MS,
+    timeoutMs: sqlCallTimeoutMs(deadlineAt),
   });
+}
+
+export function sqlCallTimeoutMs(
+  deadlineAt?: number,
+  now = Date.now(),
+): number {
+  if (deadlineAt === undefined) {
+    return SQL_CALL_TIMEOUT_MS;
+  }
+  return Math.max(
+    SQL_MIN_TIMEOUT_MS,
+    Math.min(SQL_CALL_TIMEOUT_MS, deadlineAt - now - SQL_DEADLINE_MARGIN_MS),
+  );
 }
 
 // Share only concurrent work, never completed results: a model that sends the
 // same query twice in parallel runs it once when both calls reach the same
-// server instance. Each caller gets its own copy.
+// server instance. Each caller gets its own copy. The scope is the credential
+// the call is made with, so a request never rides on another request's
+// authorization.
 const pendingQueries = new Map<string, Promise<AssistantQueryPreview>>();
 
 export async function executeSqlQuery(
@@ -200,6 +221,18 @@ const PROBE_TIMEOUT_MS = 5000;
 /** Time left for the tool call itself once the probe has used its share. */
 const PROBE_RESERVE_MS = 3000;
 
+// The SDK's timeout stops at the response headers; this bounds the body too.
+function withinTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new TimeoutError('SQL access check timed out')),
+      timeoutMs,
+    );
+  });
+  return Promise.race([promise, expired]).finally(() => clearTimeout(timer));
+}
+
 async function probeAssistantSql(
   apiToken: string,
   apiBaseUrl: string | undefined,
@@ -213,7 +246,10 @@ async function probeAssistantSql(
     maxRetries: 0,
     timeoutMs,
   });
-  const result = await client.assistantQueries.views();
+  const result = await withinTimeout(
+    client.assistantQueries.views(),
+    timeoutMs,
+  );
   return Array.isArray(result.views);
 }
 
