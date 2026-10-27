@@ -195,7 +195,8 @@ type ToolRegistrar = (definition: ToolDefinition) => void;
 export const SERVER_IDENTITY = {
   title: 'Terminal49',
   description:
-    'Track ocean containers and shipments in your Terminal49 account: find a container, bill of lading, or booking; check status, ETAs, last free day, holds, fees, and milestones; start tracking new numbers; and, where enabled, research US import trade data.',
+    'Track containers, master bills of lading, and bookings across every major ocean carrier worldwide, with last free days and frequently refreshed ETAs that flag delays against the original. ' +
+    'Direct connections to every North American port, terminal, and rail terminal add arrival, discharge, gate-out, availability, holds, and fees, so import teams can act before demurrage and per diem charges hit.',
   websiteUrl: 'https://terminal49.com/docs/mcp/home',
   icons: [
     {

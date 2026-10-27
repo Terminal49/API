@@ -86,6 +86,13 @@ const PARAGRAPHS: readonly Paragraph[] = [
     ],
   },
   {
+    segments: [
+      {
+        text: 'Answer in plain language: lead with the takeaway, name the period, and round numbers.',
+      },
+    ],
+  },
+  {
     aboutTools: true,
     segments: [
       {
