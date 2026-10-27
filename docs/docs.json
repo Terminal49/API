@@ -576,6 +576,7 @@
             "pages": [
               "mcp/home",
               "mcp/filtering-worklists",
+              "mcp/sql-queries",
               "api-docs/in-depth-guides/mcp"
             ]
           },

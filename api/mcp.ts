@@ -16,6 +16,7 @@ import { toNodeHandler } from '@modelcontextprotocol/node';
 import * as Sentry from '@sentry/node';
 import { createTerminal49McpServer } from '../packages/mcp/src/server.js';
 import { CALL_BUDGET_MS } from '../packages/mcp/src/tools/record-writes.js';
+import { discoverAssistantSql } from '../packages/mcp/src/tools/sql-query.js';
 import { flushPostHogEvents } from '../packages/mcp/src/posthog.js';
 import { captureMcpException } from '../packages/mcp/src/sentry.js';
 import { protectedResourceMetadataUrl } from '../packages/mcp/src/resource.js';
@@ -697,6 +698,32 @@ export default async function handler(
       return;
     }
 
+    // Resolving a signed-in user mints a new API token per request, so the
+    // discovery cache keys on the caller's own token instead.
+    const callerIdentity =
+      resolvedTerminal49Auth.credentialType === 'user'
+        ? callerToken
+        : undefined;
+
+    // SQL analysis is enabled per account, so list its tools only when the
+    // API confirms this user and account can use them.
+    if (
+      toolSelection.toolsets.includes('analytics') &&
+      !(await discoverAssistantSql(
+        resolvedTerminal49Auth.apiToken,
+        process.env.T49_API_BASE_URL,
+        resolvedTerminal49Auth.accountId,
+        { identity: callerIdentity, deadlineAt },
+      ))
+    ) {
+      toolSelection = {
+        ...toolSelection,
+        toolsets: toolSelection.toolsets.filter(
+          (toolset) => toolset !== 'analytics',
+        ),
+      };
+    }
+
     logLifecycle('mcp.request.auth', requestId, {
       auth_source: resolvedTerminal49Auth.authSource,
       credential_type: resolvedTerminal49Auth.credentialType,
@@ -730,6 +757,7 @@ export default async function handler(
             toolsets: toolSelection.toolsets,
             readOnly: toolSelection.readOnly,
             writeDeadlineAt: deadlineAt,
+            requestDeadlineAt: deadlineAt,
           },
         ),
       {
