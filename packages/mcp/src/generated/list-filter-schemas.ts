@@ -1,5 +1,11 @@
 // Generated from docs/openapi.json. Run npm run generate:filters --workspace @terminal49/mcp.
 import { z } from 'zod';
+/** How exact-match list filters read their value. */
+export const EXACT_FILTER_GRAMMAR =
+  'Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.';
+/** How date list filters read their value. */
+export const DATE_FILTER_GRAMMAR =
+  'Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.';
 export const SHIPMENT_FILTER_KEYS = [
   'q',
   'number',
@@ -43,7 +49,7 @@ export const shipmentFilterShape = {
   created_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Creation date. Use an ISO 8601 date-time with Z or a timezone offset; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Relative dates and comma-separated timestamps are not accepted. Use @exists or @not_exists for presence.',
+      'Creation date. Use an ISO 8601 date-time with Z or a timezone offset; prefix with =, <, <=, >, or >=. Relative dates and comma-separated timestamps are not accepted.',
     )
     .optional(),
   actively_tracked: z
@@ -67,19 +73,17 @@ export const shipmentFilterShape = {
   arriving_today: z
     .literal(true)
     .describe(
-      'true selects shipments with POD or destination estimated/actual arrival today in the API server day. false does not narrow the list. The SDK accepts only true.',
+      'true selects shipments with POD or destination estimated/actual arrival today in the API server day. false does not narrow the list.',
     )
     .optional(),
   pod_ata_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Actual POD arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Actual POD arrival date.')
     .optional(),
   pod_arrival: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'POD arrival date: actual arrival takes precedence over estimated arrival. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
+      'POD arrival date: actual arrival takes precedence over estimated arrival.',
     )
     .optional(),
   pod_code: z
@@ -97,7 +101,7 @@ export const shipmentFilterShape = {
   pod_terminal_id: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Port of discharge terminal ID. Obtain it from the related terminal resource. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean OR for this shipment terminal filter. ~ is not supported.',
+      'Port of discharge terminal ID. Obtain it from the related terminal resource. Arrays mean OR for this shipment terminal filter.',
     )
     .optional(),
   pol_code: z
@@ -115,13 +119,13 @@ export const shipmentFilterShape = {
   creator_id: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Shipment creator account ID. Comma-separated IDs mean OR; arrays of distinct IDs mean AND and return no matches. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
+      'Shipment creator account ID. Comma-separated IDs mean OR; arrays of distinct IDs mean AND and return no matches.',
     )
     .optional(),
   customer_id: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
+      'Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role.',
     )
     .optional(),
   product: z
@@ -133,8 +137,17 @@ export const shipmentFilterShape = {
     .union([
       z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
       z.strictObject({
-        value: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
-        operator: z.enum(['any', 'all']).optional(),
+        value: z
+          .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+          .describe(
+            'One party ID, comma-separated IDs, or an array of IDs. Get party IDs from list_parties.',
+          ),
+        operator: z
+          .enum(['any', 'all'])
+          .describe(
+            'any matches a shipment linked to any of the IDs; all requires every ID.',
+          )
+          .optional(),
       }),
     ])
     .describe(
@@ -229,73 +242,65 @@ export const containerFilterShape = {
   number: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Exact number match. Shipment arrays mean OR; container arrays of exact numbers mean AND. Use comma-separated container numbers for OR. Shipment scalar commas are literal. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
+      'Exact number match. Shipment arrays mean OR; container arrays of exact numbers mean AND. Use comma-separated container numbers for OR. Shipment scalar commas are literal.',
     )
     .optional(),
   pol: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Port of lading name (including raw routing data when no port relationship exists). Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
+      'Port of lading name (including raw routing data when no port relationship exists).',
     )
     .optional(),
   pod: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Port of discharge name (including raw routing data when no port relationship exists). Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
+      'Port of discharge name (including raw routing data when no port relationship exists).',
     )
     .optional(),
   destination: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Destination name, including raw routing data when no port relationship exists. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
+      'Destination name, including raw routing data when no port relationship exists.',
     )
     .optional(),
   pol_code: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Port of lading UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
-    )
+    .describe('Port of lading UN/LOCODE.')
     .optional(),
   pod_code: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Port of discharge UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
-    )
+    .describe('Port of discharge UN/LOCODE.')
     .optional(),
   destination_code: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Destination UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
-    )
+    .describe('Destination UN/LOCODE.')
     .optional(),
   shipping_line_scac: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Shipping line Standard Carrier Alpha Code (SCAC). Obtain valid values from GET /shipping_lines; preserve their exact codes. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
+      'Shipping line Standard Carrier Alpha Code (SCAC). Obtain valid values from GET /shipping_lines; preserve their exact codes.',
     )
     .optional(),
   customer_id: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
+      'Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role.',
     )
     .optional(),
   customer_name: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Exact, case-sensitive customer company name. Prefer customer_id for names containing punctuation rejected by the string parser. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
+      'Exact, case-sensitive customer company name. Prefer customer_id for names containing punctuation rejected by the string parser.',
     )
     .optional(),
   vessel_name: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Exact vessel name. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
-    )
+    .describe('Exact vessel name.')
     .optional(),
   pod_terminal_id: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Port of discharge terminal ID. Obtain it from the related terminal resource. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.',
+      'Port of discharge terminal ID. Obtain it from the related terminal resource.',
     )
     .optional(),
   current_status: z
@@ -320,7 +325,7 @@ export const containerFilterShape = {
         .min(1),
     ])
     .describe(
-      'Container status. Known values: new, on_ship, available, not_available, grounded, on_rail, picked_up, off_dock, delivered, dropped, loaded, empty_returned, awaiting_inland_transfer. Unknown values return no matches in the API; the SDK rejects them. Comma-separated states mean OR; arrays mean AND.',
+      'Container status. Comma-separated states mean OR; arrays mean AND.',
     )
     .optional(),
   has_fees: z
@@ -350,13 +355,13 @@ export const containerFilterShape = {
   eta_changed_in_last_24h: z
     .literal(true)
     .describe(
-      'Selects containers with estimated-event changes in the last 24 hours. Both true and false apply the positive selector in the API. The SDK accepts only true.',
+      'Selects containers with estimated-event changes in the last 24 hours.',
     )
     .optional(),
   eta_changed_in_past_3_days: z
     .literal(true)
     .describe(
-      'Selects containers with estimated-event changes in the past three days. Both true and false apply the positive selector in the API. The SDK accepts only true.',
+      'Selects containers with estimated-event changes in the past three days.',
     )
     .optional(),
   has_holds: z
@@ -415,87 +420,61 @@ export const containerFilterShape = {
     .optional(),
   delivered_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Delivery date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Delivery date.')
     .optional(),
   pod_discharged_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'POD discharge date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('POD discharge date.')
     .optional(),
   pod_arrived_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Container POD arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Container POD arrival date.')
     .optional(),
   pol_etd_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Estimated port of lading departure date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Estimated port of lading departure date.')
     .optional(),
   pol_atd_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Actual port of lading departure date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Actual port of lading departure date.')
     .optional(),
   empty_out_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Empty equipment out date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Empty equipment out date.')
     .optional(),
   pol_full_in_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Full equipment in at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Full equipment in at port of lading date.')
     .optional(),
   pol_vessel_loaded_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Vessel loading at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Vessel loading at port of lading date.')
     .optional(),
   pol_vessel_departed_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Vessel departure at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Vessel departure at port of lading date.')
     .optional(),
   arrival: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'POD arrival date: actual arrival takes precedence over estimated arrival. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
+      'POD arrival date: actual arrival takes precedence over estimated arrival.',
     )
     .optional(),
   picked_up_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Pickup date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Pickup date.')
     .optional(),
   empty_returned_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Empty return date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Empty return date.')
     .optional(),
   created_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Creation date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Creation date.')
     .optional(),
   updated_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Last record update date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Last record update date.')
     .optional(),
   last_free_day_on: z
     .tuple([z.string().min(1), z.string().min(1)])
@@ -505,68 +484,50 @@ export const containerFilterShape = {
     .optional(),
   inland_destination_rail_unloaded_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Inland rail unloading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Inland rail unloading date.')
     .optional(),
   final_destination_full_out_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Final destination full out date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Final destination full out date.')
     .optional(),
   inland_destination_eta_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Estimated inland destination arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Estimated inland destination arrival date.')
     .optional(),
   inland_destination_ata_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Actual inland destination arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Actual inland destination arrival date.')
     .optional(),
   pod_rail_departed_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Rail departure from POD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Rail departure from POD date.')
     .optional(),
   pickup_lfd: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Pickup last free day (LFD) date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Pickup last free day (LFD) date.')
     .optional(),
   pickup_lfd_rail_on: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Reported rail pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Reported rail pickup LFD date.')
     .optional(),
   pickup_lfd_terminal_on: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Reported terminal pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Reported terminal pickup LFD date.')
     .optional(),
   pickup_lfd_line_on: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
-    .describe(
-      'Reported shipping-line pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
-    )
+    .describe('Reported shipping-line pickup LFD date.')
     .optional(),
   pickup_lfd_terminal_effective_on: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Terminal pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
+      'Terminal pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used.',
     )
     .optional(),
   pickup_lfd_line_effective_on: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Shipping-line pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
+      'Shipping-line pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used.',
     )
     .optional(),
   tags: z
@@ -585,28 +546,49 @@ export const containerFilterShape = {
     .strictObject({
       shipper: z
         .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+        .describe(
+          'A party UUID, comma-separated UUIDs, or a supported presence expression. Matches parties in the shipper role. Get party IDs from list_parties.',
+        )
         .optional(),
       consignee: z
         .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+        .describe(
+          'A party UUID, comma-separated UUIDs, or a supported presence expression. Matches parties in the consignee role. Get party IDs from list_parties.',
+        )
         .optional(),
       notify_party: z
         .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+        .describe(
+          'A party UUID, comma-separated UUIDs, or a supported presence expression. Matches parties in the notify_party role. Get party IDs from list_parties.',
+        )
         .optional(),
       customs_broker: z
         .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+        .describe(
+          'A party UUID, comma-separated UUIDs, or a supported presence expression. Matches parties in the customs_broker role. Get party IDs from list_parties.',
+        )
         .optional(),
       customer: z
         .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+        .describe(
+          'A party UUID, comma-separated UUIDs, or a supported presence expression. Matches parties in the customer role. Get party IDs from list_parties.',
+        )
         .optional(),
       freight_forwarder: z
         .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+        .describe(
+          'A party UUID, comma-separated UUIDs, or a supported presence expression. Matches parties in the freight_forwarder role. Get party IDs from list_parties.',
+        )
         .optional(),
       pickup_dray_carrier: z
         .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+        .describe(
+          'A party UUID, comma-separated UUIDs, or a supported presence expression. Matches parties in the pickup_dray_carrier role. Get party IDs from list_parties.',
+        )
         .optional(),
     })
     .describe(
-      'Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.',
+      'Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles.',
     )
     .optional(),
 } as const;

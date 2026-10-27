@@ -1050,12 +1050,13 @@ describe('trade intelligence tools', () => {
     return { tool, result };
   };
 
-  it('registers every trade intelligence tool as read-only and closed-world', () => {
+  it('registers every trade intelligence tool as read-only, idempotent and closed-world', () => {
     const tools = (createTerminal49McpServer('token') as any)._registeredTools;
     for (const name of TRADE_INTEL_TOOL_NAMES) {
       expect(tools[name].annotations, name).toEqual({
         readOnlyHint: true,
         destructiveHint: false,
+        idempotentHint: true,
         openWorldHint: false,
       });
     }

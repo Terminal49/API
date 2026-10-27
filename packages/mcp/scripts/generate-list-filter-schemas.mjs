@@ -6,9 +6,52 @@ const spec = JSON.parse(
 );
 const scalarOrArray =
   'z.union([z.string().min(1), z.array(z.string().min(1)).min(1)])';
+const describe = (schema, description) =>
+  `${schema}.describe(${JSON.stringify(description)})`;
+
+// Operator grammar that docs/openapi.json repeats on every filter of a kind.
+// The MCP tools state it once on advanced_filters (FILTER_GRAMMAR), so each
+// field describes only what it filters.
+const EXACT_GRAMMAR = [
+  'Exact match by default; optional =, @exists, or @not_exists.',
+  'Comma-separated literals mean OR.',
+  'Arrays mean AND unless the parameter description says otherwise.',
+  '~ is not supported.',
+];
+const DATE_GRAMMAR = [
+  'Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=.',
+  'Arrays combine bounds with AND.',
+  'Comma-separated dates mean OR.',
+  'Use @exists or @not_exists for presence.',
+  'Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.',
+];
+// Rules the generated Zod schema already enforces (the status pattern, the
+// `true` literal of a selector, the strict parties object).
+const SCHEMA_RULES = [
+  /^Known values: [^.]*\.$/,
+  /^Unknown values return no matches in the API; the SDK rejects them\.$/,
+  /^Both true and false apply the positive selector in the API\.$/,
+  /^The SDK accepts only true\.$/,
+  /^Unknown roles are ignored by the API and rejected by the SDK\.$/,
+];
+const fieldDescription = (description) =>
+  description
+    .split(/(?<=\.) (?=\S)/)
+    .filter(
+      (sentence) =>
+        !EXACT_GRAMMAR.includes(sentence) &&
+        !DATE_GRAMMAR.includes(sentence) &&
+        !SCHEMA_RULES.some((rule) => rule.test(sentence)),
+    )
+    .join(' ');
+const PARTY_IDS = 'Get party IDs from list_parties.';
 const lines = [
   '// Generated from docs/openapi.json. Run npm run generate:filters --workspace @terminal49/mcp.',
   "import { z } from 'zod';",
+  '/** How exact-match list filters read their value. */',
+  `export const EXACT_FILTER_GRAMMAR = ${JSON.stringify(EXACT_GRAMMAR.join(' '))};`,
+  '/** How date list filters read their value. */',
+  `export const DATE_FILTER_GRAMMAR = ${JSON.stringify(DATE_GRAMMAR.join(' '))};`,
 ];
 for (const [entity, endpoint] of [
   ['SHIPMENT', '/shipments'],
@@ -44,12 +87,24 @@ for (const [entity, endpoint] of [
       case 'search':
         schema = 'z.string().min(1)';
         break;
-      case 'party':
-        schema = `z.union([${scalarOrArray}, z.strictObject({value: ${scalarOrArray}, operator: z.enum(['any', 'all']).optional()})])`;
+      case 'party': {
+        const value = describe(
+          scalarOrArray,
+          `One party ID, comma-separated IDs, or an array of IDs. ${PARTY_IDS}`,
+        );
+        const operator = describe(
+          "z.enum(['any', 'all'])",
+          'any matches a shipment linked to any of the IDs; all requires every ID.',
+        );
+        schema = `z.union([${scalarOrArray}, z.strictObject({value: ${value}, operator: ${operator}.optional()})])`;
         break;
+      }
       case 'parties':
-        schema = `z.strictObject({${Object.keys(p.schema.properties)
-          .map((role) => `${JSON.stringify(role)}: ${scalarOrArray}.optional()`)
+        schema = `z.strictObject({${Object.entries(p.schema.properties)
+          .map(
+            ([role, property]) =>
+              `${JSON.stringify(role)}: ${describe(scalarOrArray, `${property.description} Matches parties in the ${role} role. ${PARTY_IDS}`)}.optional()`,
+          )
           .join(',')}})`;
         break;
       case 'status': {
@@ -79,7 +134,7 @@ for (const [entity, endpoint] of [
       schema =
         'z.union([z.string().trim().min(1).max(64), z.array(z.string().trim().min(1).max(64)).min(1)])';
     lines.push(
-      `${JSON.stringify(key)}: ${schema}.describe(${JSON.stringify(p.description)}).optional(),`,
+      `${JSON.stringify(key)}: ${describe(schema, fieldDescription(p.description))}.optional(),`,
     );
   }
   lines.push('} as const;');
