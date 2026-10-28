@@ -879,11 +879,21 @@ if (!cfg) {
         advanced_filters: { customer_id: '@exists' },
         page_size: 1,
       });
-      const containerId = listItems(sample.payload)[0]?.id;
-      if (typeof containerId !== 'string') return skip();
+      const sampledContainer = fixtureItems('list_containers', sample).filter(
+        isRecord,
+      )[0];
+      const containerId = sampledContainer?.id;
+      const containerNumber = sampledContainer?.number;
+      if (
+        typeof containerId !== 'string' ||
+        typeof containerNumber !== 'string'
+      )
+        return skip();
       const container = await client.callTool('get_container', {
         id: containerId,
       });
+      expect(container.http).toBe(200);
+      expect(container.isError).toBe(false);
       const shipmentId =
         isRecord(container.payload) && isRecord(container.payload.shipment)
           ? readString(container.payload.shipment, 'id')
@@ -894,6 +904,8 @@ if (!cfg) {
         include_containers: false,
         include_party_roles: true,
       });
+      expect(shipment.http).toBe(200);
+      expect(shipment.isError).toBe(false);
       const roles =
         isRecord(shipment.payload) &&
         Array.isArray(shipment.payload.party_roles)
@@ -903,22 +915,32 @@ if (!cfg) {
       if (typeof name !== 'string') return skip();
       const parties = await client.callTool('list_parties', {
         search: name,
-        limit: 1,
+        limit: 25,
       });
-      const partyId =
+      expect(parties.http).toBe(200);
+      expect(parties.isError).toBe(false);
+      const matches =
         isRecord(parties.payload) && Array.isArray(parties.payload.parties)
-          ? parties.payload.parties.filter(isRecord)[0]?.id
-          : undefined;
+          ? parties.payload.parties
+              .filter(isRecord)
+              .filter((p) => p.name === name)
+          : [];
+      if (matches.length !== 1) return skip();
+      const partyId = matches[0]?.id;
       if (typeof partyId !== 'string') return skip();
       const { score } = await evaluate(
         'list_containers',
-        { advanced_filters: { customer_id: partyId }, page_size: 5 },
+        {
+          advanced_filters: { customer_id: partyId },
+          number: containerNumber,
+          page_size: 5,
+        },
         {
           requiredKeys: ['items'],
           predicates: [
             {
-              name: `customer_id for ${name} returns containers`,
-              test: (p) => listItems(p).length > 0,
+              name: `customer_id for ${name} returns the sampled container`,
+              test: (p) => listItems(p).some((item) => item.id === containerId),
               detail: (p) => `total=${String(listTotal(p))}`,
             },
           ],

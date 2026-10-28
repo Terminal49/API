@@ -19,13 +19,14 @@ export const getContainerTransportEventsTool = {
     'Use this for questions about journey history, "what happened", timeline analysis, rail tracking. ' +
     'For deadline changes, value is the reported deadline; timestamp is when it was reported. ' +
     'Vessel events carry vessel_id for get_vessel. ' +
-    'More efficient than get_container with transport_events when you only need event data.',
+    'More efficient than get_container with transport_events when you only need event data. The result has total_events, event_categories, timeline (each event with timestamp, location, vessel and voyage), and milestones (the vessel loaded, departed, arrived, discharged, rail, and delivered times).',
   inputSchema: {
     type: 'object',
     properties: {
       id: {
         type: 'string',
-        description: 'The Terminal49 container ID (UUID format)',
+        description:
+          'Terminal49 container ID, from search_container or list_containers.',
       },
     },
     required: ['id'],

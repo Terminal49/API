@@ -25,3 +25,17 @@ describe('readSuccessBody', () => {
     await expect(readSuccessBody(res)).resolves.toBeUndefined();
   });
 });
+
+it('consumes the owned response without retaining a cloned body', async () => {
+  const response = new Response(
+    new ReadableStream({
+      start(stream) {
+        stream.enqueue(new TextEncoder().encode('{"synthetic":true}'));
+        stream.close();
+      },
+    }),
+  );
+  await expect(readSuccessBody(response)).resolves.toEqual({ synthetic: true });
+  expect(response.bodyUsed).toBe(true);
+  expect(() => response.clone()).toThrow();
+});

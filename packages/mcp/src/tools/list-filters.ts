@@ -11,78 +11,120 @@ import {
   containerSortSchema,
   SHIPMENT_FILTER_KEYS,
   CONTAINER_FILTER_KEYS,
+  EXACT_FILTER_GRAMMAR,
+  DATE_FILTER_GRAMMAR,
+  SHIPMENT_FILTER_GRAMMAR,
+  CONTAINER_FILTER_GRAMMAR,
 } from '../generated/list-filter-schemas.js';
 export { SHIPMENT_FILTER_KEYS, CONTAINER_FILTER_KEYS };
+
+/**
+ * How filter values are read, stated once for every filter here and at the
+ * top level instead of on each field.
+ */
+export const FILTER_VALUE_GUIDE = `Exact-match filters: ${EXACT_FILTER_GRAMMAR} Date filters: ${DATE_FILTER_GRAMMAR} A field's own description overrides these rules.`;
+
+const GRAMMAR = { exact: EXACT_FILTER_GRAMMAR, date: DATE_FILTER_GRAMMAR };
+
+/**
+ * A filter offered at the top level, outside advanced_filters, so its own
+ * description carries the value grammar FILTER_VALUE_GUIDE states there.
+ */
+function topLevel<
+  Shape extends Record<string, z.ZodOptional<z.ZodType>>,
+  Key extends keyof Shape & string,
+>(
+  shape: Shape,
+  grammar: Partial<Record<string, keyof typeof GRAMMAR>>,
+  key: Key,
+): Shape[Key] {
+  const kind = grammar[key];
+  const inner = shape[key].unwrap();
+  if (!kind) return shape[key];
+  return inner
+    .describe(`${inner.description} ${GRAMMAR[kind]}`)
+    .optional() as Shape[Key];
+}
+const shipmentTop = <Key extends keyof typeof shipmentFilterShape & string>(
+  key: Key,
+) => topLevel(shipmentFilterShape, SHIPMENT_FILTER_GRAMMAR, key);
+const containerTop = <Key extends keyof typeof containerFilterShape & string>(
+  key: Key,
+) => topLevel(containerFilterShape, CONTAINER_FILTER_GRAMMAR, key);
 
 const paginationShape = {
   page: z
     .number()
     .int()
     .positive()
-    .describe('Page number, starting at 1. Fetch one page per call.')
+    .describe(
+      'Page to fetch. Fetch one page per call, and ask for the next page only when has_more is true (next_page gives its number).',
+    )
     .optional(),
   page_size: z
     .number()
     .int()
     .positive()
     .max(25)
-    .describe('Items requested on this page, from 1 to 25.')
+    .describe('Number of rows to return on this page.')
     .default(25),
 };
 
 export const shipmentListInputSchema = z.strictObject({
-  number: shipmentFilterShape.number,
-  tracking_stopped: shipmentFilterShape.tracking_stopped,
-  actively_tracked: shipmentFilterShape.actively_tracked,
-  voyage_status: shipmentFilterShape.voyage_status,
-  pod_code: shipmentFilterShape.pod_code,
-  pol_code: shipmentFilterShape.pol_code,
-  pod_arrival: shipmentFilterShape.pod_arrival,
-  created_at: shipmentFilterShape.created_at,
-  tags: shipmentFilterShape.tags,
+  number: shipmentTop('number'),
+  tracking_stopped: shipmentTop('tracking_stopped'),
+  actively_tracked: shipmentTop('actively_tracked'),
+  voyage_status: shipmentTop('voyage_status'),
+  pod_code: shipmentTop('pod_code'),
+  pol_code: shipmentTop('pol_code'),
+  pod_arrival: shipmentTop('pod_arrival'),
+  created_at: shipmentTop('created_at'),
+  tags: shipmentTop('tags'),
   advanced_filters: z
     .strictObject(shipmentFilterShape)
     .describe(
-      'All confirmed public shipment filters. Supply a filter here or at the top level, never both. Different filters combine with AND; consult each field for array semantics. IDs must come from account-visible resources.',
+      `All confirmed public shipment filters. Supply a filter here or at the top level, never both. Different filters combine with AND. IDs must come from account-visible resources. ${FILTER_VALUE_GUIDE}`,
     )
     .optional(),
   include_stopped_tracking: z
     .boolean()
     .describe(
-      'Default false: like the dashboard, results include only records whose tracking is still active. Set true for history questions (pickups, dwell or arrivals over a past period) or when the user asks about stopped tracking. Ignored when actively_tracked is set.',
+      'Like the dashboard, results include only records whose tracking is still active unless this is true. Set true for history questions (pickups, dwell or arrivals over a past period) or when the user asks about stopped tracking. Ignored when actively_tracked is set.',
     )
     .default(false),
   sort: shipmentSortSchema,
   include_containers: z
     .boolean()
-    .describe('Include related containers in this page; default false.')
+    .describe(
+      "Also return each shipment's containers, so container questions need no second call.",
+    )
     .default(false),
   ...paginationShape,
 });
 
 export const containerListInputSchema = z.strictObject({
-  number: containerFilterShape.number,
-  current_status: containerFilterShape.current_status,
-  pod_code: containerFilterShape.pod_code,
-  pol_code: containerFilterShape.pol_code,
-  shipping_line_scac: containerFilterShape.shipping_line_scac,
-  has_holds: containerFilterShape.has_holds,
-  has_fees: containerFilterShape.has_fees,
-  requires_attention: containerFilterShape.requires_attention,
-  actively_tracked: containerFilterShape.actively_tracked,
-  arrival: containerFilterShape.arrival,
-  pickup_lfd: containerFilterShape.pickup_lfd,
-  tags: containerFilterShape.tags,
+  number: containerTop('number'),
+  current_status: containerTop('current_status'),
+  pod_code: containerTop('pod_code'),
+  pol_code: containerTop('pol_code'),
+  shipping_line_scac: containerTop('shipping_line_scac'),
+  has_holds: containerTop('has_holds'),
+  has_fees: containerTop('has_fees'),
+  requires_attention: containerTop('requires_attention'),
+  actively_tracked: containerTop('actively_tracked'),
+  arrival: containerTop('arrival'),
+  pickup_lfd: containerTop('pickup_lfd'),
+  tags: containerTop('tags'),
   advanced_filters: z
     .strictObject(containerFilterShape)
     .describe(
-      'All confirmed public container filters. Supply a filter here or at the top level, never both. Different filters combine with AND; consult each field for array semantics. Dynamic IDs and carrier codes must come from visible resources.',
+      `All confirmed public container filters. Supply a filter here or at the top level, never both. Different filters combine with AND. Dynamic IDs and carrier codes must come from visible resources. ${FILTER_VALUE_GUIDE}`,
     )
     .optional(),
   include_stopped_tracking: z
     .boolean()
     .describe(
-      'Default false: like the dashboard, results include only records whose tracking is still active. Set true for history questions (pickups, dwell or arrivals over a past period) or when the user asks about stopped tracking. Ignored when actively_tracked is set.',
+      'Like the dashboard, results include only records whose tracking is still active unless this is true. Set true for history questions (pickups, dwell or arrivals over a past period) or when the user asks about stopped tracking. Ignored when actively_tracked is set.',
     )
     .default(false),
   sort: containerSortSchema,
@@ -90,13 +132,13 @@ export const containerListInputSchema = z.strictObject({
     .array(z.enum(['shipment', 'pod_terminal']))
     .max(2)
     .describe(
-      'Related resources included in this page. Compact rows include both by default.',
+      'Related records to load with each row: shipment (BL, carrier, POD ETA) and pod_terminal. Compact rows include both by default.',
     )
     .optional(),
   view: z
     .enum(['compact', 'full'])
     .describe(
-      'compact (default): number, status, availability, POD terminal, key dates, LFD, holds, fees and the shipment BL, carrier and POD ETA. full: every attribute, for fields compact rows omit.',
+      'compact: number, status, availability, POD terminal, key dates, LFD, holds, fees and the shipment BL, carrier and POD ETA. full: every attribute, for fields compact rows omit.',
     )
     .default('compact'),
   ...paginationShape,

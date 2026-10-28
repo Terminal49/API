@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import type { ToolContext } from './context.js';
 
 export const MINTLIFY_DOCS_MCP_URL = 'https://terminal49.mintlify.app/mcp';
 // `terminal49` is the domain identifier from terminal49.mintlify.app.
@@ -37,11 +38,14 @@ export interface SearchDocsOptions {
 
 export async function executeSearchDocs(
   args: { query: string; limit?: number },
+  context: Pick<ToolContext, 'me'>,
   { assistantApiKey, fetchImpl = fetch }: SearchDocsOptions = {},
 ): Promise<SearchDocsResponse> {
   const limit = args.limit ?? 5;
-  const results = assistantApiKey
-    ? await searchViaRest(args.query, limit, assistantApiKey, fetchImpl)
+  const apiKey = assistantApiKey?.trim();
+  if (apiKey) await context.me();
+  const results = apiKey
+    ? await searchViaRest(args.query, limit, apiKey, fetchImpl)
     : await searchViaMcp(args.query, limit, fetchImpl);
   return { query: args.query, total_results: results.length, results };
 }
