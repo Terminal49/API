@@ -125,7 +125,7 @@ for (const [entity, endpoint] of [
         schema = `z.strictObject({${Object.entries(p.schema.properties)
           .map(
             ([role, property]) =>
-              `${JSON.stringify(role)}: ${describe(scalarOrArray, `${property.description} Matches parties in the ${role} role. ${PARTY_IDS}`)}.optional()`,
+              `${JSON.stringify(role)}: ${describe(scalarOrArray, `${property.description} Matches parties in the ${role} role.${role === 'customer' ? '' : ` ${PARTY_IDS}`}`)}.optional()`,
           )
           .join(',')}})`;
         break;

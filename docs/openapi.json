@@ -7459,7 +7459,7 @@
                 },
                 "customer": {
                   "type": "string",
-                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                  "description": "A customer role ID, comma-separated role IDs, or a supported presence expression. For customer IDs returned by list_parties, use customer_id instead; customer party IDs can differ from role IDs."
                 },
                 "freight_forwarder": {
                   "type": "string",
@@ -7551,7 +7551,7 @@
           {
             "in": "query",
             "name": "filter[parties][customer][]",
-            "description": "Array alternative for the customer role. Party IDs use OR within this role.",
+            "description": "Array alternative for customer role IDs, using OR within this role. For customer IDs returned by list_parties, use customer_id instead.",
             "schema": {
               "type": "array",
               "items": {
@@ -8285,7 +8285,7 @@
                 },
                 "customer": {
                   "type": "string",
-                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                  "description": "A customer role ID, comma-separated role IDs, or a supported presence expression. For customer IDs returned by list_parties, use customer_id instead; customer party IDs can differ from role IDs."
                 },
                 "freight_forwarder": {
                   "type": "string",
