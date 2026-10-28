@@ -4,9 +4,13 @@ import {
 } from '@modelcontextprotocol/client';
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import { describe, expect, it } from 'vite-plus/test';
-import { buildServerInstructions } from './instructions.js';
+import {
+  buildServerInstructions,
+  MAX_INSTRUCTIONS_BYTES,
+} from './instructions.js';
 import {
   createTerminal49McpServer,
+  SERVER_IDENTITY,
   TERMINAL49_SERVER_INSTRUCTIONS,
   type Terminal49McpServerOptions,
 } from './server.js';
@@ -64,6 +68,20 @@ function toolsetSubsets(): Toolset[][] {
   );
 }
 
+describe('server identity', () => {
+  it('advertises a title, description, website and 512px icons at initialize', async () => {
+    const serverInfo = await connect({}, async (client) =>
+      client.getServerVersion(),
+    );
+
+    expect(serverInfo).toMatchObject(SERVER_IDENTITY);
+    expect(serverInfo?.websiteUrl).toMatch(/^https:\/\//);
+    for (const icon of serverInfo?.icons ?? []) {
+      expect(icon.sizes).toContain('512x512');
+    }
+  });
+});
+
 describe('server instructions', () => {
   it('sends the full guide with the default toolsets', async () => {
     await expect(initializeInstructions({})).resolves.toBe(
@@ -112,6 +130,21 @@ describe('server instructions', () => {
         expect(instructions, toolsets.join(',')).toMatch(
           /track_container only when the user asks to track/,
         );
+      }
+    }
+  });
+
+  it('stays within the 2 KB that Claude Code keeps for every selection', () => {
+    for (const toolsets of toolsetSubsets()) {
+      for (const readOnly of [false, true]) {
+        const instructions = buildServerInstructions(
+          selectTools({ toolsets, readOnly }),
+        );
+
+        expect(
+          Buffer.byteLength(instructions, 'utf8'),
+          `${toolsets.join(',')} readOnly=${readOnly}`,
+        ).toBeLessThanOrEqual(MAX_INSTRUCTIONS_BYTES);
       }
     }
   });

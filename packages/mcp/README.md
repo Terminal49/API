@@ -2,6 +2,8 @@
 
 **Vercel-native** Model Context Protocol server for Terminal49's API, built with TypeScript and the official MCP SDK.
 
+`@terminal49/mcp` is a private workspace in this repository. Connect a client to the hosted server at `https://mcp.terminal49.com` (Streamable HTTP). OAuth 2.1 needs no API key: the client discovers `https://auth.terminal49.com` and opens a browser sign-in. Clients that can't run that flow send `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys. The `Bearer` scheme is used for OAuth access tokens. A local stdio process reads `T49_API_TOKEN` instead. Build steps are in [Local Development](#local-development).
+
 ## 🚀 Quick Deploy to Vercel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Terminal49/API)
@@ -84,7 +86,7 @@ Tool results separate the human-readable answer from agent-steering metadata. Th
 - Type-safe Zod schemas for all tool inputs
 - Cleaner, maintainable code (71% code reduction in HTTP handler)
 - **MCP SDK**: @modelcontextprotocol/sdk ^1.29.0
-- **Terminal49 SDK**: @terminal49/sdk 0.2.0
+- **Terminal49 SDK**: @terminal49/sdk 0.6.0
 
 #### ✅ Production Transport Support
 - **HTTP (streamable)**: `POST /api/mcp` - stateless, JSON responses
@@ -125,11 +127,11 @@ Tool results separate the human-readable answer from agent-steering metadata. Th
   └── package.json
 ```
 
-MCP uses published `@terminal49/sdk` by default, with optional local override for contributors.
+The MCP server depends on the workspace package `@terminal49/sdk`. Build that package before you build `packages/mcp`.
 
 **Transport:**
 - **HTTP**: Vercel serverless function at `/api/mcp` (for hosted use)
-- **stdio**: Local binary for Claude Desktop (run via `npm run mcp:stdio`)
+- **stdio**: Local process for Claude Desktop (`node packages/mcp/dist/index.js` after the build in [Local Development](#local-development))
 
 ---
 
@@ -190,47 +192,45 @@ namespace.
 
 ---
 
+<a id="local-development"></a>
+
 ## 🛠️ Local Development
 
 ### Prerequisites
-- Node.js 24.x
-- Terminal49 API token ([get yours here](https://app.terminal49.com/developers/api-keys))
+
+- Node.js 24.22.1 or a newer Node 24 release (`.tool-versions` pins `24.22.1`)
+- A Terminal49 API key ([create one](https://app.terminal49.com/developers/api-keys)) for tool calls that reach the API
 
 ### Setup
 
+`@terminal49/mcp` is a private workspace. From a clone of this repository, on Node.js 24.22.1 or a newer Node 24 release:
+
 ```bash
-cd packages/mcp
-npm install
-T49_SDK_SOURCE=published npm run sdk:setup
-cp .env.example .env
-# Add your T49_API_TOKEN to .env
+git clone https://github.com/Terminal49/API.git
+cd API
+npm ci
+npm run build --workspace @terminal49/sdk
+npm run build --workspace @terminal49/mcp
 ```
 
-Use a local SDK build during MCP development:
+The MCP server depends on the workspace package `@terminal49/sdk`. Build that package first, as the commands above do. The stdio entrypoint is `packages/mcp/dist/index.js`. It reads `T49_API_TOKEN` and exits if that variable is unset.
+
+### Run locally
 
 ```bash
-cd packages/mcp
-T49_SDK_SOURCE=local npm run sdk:setup
-```
-
-### Run Locally
-
-```bash
-# Stdio mode (for Claude Desktop testing)
-npm run mcp:stdio
-
-# Development mode with auto-reload
-npm run dev
+T49_API_TOKEN=YOUR_API_KEY node packages/mcp/dist/index.js
 ```
 
 ### Test the API
 
-```bash
-# List tools
-echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | npm run mcp:stdio
+Smoke-test `initialize`, then `tools/list`:
 
-# Get container
-echo '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_container","arguments":{"id":"123e4567-e89b-12d3-a456-426614174000"}},"id":2}' | npm run mcp:stdio
+```bash
+printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"smoke","version":"1.0"}}}' \
+  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+  | T49_API_TOKEN=YOUR_API_KEY node packages/mcp/dist/index.js
 ```
 
 ---
@@ -508,7 +508,7 @@ vercel logs
 ## 📚 Documentation
 
 - **MCP Protocol:** https://modelcontextprotocol.io/
-- **Terminal49 API:** https://docs.terminal49.com
+- **Terminal49 API:** https://terminal49.com/docs
 - **Vercel Functions:** https://vercel.com/docs/functions
 - **TypeScript MCP SDK:** https://github.com/modelcontextprotocol/typescript-sdk
 
@@ -534,7 +534,7 @@ Copyright 2024 Terminal49. All rights reserved.
 ## 🆘 Support
 
 - **Issues:** [GitHub Issues](https://github.com/Terminal49/API/issues)
-- **Documentation:** https://docs.terminal49.com
+- **Documentation:** https://terminal49.com/docs
 - **Email:** support@terminal49.com
 
 ---
