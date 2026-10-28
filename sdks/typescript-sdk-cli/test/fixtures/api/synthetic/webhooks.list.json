@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "data": [
+    {
+      "type": "webhook",
+      "id": "webhook-1",
+      "attributes": {
+        "url": "https://webhooks.example.test/events",
+        "active": true
+      }
+    }
+  ]
+}

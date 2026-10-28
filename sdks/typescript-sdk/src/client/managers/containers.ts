@@ -64,7 +64,10 @@ function parseSummaryResponse(
     !Number.isSafeInteger(doc.meta.total) ||
     doc.meta.total < 0 ||
     doc.meta.group_by !== groupBy ||
-    typeof doc.meta.truncated !== 'boolean'
+    typeof doc.meta.truncated !== 'boolean' ||
+    (doc.meta.ignored_filters !== undefined &&
+      (!Array.isArray(doc.meta.ignored_filters) ||
+        !doc.meta.ignored_filters.every((key) => typeof key === 'string')))
   )
     throw invalid();
   const keys = new Set<string | null>();
@@ -191,6 +194,9 @@ export class ContainerManager extends BaseManager {
       total: doc.meta.total,
       groupBy: doc.meta.group_by,
       truncated: doc.meta.truncated,
+      ...(doc.meta.ignored_filters === undefined
+        ? {}
+        : { ignored_filters: doc.meta.ignored_filters }),
     }));
   }
 

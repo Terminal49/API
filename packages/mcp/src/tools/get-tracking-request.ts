@@ -21,14 +21,14 @@ export const getTrackingRequestInputSchema = z.object({
     .string()
     .uuid()
     .describe(
-      'The Terminal49 tracking request ID (UUID format), for example from list_tracking_requests. Identifier only; never pass conversation text.',
+      'Terminal49 tracking request ID, for example from list_tracking_requests. Identifier only; never pass conversation text.',
     ),
   include_custom_fields: z
     .boolean()
     .optional()
     .default(false)
     .describe(
-      'Include account-defined custom fields set on this request. Needs a signed-in user, not an API key. Default: false',
+      'Include account-defined custom fields set on this request. Needs a signed-in user, not an API key.',
     ),
 });
 

@@ -56,7 +56,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
-          node-version: 24
+          node-version-file: .tool-versions
       - name: Reconcile fresh PR evidence
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:

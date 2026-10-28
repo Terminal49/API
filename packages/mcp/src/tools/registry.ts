@@ -52,6 +52,7 @@ function readTool<const Name extends string>(
     annotations: {
       readOnlyHint: true,
       destructiveHint: false,
+      idempotentHint: true,
       openWorldHint: false,
     },
   };
@@ -123,6 +124,7 @@ export const TOOL_REGISTRY = [
     annotations: {
       readOnlyHint: true,
       destructiveHint: false,
+      idempotentHint: true,
       openWorldHint: true,
     },
   },
