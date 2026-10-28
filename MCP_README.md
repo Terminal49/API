@@ -229,7 +229,7 @@ MIT
 
 ## 🔗 Links
 
-- [Terminal49 API Docs](https://docs.terminal49.com)
+- [Terminal49 API Docs](https://terminal49.com/docs)
 - [Model Context Protocol](https://modelcontextprotocol.io)
 - [Get API Token](https://app.terminal49.com/developers/api-keys)
 - [Full MCP Documentation](packages/mcp/README.md)

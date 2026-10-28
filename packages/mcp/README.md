@@ -508,7 +508,7 @@ vercel logs
 ## 📚 Documentation
 
 - **MCP Protocol:** https://modelcontextprotocol.io/
-- **Terminal49 API:** https://docs.terminal49.com
+- **Terminal49 API:** https://terminal49.com/docs
 - **Vercel Functions:** https://vercel.com/docs/functions
 - **TypeScript MCP SDK:** https://github.com/modelcontextprotocol/typescript-sdk
 
@@ -534,7 +534,7 @@ Copyright 2024 Terminal49. All rights reserved.
 ## 🆘 Support
 
 - **Issues:** [GitHub Issues](https://github.com/Terminal49/API/issues)
-- **Documentation:** https://docs.terminal49.com
+- **Documentation:** https://terminal49.com/docs
 - **Email:** support@terminal49.com
 
 ---
