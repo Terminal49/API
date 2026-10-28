@@ -7459,7 +7459,7 @@
                 },
                 "customer": {
                   "type": "string",
-                  "description": "A customer role ID, comma-separated role IDs, or a supported presence expression. For customer IDs returned by list_parties, use customer_id instead; customer party IDs can differ from role IDs."
+                  "description": "A party ID stored on the customer role, comma-separated party IDs, or a supported presence expression. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead; they can differ from the party_id stored on the role."
                 },
                 "freight_forwarder": {
                   "type": "string",
@@ -7551,7 +7551,7 @@
           {
             "in": "query",
             "name": "filter[parties][customer][]",
-            "description": "Array alternative for customer role IDs, using OR within this role. For customer IDs returned by list_parties, use customer_id instead.",
+            "description": "Array alternative for party IDs stored on the customer role, using OR within this role. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead.",
             "schema": {
               "type": "array",
               "items": {
@@ -8285,7 +8285,7 @@
                 },
                 "customer": {
                   "type": "string",
-                  "description": "A customer role ID, comma-separated role IDs, or a supported presence expression. For customer IDs returned by list_parties, use customer_id instead; customer party IDs can differ from role IDs."
+                  "description": "A party ID stored on the customer role, comma-separated party IDs, or a supported presence expression. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead; they can differ from the party_id stored on the role."
                 },
                 "freight_forwarder": {
                   "type": "string",

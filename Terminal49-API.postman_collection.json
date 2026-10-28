@@ -1023,7 +1023,7 @@
                                 {
                                     "disabled": true,
                                     "description": {
-                                        "content": "Array alternative for customer role IDs, using OR within this role. For customer IDs returned by list_parties, use customer_id instead.",
+                                        "content": "Array alternative for party IDs stored on the customer role, using OR within this role. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead.",
                                         "type": "text/plain"
                                     },
                                     "key": "filter[parties][customer][]",
@@ -2057,7 +2057,7 @@
                                         {
                                             "disabled": true,
                                             "description": {
-                                                "content": "Array alternative for customer role IDs, using OR within this role. For customer IDs returned by list_parties, use customer_id instead.",
+                                                "content": "Array alternative for party IDs stored on the customer role, using OR within this role. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead.",
                                                 "type": "text/plain"
                                             },
                                             "key": "filter[parties][customer][]",
@@ -3109,7 +3109,7 @@
                                         {
                                             "disabled": true,
                                             "description": {
-                                                "content": "Array alternative for customer role IDs, using OR within this role. For customer IDs returned by list_parties, use customer_id instead.",
+                                                "content": "Array alternative for party IDs stored on the customer role, using OR within this role. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead.",
                                                 "type": "text/plain"
                                             },
                                             "key": "filter[parties][customer][]",

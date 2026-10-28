@@ -6774,7 +6774,7 @@ export interface operations {
                     notify_party?: string;
                     /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
                     customs_broker?: string;
-                    /** @description A customer role ID, comma-separated role IDs, or a supported presence expression. For customer IDs returned by list_parties, use customer_id instead; customer party IDs can differ from role IDs. */
+                    /** @description A party ID stored on the customer role, comma-separated party IDs, or a supported presence expression. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead; they can differ from the party_id stored on the role. */
                     customer?: string;
                     /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
                     freight_forwarder?: string;
@@ -6810,7 +6810,7 @@ export interface operations {
                  */
                 "filter[parties][customs_broker][]"?: string[];
                 /**
-                 * @description Array alternative for customer role IDs, using OR within this role. For customer IDs returned by list_parties, use customer_id instead.
+                 * @description Array alternative for party IDs stored on the customer role, using OR within this role. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead.
                  * @example [
                  *       "00000000-0000-4000-8000-000000000001"
                  *     ]
@@ -7162,7 +7162,7 @@ export interface operations {
                     notify_party?: string;
                     /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
                     customs_broker?: string;
-                    /** @description A customer role ID, comma-separated role IDs, or a supported presence expression. For customer IDs returned by list_parties, use customer_id instead; customer party IDs can differ from role IDs. */
+                    /** @description A party ID stored on the customer role, comma-separated party IDs, or a supported presence expression. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead; they can differ from the party_id stored on the role. */
                     customer?: string;
                     /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
                     freight_forwarder?: string;
