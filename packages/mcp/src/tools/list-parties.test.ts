@@ -77,7 +77,7 @@ describe('list_parties', () => {
     expect(result.usage).toBe(
       'Filter by a customer with advanced_filters.customer_id: "<id>" on list_containers, summarize_containers, or list_shipments. ' +
         'For other roles use advanced_filters.parties on list_containers or summarize_containers, keyed by role: { "<role>": "<party id>" }. ' +
-        'Roles: shipper, consignee, notify_party, customs_broker, customer, freight_forwarder, pickup_dray_carrier. Use @exists for "has any".',
+        'Roles: shipper, consignee, notify_party, customs_broker, freight_forwarder, pickup_dray_carrier. Use @exists for "has any".',
     );
   });
 

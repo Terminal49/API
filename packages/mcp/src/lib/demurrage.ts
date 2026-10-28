@@ -11,11 +11,11 @@
  *     cannot trust availability/LFD enough to push the user to act.
  */
 
-export interface TerminalFee {
+export type TerminalFee = {
   type?: string;
   amount?: number;
   currency_code?: string;
-}
+};
 
 export type DemurrageUrgency = 'overdue' | 'imminent' | 'none' | 'unknown';
 

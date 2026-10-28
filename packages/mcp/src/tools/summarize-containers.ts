@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { assertNoIgnoredFilters } from './ignored-filters.js';
 import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 import {
@@ -65,6 +66,7 @@ export async function executeSummarizeContainers(
     const summary = await client.containers.summary(groupBy, filters as any, {
       format: 'mapped',
     });
+    assertNoIgnoredFilters(summary.ignored_filters);
     logMcpEvent({
       event: 'tool.execute.complete',
       tool: 'summarize_containers',

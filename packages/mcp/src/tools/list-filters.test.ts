@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { z } from 'zod';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { Terminal49Client } from '@terminal49/sdk';
 import {
@@ -299,5 +300,45 @@ describe('actively tracked default', () => {
         current_status: 'picked_up',
       }),
     ).toEqual({ current_status: 'picked_up' });
+  });
+});
+
+describe('filter value grammar', () => {
+  // Optional fields carry their description on the wrapped schema.
+  const describedAs = (schema: z.ZodType | undefined): string =>
+    schema?.description ??
+    (schema instanceof z.ZodOptional
+      ? describedAs(schema.unwrap() as z.ZodType)
+      : '');
+
+  it('keeps the grammar on filters offered at the top level', () => {
+    for (const key of ['arrival', 'pickup_lfd'] as const) {
+      expect(describedAs(containerListInputSchema.shape[key]), key).toContain(
+        'YYYY-MM-DD',
+      );
+    }
+    expect(describedAs(shipmentListInputSchema.shape.pod_arrival)).toContain(
+      'YYYY-MM-DD',
+    );
+    expect(describedAs(containerListInputSchema.shape.pod_code)).toContain(
+      'Comma-separated literals mean OR.',
+    );
+  });
+
+  it('states the grammar once on advanced_filters instead of on each field', () => {
+    const advanced = containerListInputSchema.shape.advanced_filters;
+    expect(describedAs(advanced)).toContain('YYYY-MM-DD');
+    expect(
+      describedAs(advanced.unwrap().shape.picked_up_at as z.ZodType),
+    ).not.toContain('YYYY-MM-DD');
+  });
+
+  it('keeps a field whose own rules differ from the shared grammar whole', () => {
+    expect(describedAs(shipmentListInputSchema.shape.created_at)).toContain(
+      'Relative dates and comma-separated timestamps are not accepted.',
+    );
+    expect(describedAs(shipmentListInputSchema.shape.created_at)).not.toContain(
+      'N.days.ago',
+    );
   });
 });

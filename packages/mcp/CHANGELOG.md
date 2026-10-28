@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `list_parties`: route customers to `advanced_filters.customer_id`. `GET /parties` lists a customer created before party roles under its customer account ID, which `customer_id` filters accept and `advanced_filters.parties` does not, so a customer filter on the returned ID matched no containers. Looking up one party by `id` now returns it under the ID you passed instead of the account ID.
 
+### Changed
+- `get_container`, `get_shipment_details`, and `get_container_transport_events` publish a full output schema instead of an open object. Every field the tool returns is now listed with its type, so agents that script tool calls (code mode) can read field names without a probe call. Values copied straight from the API stay nullable, so a field the API omits does not fail the call.
+
 ## [1.2.0] - 2026-10-09
 
 ### Added

@@ -350,7 +350,7 @@ Filter a customer with `advanced_filters.customer_id`, and other roles with `adv
 
 With `id`, the tool reads that one party, returns it under the ID you passed, and ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
 
-**When to Use**: Before `list_containers` or `summarize_containers` when a question names a company. Filter with `advanced_filters.parties`, keyed by role, such as `{ customer: "<id>" }`.
+**When to Use**: Before `list_containers` or `summarize_containers` when a question names a company. Filter customers with `advanced_filters.customer_id`; use `advanced_filters.parties`, keyed by role, for other roles, such as `{ shipper: "<id>" }`.
 
 ---
 

@@ -31,7 +31,7 @@ export const listPartiesInputSchema = z.strictObject({
     .string()
     .uuid()
     .describe(
-      'One party ID (UUID format) to look up, for example party_id from a party role. When set, search and limit are ignored.',
+      'One party ID to look up, for example party_id from a party role. When set, search and limit are ignored.',
     )
     .optional(),
   search: z
@@ -48,7 +48,7 @@ export const listPartiesInputSchema = z.strictObject({
     .int()
     .positive()
     .max(50)
-    .describe('Most parties to return, from 1 to 50.')
+    .describe('Most parties to return.')
     .default(25),
 });
 export type ListPartiesArgs = z.input<typeof listPartiesInputSchema>;
@@ -130,7 +130,7 @@ export async function executeListParties(
 function usage(): string {
   return (
     'Filter by a customer with advanced_filters.customer_id: "<id>" on list_containers, summarize_containers, or list_shipments. ' +
-    `For other roles use advanced_filters.parties on list_containers or summarize_containers, keyed by role: { "<role>": "<party id>" }. Roles: ${PARTY_ROLES.join(', ')}. Use @exists for "has any".`
+    `For other roles use advanced_filters.parties on list_containers or summarize_containers, keyed by role: { "<role>": "<party id>" }. Roles: ${PARTY_ROLES.filter((role) => role !== 'customer').join(', ')}. Use @exists for "has any".`
   );
 }
 
