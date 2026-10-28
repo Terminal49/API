@@ -196,6 +196,11 @@ export function checkConfirmationToken(
   if (!match) return { ok: false, reason: 'malformed' };
   const [, encodedExpiry = '', nonce = '', state = '', signature = ''] = match;
   const expiresAt = Number.parseInt(encodedExpiry, 36);
+  // The MAC covers the expiry as a number, so a zero-padded copy of a token
+  // would verify too and count as a different, unspent confirmation.
+  if (expiresAt.toString(36) !== encodedExpiry) {
+    return { ok: false, reason: 'malformed' };
+  }
   // The MAC covers the expiry, the nonce and the state tag, so an edit to any
   // of them is a mismatch, never a stale preview.
   if (!sameMac(signature, tokenMac(secret, binding, expiresAt, nonce, state))) {
@@ -713,13 +718,22 @@ function elicitConfirmation<Preview>(
  */
 const spentTokens = new Map<string, number>();
 
+/**
+ * The key a spent token is remembered by: its signature, which a checked
+ * token cannot change without failing the check, rather than its text.
+ */
+function spentKey(token: string): string {
+  return token.slice(token.lastIndexOf('.') + 1);
+}
+
 /** Marks a token used. False when it already confirmed a write. */
 function spendToken(token: string, now: number = Date.now()): boolean {
   for (const [spent, expiresAt] of spentTokens) {
     if (expiresAt <= now) spentTokens.delete(spent);
   }
-  if (spentTokens.has(token)) return false;
-  spentTokens.set(token, now + CONFIRMATION_TTL_MS);
+  const key = spentKey(token);
+  if (spentTokens.has(key)) return false;
+  spentTokens.set(key, now + CONFIRMATION_TTL_MS);
   return true;
 }
 
@@ -782,7 +796,7 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
     } catch (error) {
       const status = httpStatus(error);
       if (status === undefined || status < 400 || status >= 500) throw error;
-      if (confirmation) spentTokens.delete(confirmation);
+      if (confirmation) spentTokens.delete(spentKey(confirmation));
       const answer = await plan.refused?.(error, preview);
       if (answer === undefined) throw error;
       return answer;

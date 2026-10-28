@@ -165,6 +165,43 @@ describe('stop_shipment_tracking', () => {
     ]);
   });
 
+  it('refuses a zero-padded copy of a used token after a resume', async () => {
+    const { client, requests } = trackedShipment();
+    const context = writeContext(client);
+    const preview = await executeStopShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      context,
+    );
+    const token = tokenOf(preview);
+    await executeStopShipmentTracking(
+      { shipment_id: SHIPMENT_ID, confirmation_token: token },
+      client,
+      context,
+    );
+    await executeResumeShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      context,
+    );
+    const [prefix, issued, state, signature] = token.split('.');
+
+    const replay = await executeStopShipmentTracking(
+      {
+        shipment_id: SHIPMENT_ID,
+        confirmation_token: [prefix, `0${issued}`, state, signature].join('.'),
+      },
+      client,
+      context,
+    );
+
+    expect(replay).toMatchObject({ error: 'invalid_confirmation' });
+    expect(patches(requests).map((request) => request.path)).toEqual([
+      `/shipments/${SHIPMENT_ID}/stop_tracking`,
+      `/shipments/${SHIPMENT_ID}/resume_tracking`,
+    ]);
+  });
+
   it('accepts the same token again after Terminal49 rate limits the stop', async () => {
     let limited = true;
     let stoppedAt: string | null = null;
