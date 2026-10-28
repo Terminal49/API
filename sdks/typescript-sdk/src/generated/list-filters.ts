@@ -262,7 +262,7 @@ pickup_lfd_line_effective_on?: DateFilter;
 tags?: StringFilter;
 /** With tags, true requires ALL tags; false or absent means ANY. Has no effect without tags. The SDK requires tags (or shipment tag) when this modifier is supplied. */
 tags_and?: boolean;
-/** Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK. */
+/** Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK. For the customer role, use the party_id stored on that role, not the role record id. For customer IDs returned by list_parties, use filter[customer_id] instead. */
 parties?: Partial<Record<PartyRole, StringFilter>>;
 include?: IncludeParam<ContainerInclude>;
 /** Supported API sort token(s); validated before the request. */

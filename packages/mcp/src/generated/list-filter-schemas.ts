@@ -639,7 +639,7 @@ export const containerFilterShape = {
         .optional(),
     })
     .describe(
-      'Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles.',
+      'Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. For the customer role, use the party_id stored on that role, not the role record id. For customer IDs returned by list_parties, use filter[customer_id] instead.',
     )
     .optional(),
 } as const;

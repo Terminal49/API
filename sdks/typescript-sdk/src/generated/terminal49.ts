@@ -6760,7 +6760,7 @@ export interface operations {
                  */
                 "filter[tags_and]"?: boolean;
                 /**
-                 * @description Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.
+                 * @description Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK. For the customer role, use the party_id stored on that role, not the role record id. For customer IDs returned by list_parties, use filter[customer_id] instead.
                  * @example {
                  *       "shipper": "00000000-0000-4000-8000-000000000001"
                  *     }
@@ -7148,7 +7148,7 @@ export interface operations {
                  */
                 "filter[tags_and]"?: boolean;
                 /**
-                 * @description Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.
+                 * @description Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK. For the customer role, use the party_id stored on that role, not the role record id. For customer IDs returned by list_parties, use filter[customer_id] instead.
                  * @example {
                  *       "shipper": "00000000-0000-4000-8000-000000000001"
                  *     }

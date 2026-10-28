@@ -94,3 +94,30 @@ test('every item and response has a unique id', () => {
   assert.ok(ids.length > 0);
   assert.equal(new Set(ids).size, ids.length);
 });
+
+test('scalar and array customer examples direct lookup IDs to customer_id', () => {
+  const examples = requests(collection.item).flatMap((item) => [
+    item.request,
+    ...(item.response ?? []).map((response) => response.originalRequest),
+  ]);
+  const keys = new Set();
+  for (const request of examples) {
+    for (const query of request?.url?.query ?? []) {
+      if (
+        !['filter[parties][customer]', 'filter[parties][customer][]'].includes(
+          query.key,
+        )
+      )
+        continue;
+      keys.add(query.key);
+      const description =
+        typeof query.description === 'string'
+          ? query.description
+          : query.description.content;
+      assert.match(description, /list_parties/);
+      assert.match(description, /customer_id/);
+      assert.match(description, /party_id/);
+    }
+  }
+  assert.equal(keys.size, 2);
+});
