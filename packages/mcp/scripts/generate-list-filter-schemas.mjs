@@ -34,16 +34,29 @@ const SCHEMA_RULES = [
   /^The SDK accepts only true\.$/,
   /^Unknown roles are ignored by the API and rejected by the SDK\.$/,
 ];
-const fieldDescription = (description) =>
-  description
-    .split(/(?<=\.) (?=\S)/)
+const sentences = (description) => description.split(/(?<=\.) (?=\S)/);
+/**
+ * The shared grammar a filter's description carries in full, if any. A field
+ * with its own variant (such as shipment created_at) keeps its whole text.
+ */
+const grammarOf = (description) => {
+  const parts = sentences(description);
+  if (DATE_GRAMMAR.every((sentence) => parts.includes(sentence))) return 'date';
+  if (EXACT_GRAMMAR.every((sentence) => parts.includes(sentence)))
+    return 'exact';
+  return undefined;
+};
+const GRAMMAR_SENTENCES = { date: DATE_GRAMMAR, exact: EXACT_GRAMMAR };
+const fieldDescription = (description) => {
+  const shared = GRAMMAR_SENTENCES[grammarOf(description)] ?? [];
+  return sentences(description)
     .filter(
       (sentence) =>
-        !EXACT_GRAMMAR.includes(sentence) &&
-        !DATE_GRAMMAR.includes(sentence) &&
+        !shared.includes(sentence) &&
         !SCHEMA_RULES.some((rule) => rule.test(sentence)),
     )
     .join(' ');
+};
 const PARTY_IDS = 'Get party IDs from list_parties.';
 const lines = [
   '// Generated from docs/openapi.json. Run npm run generate:filters --workspace @terminal49/mcp.',
@@ -65,6 +78,15 @@ for (const [entity, endpoint] of [
     throw new Error(`Duplicate ${entity} canonical filter`);
   lines.push(
     `export const ${entity}_FILTER_KEYS = ${JSON.stringify(keys)} as const;`,
+  );
+  const grammar = Object.fromEntries(
+    params
+      .map((p) => [p['x-t49-filter-key'], grammarOf(p.description)])
+      .filter(([, kind]) => kind),
+  );
+  lines.push(
+    `/** The shared grammar each ${entity.toLowerCase()} filter follows; FILTER_VALUE_GUIDE states it. */`,
+    `export const ${entity}_FILTER_GRAMMAR: Partial<Record<(typeof ${entity}_FILTER_KEYS)[number], 'exact' | 'date'>> = ${JSON.stringify(grammar)};`,
   );
   lines.push(`export const ${entity.toLowerCase()}FilterShape = {`);
   for (const p of params) {

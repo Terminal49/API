@@ -29,6 +29,15 @@ export const SHIPMENT_FILTER_KEYS = [
   'tags_and',
   'tag',
 ] as const;
+/** The shared grammar each shipment filter follows; FILTER_VALUE_GUIDE states it. */
+export const SHIPMENT_FILTER_GRAMMAR: Partial<
+  Record<(typeof SHIPMENT_FILTER_KEYS)[number], 'exact' | 'date'>
+> = {
+  pod_ata_at: 'date',
+  pod_arrival: 'date',
+  creator_id: 'exact',
+  customer_id: 'exact',
+};
 export const shipmentFilterShape = {
   q: z
     .string()
@@ -49,7 +58,7 @@ export const shipmentFilterShape = {
   created_at: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Creation date. Use an ISO 8601 date-time with Z or a timezone offset; prefix with =, <, <=, >, or >=. Relative dates and comma-separated timestamps are not accepted.',
+      'Creation date. Use an ISO 8601 date-time with Z or a timezone offset; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Relative dates and comma-separated timestamps are not accepted. Use @exists or @not_exists for presence.',
     )
     .optional(),
   actively_tracked: z
@@ -101,7 +110,7 @@ export const shipmentFilterShape = {
   pod_terminal_id: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .describe(
-      'Port of discharge terminal ID. Obtain it from the related terminal resource. Arrays mean OR for this shipment terminal filter.',
+      'Port of discharge terminal ID. Obtain it from the related terminal resource. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean OR for this shipment terminal filter. ~ is not supported.',
     )
     .optional(),
   pol_code: z
@@ -238,6 +247,48 @@ export const CONTAINER_FILTER_KEYS = [
   'tags_and',
   'parties',
 ] as const;
+/** The shared grammar each container filter follows; FILTER_VALUE_GUIDE states it. */
+export const CONTAINER_FILTER_GRAMMAR: Partial<
+  Record<(typeof CONTAINER_FILTER_KEYS)[number], 'exact' | 'date'>
+> = {
+  number: 'exact',
+  pol: 'exact',
+  pod: 'exact',
+  destination: 'exact',
+  pol_code: 'exact',
+  pod_code: 'exact',
+  destination_code: 'exact',
+  shipping_line_scac: 'exact',
+  customer_id: 'exact',
+  customer_name: 'exact',
+  vessel_name: 'exact',
+  pod_terminal_id: 'exact',
+  delivered_at: 'date',
+  pod_discharged_at: 'date',
+  pod_arrived_at: 'date',
+  pol_etd_at: 'date',
+  pol_atd_at: 'date',
+  empty_out_at: 'date',
+  pol_full_in_at: 'date',
+  pol_vessel_loaded_at: 'date',
+  pol_vessel_departed_at: 'date',
+  arrival: 'date',
+  picked_up_at: 'date',
+  empty_returned_at: 'date',
+  created_at: 'date',
+  updated_at: 'date',
+  inland_destination_rail_unloaded_at: 'date',
+  final_destination_full_out_at: 'date',
+  inland_destination_eta_at: 'date',
+  inland_destination_ata_at: 'date',
+  pod_rail_departed_at: 'date',
+  pickup_lfd: 'date',
+  pickup_lfd_rail_on: 'date',
+  pickup_lfd_terminal_on: 'date',
+  pickup_lfd_line_on: 'date',
+  pickup_lfd_terminal_effective_on: 'date',
+  pickup_lfd_line_effective_on: 'date',
+};
 export const containerFilterShape = {
   number: z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])

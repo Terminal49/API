@@ -13,6 +13,8 @@ import {
   CONTAINER_FILTER_KEYS,
   EXACT_FILTER_GRAMMAR,
   DATE_FILTER_GRAMMAR,
+  SHIPMENT_FILTER_GRAMMAR,
+  CONTAINER_FILTER_GRAMMAR,
 } from '../generated/list-filter-schemas.js';
 export { SHIPMENT_FILTER_KEYS, CONTAINER_FILTER_KEYS };
 
@@ -21,6 +23,34 @@ export { SHIPMENT_FILTER_KEYS, CONTAINER_FILTER_KEYS };
  * top level instead of on each field.
  */
 export const FILTER_VALUE_GUIDE = `Exact-match filters: ${EXACT_FILTER_GRAMMAR} Date filters: ${DATE_FILTER_GRAMMAR} A field's own description overrides these rules.`;
+
+const GRAMMAR = { exact: EXACT_FILTER_GRAMMAR, date: DATE_FILTER_GRAMMAR };
+
+/**
+ * A filter offered at the top level, outside advanced_filters, so its own
+ * description carries the value grammar FILTER_VALUE_GUIDE states there.
+ */
+function topLevel<
+  Shape extends Record<string, z.ZodOptional<z.ZodType>>,
+  Key extends keyof Shape & string,
+>(
+  shape: Shape,
+  grammar: Partial<Record<string, keyof typeof GRAMMAR>>,
+  key: Key,
+): Shape[Key] {
+  const kind = grammar[key];
+  const inner = shape[key].unwrap();
+  if (!kind) return shape[key];
+  return inner
+    .describe(`${inner.description} ${GRAMMAR[kind]}`)
+    .optional() as Shape[Key];
+}
+const shipmentTop = <Key extends keyof typeof shipmentFilterShape & string>(
+  key: Key,
+) => topLevel(shipmentFilterShape, SHIPMENT_FILTER_GRAMMAR, key);
+const containerTop = <Key extends keyof typeof containerFilterShape & string>(
+  key: Key,
+) => topLevel(containerFilterShape, CONTAINER_FILTER_GRAMMAR, key);
 
 const paginationShape = {
   page: z
@@ -41,15 +71,15 @@ const paginationShape = {
 };
 
 export const shipmentListInputSchema = z.strictObject({
-  number: shipmentFilterShape.number,
-  tracking_stopped: shipmentFilterShape.tracking_stopped,
-  actively_tracked: shipmentFilterShape.actively_tracked,
-  voyage_status: shipmentFilterShape.voyage_status,
-  pod_code: shipmentFilterShape.pod_code,
-  pol_code: shipmentFilterShape.pol_code,
-  pod_arrival: shipmentFilterShape.pod_arrival,
-  created_at: shipmentFilterShape.created_at,
-  tags: shipmentFilterShape.tags,
+  number: shipmentTop('number'),
+  tracking_stopped: shipmentTop('tracking_stopped'),
+  actively_tracked: shipmentTop('actively_tracked'),
+  voyage_status: shipmentTop('voyage_status'),
+  pod_code: shipmentTop('pod_code'),
+  pol_code: shipmentTop('pol_code'),
+  pod_arrival: shipmentTop('pod_arrival'),
+  created_at: shipmentTop('created_at'),
+  tags: shipmentTop('tags'),
   advanced_filters: z
     .strictObject(shipmentFilterShape)
     .describe(
@@ -73,18 +103,18 @@ export const shipmentListInputSchema = z.strictObject({
 });
 
 export const containerListInputSchema = z.strictObject({
-  number: containerFilterShape.number,
-  current_status: containerFilterShape.current_status,
-  pod_code: containerFilterShape.pod_code,
-  pol_code: containerFilterShape.pol_code,
-  shipping_line_scac: containerFilterShape.shipping_line_scac,
-  has_holds: containerFilterShape.has_holds,
-  has_fees: containerFilterShape.has_fees,
-  requires_attention: containerFilterShape.requires_attention,
-  actively_tracked: containerFilterShape.actively_tracked,
-  arrival: containerFilterShape.arrival,
-  pickup_lfd: containerFilterShape.pickup_lfd,
-  tags: containerFilterShape.tags,
+  number: containerTop('number'),
+  current_status: containerTop('current_status'),
+  pod_code: containerTop('pod_code'),
+  pol_code: containerTop('pol_code'),
+  shipping_line_scac: containerTop('shipping_line_scac'),
+  has_holds: containerTop('has_holds'),
+  has_fees: containerTop('has_fees'),
+  requires_attention: containerTop('requires_attention'),
+  actively_tracked: containerTop('actively_tracked'),
+  arrival: containerTop('arrival'),
+  pickup_lfd: containerTop('pickup_lfd'),
+  tags: containerTop('tags'),
   advanced_filters: z
     .strictObject(containerFilterShape)
     .describe(
