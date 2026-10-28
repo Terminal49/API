@@ -189,8 +189,9 @@ type ToolRegistrar = (definition: ToolDefinition) => void;
 /**
  * How clients and directories show this server: the `title`, `description`,
  * `websiteUrl` and `icons` fields of the MCP `Implementation` that initialize
- * returns as `serverInfo`. The icons are the 512px store icons served from
- * `public/store-icons/`, the same ones `server.json` lists.
+ * returns as `serverInfo`. The website is the MCP landing page, and the icons
+ * are the 512px store icons served from `public/store-icons/`, the same ones
+ * `server.json` lists.
  */
 export const SERVER_IDENTITY = {
   title: 'Terminal49',
@@ -198,7 +199,7 @@ export const SERVER_IDENTITY = {
     'Terminal49 gives your AI agent live visibility into every ocean shipment and container. ' +
     'Track by container, bill of lading, or booking across all major carriers; find what needs attention, from ETA delays to holds, fees, and last free days; and update your shipments. ' +
     'Direct connections to North American ports, terminals, and rail make it the most complete import data available.',
-  websiteUrl: 'https://terminal49.com/docs/mcp/home',
+  websiteUrl: 'https://terminal49.com/ai',
   icons: [
     {
       src: 'https://mcp.terminal49.com/store-icons/terminal49-light.png',
