@@ -81,7 +81,13 @@ could create a real tracking request.
 sandbox account. It runs only when `MCP_EVAL_ENABLE_WRITE=1` and
 `MCP_EVAL_SANDBOX_TOKEN` are both set, and it uses that token, never
 `MCP_EVAL_TOKEN`. Each case except the document case is a round trip that
-leaves the record as it found it. The document case only previews. The cases:
+leaves the record as it found it. The document case only previews.
+
+The sandbox account also holds demo data, so the shipment cases change only
+the one shipment whose reference numbers include `MCP-EVAL-FIXTURE`, chosen by
+exact match in [`write-fixtures.ts`](./write-fixtures.ts). To set up the
+sandbox once, add the reference number `MCP-EVAL-FIXTURE` to one shipment. The
+cases:
 
 - stop a shipment with a confirmed preview, then resume it;
 - refuse a stop with an edited confirmation token;
@@ -99,9 +105,10 @@ write tool in the default toolsets, so a gateway that lost `reference_numbers`
 or `documents_write` cannot pass with its cases skipped.
 `MCP_EVAL_ALLOW_SPARSE=1` lets those cases skip instead. The two stop cases
 skip when the gateway does not serve the opt-in `tracking_lifecycle` toolset.
-The shipment cases skip when the sandbox account has no shipment, and the two
-stop cases also skip when the sandbox key cannot stop
-tracking (`FeatureNotEnabled`) or the first shipment is already stopped. The
+The shipment cases skip, and never fall back to another shipment, when no
+shipment or more than one carries `MCP-EVAL-FIXTURE`. The two stop cases also
+skip when the sandbox key cannot stop
+tracking (`FeatureNotEnabled`) or the fixture shipment is already stopped. The
 reference number case does not check either, so it runs on a stopped shipment
 too.
 If an assertion fails after a change, the case still undoes the change before
