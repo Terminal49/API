@@ -146,13 +146,15 @@ Search for bill of lading 123456789
 | `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
 | `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
 
-The opt-in `tracking_lifecycle` toolset adds three write tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists `tracking_lifecycle`. `stop_shipment_tracking` and `cancel_tracking_request` return a preview first and change data only after you approve it. A client that declares MCP 2026-07-28 form elicitation shows an `input_required` dialog and asks you to confirm. Any other client gets the preview and a `confirmation_token`, and sends the token back on a second call after you approve. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+Two opt-in toolsets add write tools: `tracking_lifecycle` adds three and `reference_numbers` adds two, so all 35 tools exist but a deployment serves 30 by default. A deployment serves an opt-in toolset only when `T49_MCP_TOOLSETS` lists it. `stop_shipment_tracking`, `cancel_tracking_request` and `remove_reference_numbers` return a preview first and change data only after you approve it. A client that declares MCP 2026-07-28 form elicitation shows an `input_required` dialog and asks you to confirm. Any other client gets the preview and a `confirmation_token`, and sends the token back on a second call after you approve. See [Confirming writes](packages/mcp/README.md#confirming-writes).
 
 | Tool | Description |
 |------|-------------|
 | `stop_shipment_tracking` | Stop updates for a shipment and its containers, after a confirmed preview |
 | `resume_shipment_tracking` | Start tracking a stopped shipment again |
 | `cancel_tracking_request` | Cancel a pending tracking request, after a confirmed preview. It cannot be undone. |
+| `add_reference_numbers` | Add reference numbers to a container, shipment, or tracking request, keeping the ones already there |
+| `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request, after a confirmed preview |
 
 ### 🎯 Workflow Prompts (3)
 

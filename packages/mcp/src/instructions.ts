@@ -55,13 +55,13 @@ const PARAGRAPHS: readonly Paragraph[] = [
         unless: ['set_party_role'],
       },
       {
-        text: " For set_party_role, take party_id from the record's party roles, or list_parties for a party on no record.",
+        text: " For set_party_role, take party_id from the record's party roles or list_parties.",
       },
       {
-        text: ' Use search_docs for how-to and API questions and cite the returned links.',
+        text: ' Use search_docs for how-to and API questions; cite its links.',
       },
       {
-        text: ' Call whoami when a lookup returns nothing or an authorization error, or before relying on a gated feature.',
+        text: ' Call whoami when a lookup returns nothing or an authorization error, or before using a gated feature.',
       },
     ],
   },
@@ -83,7 +83,7 @@ const PARAGRAPHS: readonly Paragraph[] = [
     aboutTools: true,
     segments: [
       {
-        text: "Trade intelligence (search_importers, get_importer_profile, rank_importers, get_trade_trends, get_trade_breakdown) reads US Customs bill-of-lading records from January 2022, not the account's shipments. It is enabled per account: if a tool says it isn't enabled, refer the user to support@terminal49.com and don't invent figures. Volume is physical containers; values are estimates. The trends company filter is a substring match, so for one company use get_importer_profile with months: 24. Low or missing volume is a floor, not a company's size.",
+        text: "Trade intelligence (search_importers, get_importer_profile, rank_importers, get_trade_trends, get_trade_breakdown) reads US Customs bill-of-lading records from January 2022, not the account's shipments. It is enabled per account: if a tool says it isn't, refer the user to support@terminal49.com and don't invent figures. Volume is physical containers; values are estimates. The trends company filter is a substring match, so for one company use get_importer_profile with months: 24. Low or missing volume is a floor, not a company's size.",
       },
     ],
   },
@@ -119,18 +119,22 @@ function approvalRule(writes: readonly WriteTool[]): string {
   const destructive = writes.filter(
     (tool) => tool.tier === 'C' && tool.confirms === 'destructive_only',
   );
-  const asks = (tools: readonly WriteTool[]) =>
-    `${nameList(tools)} ask${tools.length === 1 ? 's' : ''} the user to approve a preview`;
+  const needs = (tools: readonly WriteTool[], when: string) =>
+    `${nameList(tools)} ${when}${tools.length === 1 ? 's' : ''}`;
   const parts = [
-    ...(always.length > 0 ? [`${asks(always)} on every call`] : []),
+    ...(always.length > 0
+      ? [`${needs(always, 'always need')} the user's approval of a preview`]
+      : []),
     ...(destructive.length > 0
       ? [
-          `${always.length > 0 ? nameList(destructive) : asks(destructive)} only when a record would lose a party or a value`,
+          always.length > 0
+            ? `${nameList(destructive)} only when a record would lose a party or a value`
+            : `${needs(destructive, 'need')} the user's approval of a preview only when a record would lose a party or a value`,
         ]
       : []),
   ];
   if (parts.length === 0) return '';
-  return ` ${parts.join('; ')}. Show the user every preview; never pass a confirmation_token they have not approved in this turn.`;
+  return ` ${parts.join('; ')}. Show every preview; never pass a confirmation_token the user has not approved this turn.`;
 }
 
 /** Which tools change account records, and the rules for using them. */
@@ -138,7 +142,7 @@ function writeRules(tools: readonly RegisteredTool[]): string {
   const writes = tools.filter(isWriteTool);
   if (writes.length === 0) return `These tools only fetch data. ${UNTRUSTED}`;
   const [tool, them] = writes.length === 1 ? ['tool', 'it'] : ['tools', 'them'];
-  return `Write ${tool}: ${nameList(writes)}. Call ${them} only when the user asks. The other tools only fetch data.${approvalRule(writes)} ${UNTRUSTED}`;
+  return `Write ${tool}: ${nameList(writes)}. Call ${them} only when the user asks; the rest only fetch data.${approvalRule(writes)} ${UNTRUSTED}`;
 }
 
 /** The instructions for a server that registers exactly these tools. */

@@ -228,7 +228,7 @@ printf '%s\n' \
 | `list_shipments` | List shipments with filters + pagination | `number?`, `tracking_stopped?`, `actively_tracked?`, `voyage_status?`, `pod_code?`, `pol_code?`, `pod_arrival?`, `created_at?`, `tags?`, `advanced_filters?`, `include_stopped_tracking?`, `sort?`, `include_containers?`, `page?`, `page_size?` |
 | `list_containers` | List containers with filters + pagination | `number?`, `current_status?`, `pod_code?`, `pol_code?`, `shipping_line_scac?`, `has_holds?`, `has_fees?`, `requires_attention?`, `actively_tracked?`, `arrival?`, `pickup_lfd?`, `tags?`, `advanced_filters?`, `include_stopped_tracking?`, `sort?`, `include?: ['shipment', 'pod_terminal']`, `view?`, `page?`, `page_size?` |
 | `summarize_containers` | Count containers grouped by one dimension | `group_by` (`pod_terminal`, `current_status`, `shipping_line`, `port_of_discharge`, `hold_type`, `pickup_lfd_date`, or `pod_arrival_date`), plus the `list_containers` filters except `sort`, `include`, `view`, `page`, and `page_size` |
-| `list_parties` | Find parties by company name, or read one by ID | `id?`, `search?`, `limit?` (default 25, maximum 50) |
+| `list_parties` | Find parties by name, or read one by ID | `id?`, `search?`, `limit?` (default 25, maximum 50) |
 | `list_custom_field_definitions` | List the account's custom fields, their types, and enum options | `entity_type?` (`container` or `shipment`), `include_archived?: boolean` |
 | `list_tracking_requests` | List tracking requests with filters | `request_number?`, `status?` (`pending`, `created`, `failed`, or `cancelled`), `scac?`, `page?`, `page_size?` |
 | `get_tracking_request` | Get one tracking request's status, failure reason, and shipment | `id: uuid`, `include_custom_fields?: boolean` |
@@ -237,13 +237,15 @@ printf '%s\n' \
 | `search_docs` | Search the public Terminal49 documentation | `query: string`, `limit?` (1-10, default 5) |
 | `whoami` | Identify the credential, its account, available features, and the session's toolsets | none |
 
-The `operations` toolset adds `set_party_role` and `set_custom_field` and is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to leave them out. The `tracking_lifecycle` toolset adds `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
+The `operations` toolset adds `set_party_role` and `set_custom_field` and is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to leave them out. The `tracking_lifecycle` toolset adds `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`, and the `reference_numbers` toolset adds `add_reference_numbers` and `remove_reference_numbers`; a deployment serves each only when `T49_MCP_TOOLSETS` lists it.
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
 | `stop_shipment_tracking` | Stop updates for a shipment and its containers. Asks you to approve a preview first. | `shipment_id: uuid`, `confirmation_token?: string` |
 | `resume_shipment_tracking` | Start tracking a stopped shipment again | `shipment_id: uuid` |
 | `cancel_tracking_request` | Cancel a pending tracking request. Asks you to approve a preview first. It cannot be undone. | `tracking_request_id: uuid`, `confirmation_token?: string` |
+| `add_reference_numbers` | Add reference numbers to a container, shipment, or tracking request, keeping the ones already there | `entity_type`, `entity_id: uuid`, `add: string[]` |
+| `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request. Asks you to approve a preview first. | `entity_type`, `entity_id: uuid`, `remove: string[]`, `confirmation_token?: string` |
 | `set_party_role` | Attach, replace, or detach a party on up to 50 containers or shipments. `add` runs at once; `remove`, and a `replace` that detaches another party, ask you to approve a preview of every record that changes. | `container_ids?` or `shipment_ids?` (1 to 50), `role`, `party_id: uuid`, `action` (`add`, `replace`, or `remove`), `confirmation_token?: string` |
 | `set_custom_field` | Set or clear a custom field on up to 50 containers or shipments. Filling empty fields runs at once; overwriting or clearing a value asks you to approve a preview of every record that changes. | `entity` (`container` or `shipment`), `ids` (1 to 50), `api_slug`, `value` (string, number, boolean, string array, or `null` to clear), `confirmation_token?: string` |
 
@@ -370,7 +372,7 @@ The `vercel.json` configures the MCP server (excerpt):
 | `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,operations,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
 | `T49_MCP_READ_ONLY` | No | Serves only read-only tools when set to `true` or `1`; defaults to `false` |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | Serves toolsets other than `core` and `trade` when callers share `T49_API_TOKEN`; defaults to `false` |
-| `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, and a destructive `set_party_role` or `set_custom_field` call need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
+| `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, and a destructive `set_party_role` or `set_custom_field` call need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
 | `SENTRY_DSN` | No | Enables Sentry MCP Monitoring |
 | `SENTRY_ENVIRONMENT` | No | Sentry environment name; defaults to `NODE_ENV` |
 | `SENTRY_RELEASE` | No | Sentry release identifier; defaults to `VERCEL_GIT_COMMIT_SHA` |

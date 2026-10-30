@@ -511,7 +511,7 @@ export function auditOutcome(result: unknown): string {
 
 // ==================== Write flows ====================
 
-interface WriteTarget {
+export interface WriteTarget {
   tool: ToolName;
   entityType: AuditEntityType;
   entityId: string | undefined;

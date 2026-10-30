@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **33 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 30 of them; the three tracking lifecycle tools are opt-in.
+The Terminal49 MCP Server provides **35 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 30 of them; the three tracking lifecycle tools and the two reference number tools are opt-in.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role` and `set_custom_field` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role` and `set_custom_field` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it. `add_reference_numbers` and `remove_reference_numbers` are in the `reference_numbers` toolset, which is opt-in the same way. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -346,7 +346,7 @@ list_parties({ id: "party-uuid" })
 - `parties` (`id`, `name`) and `total_matched`
 - `truncated` when the list does not hold every match
 
-With `id`, the tool reads that one party and ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
+A `search` matches a party's company name, name or nickname. With `id`, the tool reads that one party and ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
 
 **When to Use**: Before `list_containers` or `summarize_containers` when a question names a company. Filter with `advanced_filters.parties`, keyed by role, such as `{ customer: "<id>" }`.
 
@@ -634,7 +634,65 @@ cancel_tracking_request({
 
 ---
 
-### 25. `set_party_role`
+### 25. `add_reference_numbers`
+**Purpose**: Add reference numbers, such as PO or job numbers, to a container, shipment, or tracking request. Tier A.
+
+**Usage**:
+```typescript
+add_reference_numbers({
+  entity_type: "container", // or "shipment" or "tracking_request"
+  entity_id: "container-uuid",
+  add: ["PO-4500123"] // 1 to 20, each up to 64 characters
+})
+```
+
+The API replaces the whole list on every change, and it has no version check. The tool reads the current list, sends that list plus the new numbers, and reads the record again. Matching is exact after trimming spaces from both the numbers passed and the numbers on the record.
+
+**Returns**:
+- `status: "added"` with `record` (`entity_type`, `entity_id` and `label`, which is the container number, Bill of Lading or request number), `previous`, `ref_numbers` (the list read back), `added`, `already_present`, `concurrent_change_detected` and `undo: "remove_reference_numbers"`
+- `status: "already_present"` when every number is already on the record. Nothing is sent, so a repeated call changes nothing.
+- `concurrent_change_detected: true` when the list read back differs from the list sent, which means someone else changed it at the same time. It is `null`, with `read_back_note`, when the record could not be read after the change; `ref_numbers` is then the list that was sent.
+- `status: "noop"` with an `alternative` when the API refuses the list with 422
+- `unreadable_reference_numbers` with `record` when the API returns a list the tool cannot read, such as one with a number or an object in it. Nothing is sent. Null entries hold no number, and the tool leaves them out of the list it sends.
+
+**When to Use**: Tag a record with a PO, job or customer reference so it can be found by it later.
+
+---
+
+### 26. `remove_reference_numbers`
+**Purpose**: Remove reference numbers from a container, shipment, or tracking request. Tier C, because searches, filters and integrations that use a removed number stop finding the record.
+
+**Usage**:
+```typescript
+remove_reference_numbers({
+  entity_type: "shipment",
+  entity_id: "shipment-uuid",
+  remove: ["PO-WRONG"]
+})
+// After the user approves the preview:
+remove_reference_numbers({
+  entity_type: "shipment",
+  entity_id: "shipment-uuid",
+  remove: ["PO-WRONG"],
+  confirmation_token: "t49ct1...."
+})
+```
+
+Each number can be up to 1000 characters, so a long number already on the record can be removed. Matching works as in `add_reference_numbers`.
+
+**Returns**:
+- Preview: `current` (`record` fields and `ref_numbers`), `proposed: { ref_numbers }`, `removing`, `not_present` and `reach`. The token covers the whole current list, so a change to the list between the preview and the approval returns `stale_preview`. A change that lands while the confirmed write is running can still be lost, because Terminal49 replaces the whole list and has no conditional update.
+- `status: "removed"` with `previous`, `ref_numbers`, `removed`, `not_present` and `concurrent_change_detected`. The read-back works as in `add_reference_numbers`.
+- `undo: "add_reference_numbers"` only when every removed number is 64 characters or shorter, because `add_reference_numbers` takes no longer number. Otherwise `message` says to re-add the number in the Terminal49 dashboard.
+- `status: "not_present"` with `ref_numbers` when none of the numbers are on the record. No token is issued.
+- `status: "noop"` with an `alternative` when the API refuses the shorter list with 422
+- `unreadable_reference_numbers` as in `add_reference_numbers`. No token is issued.
+
+**When to Use**: A reference number was added to the wrong record or has a typo.
+
+---
+
+### 27. `set_party_role`
 **Purpose**: Attach a party to up to 50 containers or shipments in a role, replace the party in that role, or detach it. Tier C: a call that detaches a party asks the user; a call that only attaches runs at once.
 
 **Usage**:
@@ -659,7 +717,7 @@ set_party_role({ ...sameArguments, confirmation_token: "t49ct1...." })
 
 ---
 
-### 26. `set_custom_field`
+### 28. `set_custom_field`
 **Purpose**: Set or clear one of the account's custom fields on up to 50 containers or shipments. Tier C: a call that overwrites or clears a value asks the user; a call that only fills empty fields runs at once.
 
 **Usage**:
@@ -781,6 +839,15 @@ set_custom_field({ ...sameArguments, confirmation_token: "t49ct1...." })
 
 ### User asks: "Cancel the tracking request with the typo"
 → Use `list_tracking_requests` to find it, then `cancel_tracking_request` with the same preview and approval steps
+
+### User asks: "Tag MSCU1234565 with PO 4500123"
+→ Use `search_container` for the container UUID, then `add_reference_numbers`
+
+### User asks: "Make Ray Drayage the dray carrier on this container"
+→ Use `set_party_role` with `role: "pickup_dray_carrier"`, `action: "replace"` and the `party_id` from a record's `party_roles` (or from `list_parties` for a party on no record); a record that loses its current carrier is previewed for the user's approval
+
+### User asks: "The customer on this shipment is wrong"
+→ Use `get_shipment_details` with `include_party_roles` for the current customer's `party_id`, then `set_party_role` with `action: "remove"` (previewed for the user's approval), then `set_party_role` with `action: "add"` for the right customer
 
 ### User asks: "How did it get from Shanghai to Chicago?"
 → Option A: Use `get_container_route` (paid feature, shows ports and ETAs)
@@ -924,7 +991,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 33 tools and 4 resources, the LLM can:
+With these 35 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

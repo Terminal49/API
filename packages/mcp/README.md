@@ -17,7 +17,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (33 Available)
+### 🛠️ Tools (35 Available)
 
 The default toolsets, `core`, `documents`, `operations` and `trade`, serve these 30:
 
@@ -36,7 +36,7 @@ The default toolsets, `core`, `documents`, `operations` and `trade`, serve these
 | **`list_shipments`** | List shipments with filters and pagination | Fleet-level visibility |
 | **`list_containers`** | List containers with filters and pagination | Returns ResourceLinks ✨ |
 | **`summarize_containers`** | Count containers grouped by terminal, status, carrier, port, hold, or date | Same filters as `list_containers` |
-| **`list_parties`** | Find parties by company name, or read one by ID | Feeds `advanced_filters.parties` |
+| **`list_parties`** | Find parties by name, or read one by ID | Feeds `advanced_filters.parties` |
 | **`list_custom_field_definitions`** | List the account's custom fields, their types, and enum options | Needs a signed-in user |
 | **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |
 | **`get_tracking_request`** | Get one tracking request's status, failure reason, and shipment | Follow-up after tracking |
@@ -54,13 +54,15 @@ The default toolsets, `core`, `documents`, `operations` and `trade`, serve these
 | **`get_trade_breakdown`** | Nested totals over one to three dimensions | Trade intelligence, per account |
 | **`get_trade_data_coverage`** | Where trade data starts, the latest and last full month | Trade intelligence, per account |
 
-The opt-in `tracking_lifecycle` toolset adds three more. A deployment serves them only when `T49_MCP_TOOLSETS` lists it:
+Two opt-in toolsets add five more. A deployment serves `tracking_lifecycle` or `reference_numbers` only when `T49_MCP_TOOLSETS` lists it:
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
 | **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
 | **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
 | **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
+| **`add_reference_numbers`** | Add reference numbers to a container, shipment, or tracking request. Numbers already there stay. | A: runs in one call |
+| **`remove_reference_numbers`** | Remove reference numbers from a container, shipment, or tracking request | C: needs a confirmed preview |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -424,7 +426,7 @@ Signed URLs, such as the document download link that `get_document` returns, are
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `tracking_lifecycle`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `set_party_role` and `set_custom_field` are in `operations`. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in `tracking_lifecycle`, which no deployment serves until `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `tracking_lifecycle`, `reference_numbers`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `set_party_role` and `set_custom_field` are in `operations`. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in `tracking_lifecycle`, and `add_reference_numbers` and `remove_reference_numbers` are in `reference_numbers`. No deployment serves either until `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
@@ -435,7 +437,7 @@ Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`
 
 ### Confirming writes
 
-Each write tool has a tier in the registry. A tier A tool, such as `resume_shipment_tracking`, is additive or reversible and runs in one call. Its result names the tool that undoes it. A tier C tool, such as `stop_shipment_tracking` or `cancel_tracking_request`, has `destructiveHint: true`, carries `_meta["anthropic/requiresUserInteraction"]: true` so Claude Code prompts on every call, and needs the user's approval of a preview. Its first call never writes. It reads the record, builds a `preview` with `current`, `proposed` and `reach`, and issues a confirmation token: an HMAC-SHA256, keyed with `T49_MCP_CONFIRMATION_SECRET`, over the channel, the tool name, the other arguments, the account, the credential, an expiry five minutes out, a random nonce and a fingerprint of the record fields the preview showed. Which channel carries the token depends on the request.
+Each write tool has a tier in the registry. A tier A tool, such as `resume_shipment_tracking` or `add_reference_numbers`, is additive or reversible and runs in one call. Its result names the tool that undoes it. A tier C tool, such as `stop_shipment_tracking`, `cancel_tracking_request` or `remove_reference_numbers`, has `destructiveHint: true`, carries `_meta["anthropic/requiresUserInteraction"]: true` so Claude Code prompts on every call, and needs the user's approval of a preview. Its first call never writes. It reads the record, builds a `preview` with `current`, `proposed` and `reach`, and issues a confirmation token: an HMAC-SHA256, keyed with `T49_MCP_CONFIRMATION_SECRET`, over the channel, the tool name, the other arguments, the account, the credential, an expiry five minutes out, a random nonce and a fingerprint of the record fields the preview showed. Which channel carries the token depends on the request.
 
 **Elicitation channel.** A request whose 2026-07-28 `_meta` envelope declares form elicitation (`io.modelcontextprotocol/clientCapabilities.elicitation.form`, or a bare `elicitation: {}`) gets an `input_required` result per the MCP multi round-trip pattern: one embedded `elicitation/create` request whose message is the preview as text and whose form has one boolean `confirm` field, plus the token as `requestState`. The client shows the user the preview, then retries the call with the user's answer in `inputResponses` and the `requestState` echoed back. The tool verifies the state against the same call, account, credential, expiry and record fingerprint, and:
 
@@ -461,7 +463,7 @@ On the elicitation channel the human decides, because only the client can answer
 
 Every tier C tool fingerprints the fields its write changes: `stop_shipment_tracking` the stop time, `cancel_tracking_request` the status, `set_party_role` the party role assignments (by assignment id) in the role on every record, and `set_custom_field` the field's value and its `updated_at` on every record. For the two batch tools a restored record never matches again: a party attached back gets a new assignment id, and a value put back gets a new `updated_at`, so an approval confirms its change once however many instances serve the gateway. The shipment resource has no such field, so after `resume_shipment_tracking` a shipment looks as it did before the stop. The server therefore also remembers each confirmation that made a write until it expires, and refuses a second use with `invalid_confirmation` and reason `used`. A write that Terminal49 refuses with a 4xx status, such as `rate_limited`, changed nothing, so the same confirmation still works on retry. After a 5xx or a lost response the write may have happened, so the confirmation stays used and the caller previews again. That memory is per process. On a deployment with several instances, such as the HTTP gateway, another instance can still accept a `stop_shipment_tracking` confirmation once more within its five minutes, after a resume.
 
-The HTTP gateway reads `T49_MCP_CONFIRMATION_SECRET` and has no fallback, because serverless instances share no memory. Without a secret of at least 32 characters, a tier C call that needs the user's approval returns `not_permitted` with a message that names the variable, and the server logs `mcp.config.error`; a call that only adds, such as `set_party_role` with `action: "add"`, still runs. Set it in Vercel before you serve `operations` or `tracking_lifecycle`. stdio uses the variable when it is at least 32 characters. Otherwise it makes a random secret per process, and warns on stderr when the variable is set but too short. Rotating the secret only means an open preview must be requested again.
+The HTTP gateway reads `T49_MCP_CONFIRMATION_SECRET` and has no fallback, because serverless instances share no memory. Without a secret of at least 32 characters, a tier C call that needs the user's approval returns `not_permitted` with a message that names the variable, and the server logs `mcp.config.error`; a call that only adds, such as `set_party_role` with `action: "add"`, still runs. Set it in Vercel before you serve `operations`, `tracking_lifecycle` or `reference_numbers`. stdio uses the variable when it is at least 32 characters. Otherwise it makes a random secret per process, and warns on stderr when the variable is set but too short. Rotating the secret only means an open preview must be requested again.
 
 Each call to a write tool, `track_container` included, emits one `mcp.write.audit` event to the log and a Sentry breadcrumb, and to PostHog when the account is known. It carries the tool, tier, phase, outcome, entity type and ID, account ID and credential type, and nothing else. Values, reference numbers, party names, URLs and tokens never reach it.
 

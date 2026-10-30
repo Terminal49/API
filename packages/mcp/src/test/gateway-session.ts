@@ -43,7 +43,12 @@ export async function connect(
         'https://api.test',
         undefined,
         {
-          toolsets: ['core', 'operations', 'tracking_lifecycle'],
+          toolsets: [
+            'core',
+            'operations',
+            'tracking_lifecycle',
+            'reference_numbers',
+          ],
           confirmationSecret: TEST_CONFIRMATION_SECRET,
           ...serverOptions,
         },

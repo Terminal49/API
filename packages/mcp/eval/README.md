@@ -79,13 +79,18 @@ sandbox account. It runs only when `MCP_EVAL_ENABLE_WRITE=1` and
 it:
 
 - stop a shipment with a confirmed preview, then resume it;
-- refuse a stop with an edited confirmation token.
+- refuse a stop with an edited confirmation token;
+- add a reference number to a shipment, then remove it with a confirmed
+  preview.
 
-The cases skip when the gateway does not list the write tools, which happens
-when its toolsets leave out `operations`. They also skip when the sandbox key
-cannot stop tracking (`FeatureNotEnabled`) or the first shipment is already
-stopped. If an assertion fails after the stop, the case still resumes the
-shipment before it ends. `cancel_tracking_request` has no live
+Every case skips when the gateway does not list the write tools, which
+happens when its toolsets leave out `tracking_lifecycle` or `reference_numbers`,
+or when the sandbox account has no shipment. The two stop cases also skip when the sandbox key cannot stop
+tracking (`FeatureNotEnabled`) or the first shipment is already stopped. The
+reference number case does not check either, so it runs on a stopped shipment
+too.
+If an assertion fails after a change, the case still undoes the change before
+it ends. `cancel_tracking_request` has no live
 case: a cancel cannot be undone and each run would need a new, billable
 tracking request. Fixture tests cover it.
 
