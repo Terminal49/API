@@ -471,6 +471,8 @@ describe('MCP server wiring', () => {
         api_slug: 'sales_rep',
         value: 'X',
       },
+      relink_document: { id },
+      update_document: { id, action: 'reextract' },
     };
     const newWrites = new Set<string>(
       TOOL_REGISTRY.filter(

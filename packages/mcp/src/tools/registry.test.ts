@@ -81,19 +81,26 @@ describe('tool registry', () => {
     }
   });
 
-  it('serves the reference number tools only when that toolset is asked for', () => {
-    const referenceNumbers = TOOL_REGISTRY.filter(
-      (tool) => tool.toolset === 'reference_numbers',
-    ).map((tool) => tool.name);
+  it('serves the reference number and document fix tools by default', () => {
+    const toolsIn = (toolset: string) =>
+      TOOL_REGISTRY.filter((tool) => tool.toolset === toolset).map(
+        (tool) => tool.name,
+      );
 
-    expect(referenceNumbers).toEqual([
+    expect(toolsIn('reference_numbers')).toEqual([
       'add_reference_numbers',
       'remove_reference_numbers',
     ]);
-    expect(DEFAULT_TOOLSETS).not.toContain('reference_numbers');
-    for (const name of referenceNumbers) {
-      expect(defaultTools().map((tool) => tool.name)).not.toContain(name);
-    }
+    expect(toolsIn('documents_write')).toEqual([
+      'relink_document',
+      'update_document',
+    ]);
+    expect(defaultTools().map((tool) => tool.name)).toEqual(
+      expect.arrayContaining([
+        ...toolsIn('reference_numbers'),
+        ...toolsIn('documents_write'),
+      ]),
+    );
   });
 
   it('registers only tools in the requested toolsets', () => {

@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "Terminal49",
     "subtitle": "Track shipping containers",
-    "description": "Terminal49 helps users get live visibility into every ocean shipment and container. Track by container, bill of lading, or booking across all major carriers; find what needs attention, from ETA delays to holds, fees, and last free days; filter and count container worklists; create new tracking requests; and update shipment records. Direct connections to North American ports, terminals, and rail make it the most complete import data available. Where trade intelligence is enabled, it also researches US ocean import markets: importers, products, origins, ports, and carriers.",
+    "description": "Terminal49 helps users get live visibility into every ocean shipment and container. Track by container, bill of lading, or booking across all major carriers; find what needs attention, from ETA delays to holds, fees, and last free days; filter and count container worklists; create new tracking requests; and update shipment records, reference numbers, and documents. Changes that remove or replace data show a preview first and run only after the user confirms. Direct connections to North American ports, terminals, and rail make it the most complete import data available. Where trade intelligence is enabled, it also researches US ocean import markets: importers, products, origins, ports, and carriers.",
     "category": "BUSINESS"
   },
   "tools": {
@@ -367,6 +367,54 @@
         "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
         "destructive_justification": "Setting a field overwrites its previous value, and null clears it. A call that would overwrite or clear a value never changes anything on its first call: it builds a preview of every record that changes, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. A call that only fills empty fields runs at once. The container or shipment is not deleted."
       }
+    },
+    "add_reference_numbers": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Adds reference numbers to one of the user's own containers, shipments, or tracking requests when the user asks; it changes that record.",
+        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Keeps every reference number already on the record and only adds new ones. remove_reference_numbers undoes the change."
+      }
+    },
+    "remove_reference_numbers": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Removes reference numbers from one of the user's own containers, shipments, or tracking requests when the user asks; it changes that record.",
+        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Removes the named reference numbers from the record. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. The container, shipment, or tracking request is not deleted."
+      }
+    },
+    "relink_document": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Asks Terminal49 to match one of the user's own documents to shipments and containers again when the user asks; it can change the document's links.",
+        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Matching again can remove links that Terminal49's earlier matching made, and nothing puts them back. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. The document, its type, and its extracted data are not changed or deleted."
+      }
+    },
+    "update_document": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Sets the type of one of the user's own documents, or has Terminal49 classify or extract it again, when the user asks; it changes that document.",
+        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Replaces the document's type or extracted data, and Terminal49 keeps no copy of the old one. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. The document is not deleted."
+      }
     }
   },
   "test_cases": [
@@ -395,11 +443,11 @@
       "expected_output_url": null
     },
     {
-      "description": "List the 10 most recently updated shipments without nested containers.",
-      "user_prompt": "Show my 10 most recently updated shipments. Don’t include nested containers.",
+      "description": "Remove a reference number from a shipment only after the user approves a preview.",
+      "user_prompt": "Remove reference number PO-1234 from the shipment with Bill of Lading COSU6123456789 in my Terminal49 account.",
       "file_attachment_urls": null,
-      "tools_triggered": "list_shipments",
-      "expected_output": "Returns up to 10 of the most recently updated shipments with a page size of 10, include_containers=false, no carrier, status, or port filters, and no nested containers. Mentions pagination if present.",
+      "tools_triggered": "search_container, remove_reference_numbers",
+      "expected_output": "Finds the shipment, then calls remove_reference_numbers without a confirmation token. The user sees the reference numbers before and after in the preview, in the client's confirmation dialog or in the chat, and PO-1234 is removed only after the user approves it. If the shipment does not have PO-1234, it reports that nothing was changed.",
       "expected_output_url": null
     },
     {

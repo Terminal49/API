@@ -333,15 +333,13 @@ describe('webhook reads over the MCP client transport', () => {
 });
 
 describe('document fix and webhook tool listing', () => {
-  it('leaves all four tools out of the default listing', async () => {
+  it('lists the document fixes and leaves the webhook reads out by default', async () => {
     const names = await listToolNames(DEFAULT_TOOLSETS);
 
-    for (const name of [
-      'relink_document',
-      'update_document',
-      'list_webhooks',
-      'list_webhook_notifications',
-    ]) {
+    expect(names).toEqual(
+      expect.arrayContaining(['relink_document', 'update_document']),
+    );
+    for (const name of ['list_webhooks', 'list_webhook_notifications']) {
       expect(names).not.toContain(name);
     }
   });

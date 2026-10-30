@@ -227,14 +227,13 @@ describe('MCP tool annotations', () => {
     const optIn = REGISTRY.filter(
       (tool) => !DEFAULT_TOOLSETS.includes(tool.toolset),
     ).map((tool) => tool.name);
-    expect(optIn).toEqual(
-      expect.arrayContaining([
-        'relink_document',
-        'update_document',
-        'list_webhooks',
-        'list_webhook_notifications',
-      ]),
-    );
+    expect(optIn.sort()).toEqual([
+      'cancel_tracking_request',
+      'list_webhook_notifications',
+      'list_webhooks',
+      'resume_shipment_tracking',
+      'stop_shipment_tracking',
+    ]);
 
     for (const file of [
       'chatgpt-app-submission.json',
@@ -318,6 +317,9 @@ describe('MCP tool annotations', () => {
     );
     expect(triggered).toContain('summarize_containers');
     expect(triggered).toContain('list_parties');
+    expect(
+      caseFor('search_container, remove_reference_numbers')?.expected_output,
+    ).toContain('only after the user approves it');
     for (const testCase of chatGpt.test_cases) {
       expect(testCase.description.trim()).not.toBe('');
       expect(testCase.user_prompt.trim()).not.toBe('');

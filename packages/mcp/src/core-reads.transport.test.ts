@@ -234,7 +234,14 @@ describe('core reads over the MCP client transport', () => {
 
     expect(result.structuredContent).toMatchObject({
       credential_type: 'api_key',
-      enabled_toolsets: ['core', 'documents', 'operations', 'trade'],
+      enabled_toolsets: [
+        'core',
+        'documents',
+        'operations',
+        'reference_numbers',
+        'documents_write',
+        'trade',
+      ],
       write_tools_available: true,
     });
   });
