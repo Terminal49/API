@@ -1,5 +1,5 @@
 ---
-title: "Terminal49 Container Statuses"
+title: "Terminal49 container statuses"
 description: "Understand every Terminal49 container status value, from on-ship to empty-returned, so your integration can interpret each shipment lifecycle stage."
 keywords:
   - "Terminal49 API"
@@ -41,7 +41,7 @@ The API returns the raw backend value (for example `grounded`). The Terminal49 d
 ### on_ship
 **Dashboard label: "On Ship"**
 
-**In transit by vessel** — The container is on a vessel. In the lifecycle this status first appears when the container is loaded or the vessel departs the port of lading, and it persists through the ocean voyage until the container is discharged at the Port of Discharge (POD).
+**In transit by vessel** — The container is on a vessel. This status first appears when the container is loaded or the vessel departs the port of lading. It persists through the ocean voyage until the container is discharged at the Port of Discharge (POD).
 
 Triggered by the *vessel loaded* or *vessel departed* milestone (and kept by subsequent on-vessel milestones such as *vessel arrived*, *vessel berthed*, and transshipment events).
 
@@ -83,7 +83,7 @@ While a hold is in place, the terminal will not release the container for pickup
 ### off_dock
 **Dashboard label: "Available at Shippers"**
 
-**At an off-dock facility** — The terminal reported that the container has moved off the main terminal to an off-dock or shipper's-own yard, where it's available for pickup. When this happens, Terminal49 attempts to identify the off-dock facility and re-point tracking to it, so this status can also appear briefly during that transition before status is pulled from the new facility. This value comes from terminal data (not the steamship line) and is uncommon.
+**At an off-dock facility** — The terminal reported that the container has moved off the main terminal to an off-dock or shipper's-own yard, where it's available for pickup. When this happens, Terminal49 attempts to identify the off-dock facility and re-point tracking to it. This status can also appear briefly during that transition, before Terminal49 pulls status from the new facility. This value comes from terminal data (not the steamship line) and is uncommon.
 
 ### picked_up
 **Dashboard label: "Picked up"**
@@ -93,7 +93,7 @@ While a hold is in place, the terminal will not release the container for pickup
 ### delivered
 **Dashboard label: "Delivered"**
 
-**Delivery confirmed** — The container has been delivered to the warehouse. This status is only set when delivery is [manually marked as delivered](https://help.terminal49.com/articles/4713318249-how-to-mark-containers-as-delivered) through the Terminal49 dashboard, because delivery date/time data is only available to the customer (Terminal49 does not have access to it).
+**Delivery confirmed** — The container has been delivered to the warehouse. This status is only set when you [manually mark the container as delivered](https://help.terminal49.com/articles/4713318249-how-to-mark-containers-as-delivered) in the Terminal49 dashboard. Delivery date and time data is only available to you, so Terminal49 does not have access to it.
 
 ### empty_returned
 **Dashboard label: "Empty Returned"**
