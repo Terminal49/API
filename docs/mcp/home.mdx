@@ -141,13 +141,13 @@ Two optional request headers reduce the tools your client sees. They can only re
 
 The toolset names are:
 
-- `core`: every tool except the document reads, the write tools below, and the trade intelligence tools. `whoami` reports the toolsets a session serves.
+- `core`: every tool except the document reads, the webhook reads, the write tools below, and the trade intelligence tools. `whoami` reports the toolsets a session serves.
 - `documents`: `list_documents` and `get_document`.
 - `operations`: `set_party_role` and `set_custom_field`. It is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
 - `tracking_lifecycle`: `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
 - `reference_numbers`: `add_reference_numbers` and `remove_reference_numbers`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
-- `documents_write`: no tools yet.
-- `developer`: no tools yet.
+- `documents_write`: `relink_document` and `update_document`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
+- `developer`: `list_webhooks` and `list_webhook_notifications`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
 - `trade`: the [trade intelligence tools](#trade-intelligence-tools).
 
 ```json
@@ -181,7 +181,7 @@ Each call to a write tool, `track_container` included, logs one `mcp.write.audit
 ## Tools reference
 
 <Note>
-In the default toolsets, every tool is read-only except `track_container` and the write tools in the `operations` toolset, which are described under [Write tools](#write-tools). `track_container` creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
+In the default toolsets, every tool is read-only except `track_container` and the write tools in the `operations` toolset, which are described under [Write tools](#write-tools) with the `documents_write` tools. The webhook reads are under [Developer tools](#developer-tools). `track_container` creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
 </Note>
 
 ### `search_container`
@@ -912,10 +912,10 @@ Extracted data and the source email are text that people outside your account wr
 
 ### Write tools
 
-Seven tools change your account's data. The `operations` toolset, which is in the default toolsets, holds `set_party_role` and `set_custom_field`. The `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it, holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`. The `reference_numbers` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it, holds `add_reference_numbers` and `remove_reference_numbers`. Each write tool has a tier:
+Nine tools change your account's data. The `operations` toolset, which is in the default toolsets, holds `set_party_role` and `set_custom_field`. Three toolsets that a deployment serves only when `T49_MCP_TOOLSETS` lists them hold the rest: `tracking_lifecycle` holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`; `reference_numbers` holds `add_reference_numbers` and `remove_reference_numbers`; and `documents_write` holds `relink_document` and `update_document`. Each write tool has a tier:
 
-- **Tier A** tools run in one call. The result names the tool that undoes the change.
-- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode. `stop_shipment_tracking`, `cancel_tracking_request` and `remove_reference_numbers` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
+- **Tier A** tools run in one call. The result names the tool that undoes the change, when there is one.
+- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode. `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `relink_document` and `update_document` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
 
 A call that needs your approval never changes anything the first time. It reads the record, or every record in the batch, and builds a preview of the record now and after the change. For a batch, the preview lists each record that changes and counts the rest, and one approval covers the whole call. How you approve the preview depends on your AI client.
 
@@ -1046,6 +1046,112 @@ The token covers the whole list. If any reference number on the record changes b
 - "Remove the wrong PO number from this shipment."
 
 **REST equivalent**: [PATCH /containers/{id}](/api-docs/api-reference/containers/edit-a-container), [PATCH /shipments/{id}](/api-docs/api-reference/shipments/edit-a-shipment), [PATCH /tracking_requests/{id}](/api-docs/api-reference/tracking-requests/edit-a-tracking-request)
+
+---
+
+### `relink_document`
+
+Have Terminal49 match a document to shipments and containers again, for example after a shipment the document names starts being tracked. Tier C, because a relink also removes the links Terminal49's own matching made earlier that no longer match, and Terminal49 keeps no copy of them. Links made by hand in the dashboard stay. In the `documents_write` toolset.
+
+**Parameters**
+- `id` *(uuid, required)* – the document's UUID
+- `confirmation_token` *(string, optional)* – the token from the preview, after you approve it
+
+**Returns**
+- `status: "confirmation_required"` with a `preview` of the document and the shipments and containers it is linked to now, and a `confirmation_token`. The preview changes if the links or the document change before you approve.
+- `status: "accepted"` with `document_before_relink`, the document and its links before the call. Terminal49 relinks in the background, so the links can take a minute to change.
+- `status: "noop"` when Terminal49 would not relink the document. Nothing is changed.
+- `FeatureNotEnabled` when the account does not have document processing
+
+Calling it again only repeats the matching, so it has no undo tool.
+
+**Good for**
+- "We just started tracking that Bill of Lading. Link the arrival notice to it."
+
+**REST equivalent**: [POST /documents/{id}/relink](/api-docs/api-reference/documents/re-link-a-document)
+
+---
+
+### `update_document`
+
+Fix a misclassified document. Tier C, because each action can replace the document type or its extracted data, and Terminal49 keeps no copy of the old one. In the `documents_write` toolset.
+
+**Parameters**
+- `id` *(uuid, required)* – the document's UUID
+- `action` *(string, required)* – one of:
+  - `set_type`: set the document type to `document_type`. Terminal49 records that your account set it.
+  - `reclassify`: have Terminal49 choose the type again. It may replace a type your account set.
+  - `reextract`: have Terminal49 read the fields from the file again and replace the extracted data. It uses processing time.
+- `document_type` *(string)* – for `set_type` only, and required there: a document type code, such as `arrival_notice`
+- `classification_notes` *(string, optional)* – for `set_type` only: a short note on why the type changed, up to 256 characters
+- `confirmation_token` *(string, optional)* – leave it out to get a preview. Send it only after you approve that preview.
+
+**Returns**
+- Without a token: a `preview` with the document now and the change, and a `confirmation_token`. The token stops working if the document changes before you approve it.
+- `status: "updated"` for `set_type`, with the updated document and `previous_document_type`. When your account already set that type, only the notes change, and the preview and the result say so. New notes replace the old ones. There is no undo. Setting the old type again marks it as set by your account.
+- `status: "accepted"` for `reclassify` and `reextract`. Terminal49 runs them in the background.
+- `unknown_document_type` with `allowed_types` when the code is not one of your account's document types, and `status: "unchanged"` when your account already set that type and the notes would not change. No token is issued. A type the classifier chose gets a preview, so you can confirm it.
+- `status: "noop"` when Terminal49 would not make the change. Nothing is changed.
+- `FeatureNotEnabled` when the account does not have document processing
+
+**Good for**
+- "This arrival notice is marked as a commercial invoice. Fix it."
+- "The extracted container numbers on this delivery order are wrong. Read it again."
+
+**REST equivalent**: [PATCH /documents/{id}](/api-docs/api-reference/documents/edit-a-document), [POST /documents/{id}/reclassify](/api-docs/api-reference/documents/re-classify-a-document), [POST /documents/{id}/reextract](/api-docs/api-reference/documents/re-extract-a-document), [GET /documents/types](/api-docs/api-reference/documents/list-document-types)
+
+---
+
+### Developer tools
+
+The `developer` toolset holds two reads for checking a webhook integration. The hosted server does not serve this toolset. A webhook record holds a signing secret, header values your endpoint may use as credentials, and a URL whose host, path, or query string can hold a key. These tools never return the secret, header values, or query string, and those values never reach logs, Sentry, or PostHog. The URL host and path are cut down by the rules under `list_webhooks`.
+
+---
+
+### `list_webhooks`
+
+List your account's webhooks, or read one, with the events each one receives.
+
+**Parameters**
+- `webhook_id` *(uuid, optional)* – read one webhook instead of listing them
+- `include_event_catalog` *(boolean, optional)* – also return every event a webhook can subscribe to, with a description (default: false)
+- `page` *(integer, optional)* – page number
+- `page_size` *(integer, optional)* – rows per page, up to 25 (default: 25)
+
+**Returns**
+- `webhooks` – each with `id`, `active`, `events`, `url`, `has_secret`, and `header_names`
+  - `url` has the `scheme`, `host`, and `path`. The query string, fragment, user name, and password are left out, and `has_query` says whether there was a query string. The host keeps only its last two labels, such as `example.com`. Every other host label and every path segment is replaced with `[redacted]`. `host_redacted` and `path_redacted` say when that happened.
+  - `has_secret` says whether a signing secret is set. `header_names` lists your custom headers by name, never their values.
+- `links` and `meta` when listing
+- `event_catalog` – with `include_event_catalog`
+
+**Good for**
+- "Which events does our webhook receive?"
+- "Is our webhook still active?"
+
+**REST equivalent**: [GET /webhooks](/api-docs/api-reference/webhooks/list-webhooks), [GET /webhooks/{id}](/api-docs/api-reference/webhooks/get-single-webhook), [GET /webhooks/events](/api-docs/api-reference/webhooks/list-webhook-events)
+
+---
+
+### `list_webhook_notifications`
+
+List the webhook notifications Terminal49 created for your account, or read one, with whether each was delivered.
+
+**Parameters**
+- `notification_id` *(uuid, optional)* – read one notification instead of listing them
+- `page` *(integer, optional)* – page number
+- `page_size` *(integer, optional)* – rows per page, up to 25 (default: 25)
+
+**Returns**
+- `notifications` – each with `id`, `event`, `delivery_status` (`pending`, `succeeded`, or `failed`), `created_at`, `webhook_id`, and `reference`, the type and ID of the record the notification is about
+- `links` and `meta` when listing
+
+The tool returns no payloads. The API has no filters for this list, so the AI client reads the rows page by page.
+
+**Good for**
+- "Did Terminal49 send any Last Free Day change notifications today, and were they delivered?"
+
+**REST equivalent**: [GET /webhook_notifications](/api-docs/api-reference/webhook-notifications/list-webhook-notifications), [GET /webhook_notifications/{id}](/api-docs/api-reference/webhook-notifications/get-a-single-webhook-notification)
 
 ---
 
@@ -1291,10 +1397,10 @@ These Terminal49 API capabilities are available through the [SDK](/api-docs/in-d
 | `update_shipment` | Update shipment tags and user-provided booking or Bill of Lading numbers | Use [REST API](/api-docs/api-reference/shipments/edit-a-shipment) |
 | `raw_events` | Get raw EDI event data | Use [REST API](/api-docs/api-reference/containers/get-a-containers-raw-events) |
 | Container refresh | Ask the carrier and terminal for fresh container data | Use [REST API](/api-docs/api-reference/containers/refresh-container) |
-| Webhooks | Real-time event notifications | Configure via the [webhooks guide](/api-docs/in-depth-guides/webhooks) |
+| Webhook setup | Create, edit, delete, or test webhooks | Configure via the [webhooks guide](/api-docs/in-depth-guides/webhooks) |
 
 <Info>
-Stopping and resuming shipment tracking, and cancelling a tracking request, are MCP tools in the `tracking_lifecycle` toolset, and editing reference numbers is in the `reference_numbers` toolset. The hosted server does not serve either toolset yet. Editing a shipment still needs the REST API or the SDK.
+Stopping and resuming shipment tracking, and cancelling a tracking request, are MCP tools in the `tracking_lifecycle` toolset; editing reference numbers is in the `reference_numbers` toolset; fixing a document's type, extraction, or links is in the `documents_write` toolset; and reading webhooks and their notifications is in the `developer` toolset. The hosted server does not serve any of those four toolsets yet. Editing a shipment still needs the REST API or the SDK.
 </Info>
 
 ---

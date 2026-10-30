@@ -156,19 +156,23 @@ describe('MCP tool annotations', () => {
     expect(writes.sort()).toEqual([
       'add_reference_numbers',
       'cancel_tracking_request',
+      'relink_document',
       'remove_reference_numbers',
       'resume_shipment_tracking',
       'set_custom_field',
       'set_party_role',
       'stop_shipment_tracking',
       'track_container',
+      'update_document',
     ]);
     expect(destructiveTools.sort()).toEqual([
       'cancel_tracking_request',
+      'relink_document',
       'remove_reference_numbers',
       'set_custom_field',
       'set_party_role',
       'stop_shipment_tracking',
+      'update_document',
     ]);
   });
 
@@ -217,6 +221,35 @@ describe('MCP tool annotations', () => {
         (tool) => tool.name,
       ),
     ).toEqual(['search_docs']);
+  });
+
+  it('never names a tool from an opt-in toolset in the store submissions', () => {
+    const optIn = REGISTRY.filter(
+      (tool) => !DEFAULT_TOOLSETS.includes(tool.toolset),
+    ).map((tool) => tool.name);
+    expect(optIn).toEqual(
+      expect.arrayContaining([
+        'relink_document',
+        'update_document',
+        'list_webhooks',
+        'list_webhook_notifications',
+      ]),
+    );
+
+    for (const file of [
+      'chatgpt-app-submission.json',
+      'claude-connector-submission.json',
+    ]) {
+      const text = readFileSync(
+        new URL(`../../../${file}`, import.meta.url),
+        'utf8',
+      );
+      for (const name of optIn) {
+        expect(text, `${name} in ${file}`).not.toMatch(
+          new RegExp(`\\b${name}\\b`),
+        );
+      }
+    }
   });
 
   it('lists exactly the default toolset tools, with live annotations, in the store submissions', () => {

@@ -3,8 +3,10 @@
  * into a compact summary, and the soft result for accounts without documents.
  */
 
+import type { Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
 import {
+  includedList,
   nullableNumber,
   nullableString,
   relationshipList,
@@ -170,4 +172,46 @@ export function toDocumentSummary(
     created_at: attributes.created_at,
     updated_at: attributes.updated_at,
   };
+}
+
+/** A document summary plus the classification notes the write tools change. */
+export const documentStateSchema = documentSummarySchema.extend({
+  classification_notes: z.string().nullable(),
+});
+
+export type DocumentState = z.infer<typeof documentStateSchema>;
+
+const rawDocumentResponseSchema = z.object({
+  data: rawDocumentSchema,
+  included: includedList,
+});
+
+/** Parses a GET or PATCH /documents/{id} body. */
+export function parseDocumentResponse(raw: unknown): {
+  document: DocumentState;
+  /** The latest extraction's id, so a new extraction changes the state. */
+  extractionId: string | null;
+} {
+  const { data, included } = rawDocumentResponseSchema.parse(raw);
+  return {
+    document: {
+      ...toDocumentSummary(data, included),
+      classification_notes: data.attributes.classification_notes,
+    },
+    extractionId:
+      data.relationships.last_document_representation?.data?.id ?? null,
+  };
+}
+
+/**
+ * Reads one document without includes, so no extracted text enters the write
+ * path. has_extracted_data is then null whenever an extraction exists.
+ */
+export async function readDocument(
+  client: Pick<Terminal49Client, 'documents'>,
+  id: string,
+) {
+  return parseDocumentResponse(
+    await client.documents.get(id, { format: 'raw' }),
+  );
 }

@@ -146,7 +146,7 @@ Search for bill of lading 123456789
 | `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
 | `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
 
-Two opt-in toolsets add write tools: `tracking_lifecycle` adds three and `reference_numbers` adds two, so all 35 tools exist but a deployment serves 30 by default. A deployment serves an opt-in toolset only when `T49_MCP_TOOLSETS` lists it. `stop_shipment_tracking`, `cancel_tracking_request` and `remove_reference_numbers` return a preview first and change data only after you approve it. A client that declares MCP 2026-07-28 form elicitation shows an `input_required` dialog and asks you to confirm. Any other client gets the preview and a `confirmation_token`, and sends the token back on a second call after you approve. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+A deployment serves 30 tools by default. Four opt-in toolsets add the other nine, so all 39 tools exist. `tracking_lifecycle` adds three write tools, `reference_numbers` two, `documents_write` two, and `developer` two read tools. A deployment serves an opt-in toolset only when `T49_MCP_TOOLSETS` lists it. `stop_shipment_tracking`, `cancel_tracking_request` and `remove_reference_numbers` return a preview first and change data only after you approve it. A client that declares MCP 2026-07-28 form elicitation shows an `input_required` dialog and asks you to confirm. Any other client gets the preview and a `confirmation_token`, and sends the token back on a second call after you approve. See [Confirming writes](packages/mcp/README.md#confirming-writes).
 
 | Tool | Description |
 |------|-------------|
@@ -155,6 +155,15 @@ Two opt-in toolsets add write tools: `tracking_lifecycle` adds three and `refere
 | `cancel_tracking_request` | Cancel a pending tracking request, after a confirmed preview. It cannot be undone. |
 | `add_reference_numbers` | Add reference numbers to a container, shipment, or tracking request, keeping the ones already there |
 | `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request, after a confirmed preview |
+
+Two more opt-in toolsets add four tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists them.
+
+| Tool | Toolset | Description |
+|------|---------|-------------|
+| `relink_document` | `documents_write` | Have Terminal49 match a document to shipments and containers again, after a confirmed preview |
+| `update_document` | `documents_write` | Set a document's type, or have Terminal49 classify or extract it again, after a confirmed preview |
+| `list_webhooks` | `developer` | List webhooks and their events, without the secret, header values, or URL query string |
+| `list_webhook_notifications` | `developer` | List webhook notifications and whether each was delivered |
 
 ### 🎯 Workflow Prompts (3)
 

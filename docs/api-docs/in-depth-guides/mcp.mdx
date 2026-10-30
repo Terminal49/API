@@ -249,6 +249,15 @@ The `operations` toolset adds `set_party_role` and `set_custom_field` and is in 
 | `set_party_role` | Attach, replace, or detach a party on up to 50 containers or shipments. `add` runs at once; `remove`, and a `replace` that detaches another party, ask you to approve a preview of every record that changes. | `container_ids?` or `shipment_ids?` (1 to 50), `role`, `party_id: uuid`, `action` (`add`, `replace`, or `remove`), `confirmation_token?: string` |
 | `set_custom_field` | Set or clear a custom field on up to 50 containers or shipments. Filling empty fields runs at once; overwriting or clearing a value asks you to approve a preview of every record that changes. | `entity` (`container` or `shipment`), `ids` (1 to 50), `api_slug`, `value` (string, number, boolean, string array, or `null` to clear), `confirmation_token?: string` |
 
+Two more toolsets are opt-in. The hosted server does not serve them yet. A self-hosted server serves each one when `T49_MCP_TOOLSETS` lists it.
+
+| Tool | Toolset | Description | Parameters |
+|------|---------|-------------|------------|
+| `relink_document` | `documents_write` | Have Terminal49 match a document to shipments and containers again. Asks you to approve a preview first, because it can remove links. | `id: uuid`, `confirmation_token?: string` |
+| `update_document` | `documents_write` | Set a document's type, or have Terminal49 classify or extract it again. Asks you to approve a preview first. | `id: uuid`, `action`, `document_type?: string`, `classification_notes?: string`, `confirmation_token?: string` |
+| `list_webhooks` | `developer` | List webhooks and their events. Never returns the secret, header values, or URL query string. | `webhook_id?: uuid`, `include_event_catalog?: boolean`, `page?`, `page_size?` |
+| `list_webhook_notifications` | `developer` | List webhook notifications and whether each was delivered | `notification_id?: uuid`, `page?`, `page_size?` |
+
 See [Write tools](/mcp/home#write-tools) for how you approve a preview, in a client that asks you directly or with a confirmation token.
 
 ### Prompts
@@ -372,7 +381,7 @@ The `vercel.json` configures the MCP server (excerpt):
 | `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,operations,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
 | `T49_MCP_READ_ONLY` | No | Serves only read-only tools when set to `true` or `1`; defaults to `false` |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | Serves toolsets other than `core` and `trade` when callers share `T49_API_TOKEN`; defaults to `false` |
-| `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, and a destructive `set_party_role` or `set_custom_field` call need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
+| `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `relink_document`, `update_document`, and a destructive `set_party_role` or `set_custom_field` call need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
 | `SENTRY_DSN` | No | Enables Sentry MCP Monitoring |
 | `SENTRY_ENVIRONMENT` | No | Sentry environment name; defaults to `NODE_ENV` |
 | `SENTRY_RELEASE` | No | Sentry release identifier; defaults to `VERCEL_GIT_COMMIT_SHA` |

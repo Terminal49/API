@@ -106,8 +106,24 @@
       "implementation": "packages/mcp/src/tools/remove-reference-numbers.ts"
     },
     {
+      "name": "relink_document",
+      "implementation": "packages/mcp/src/tools/relink-document.ts"
+    },
+    {
+      "name": "update_document",
+      "implementation": "packages/mcp/src/tools/update-document.ts"
+    },
+    {
       "name": "search_docs",
       "implementation": "packages/mcp/src/tools/search-docs.ts"
+    },
+    {
+      "name": "list_webhooks",
+      "implementation": "packages/mcp/src/tools/list-webhooks.ts"
+    },
+    {
+      "name": "list_webhook_notifications",
+      "implementation": "packages/mcp/src/tools/list-webhook-notifications.ts"
     },
     {
       "name": "whoami",

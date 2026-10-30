@@ -1,17 +1,20 @@
 /**
- * Live write evals for the tracking lifecycle, reference number and party
- * tools.
+ * Live write evals for the tracking lifecycle, reference number and document
+ * fix tools.
  *
  * These change account data, so they run only against a dedicated sandbox
  * account and only when both are set:
  *   MCP_EVAL_ENABLE_WRITE=1
  *   MCP_EVAL_SANDBOX_TOKEN=<API key of the sandbox account>
- * The endpoint is MCP_EVAL_ENDPOINT, as for the read suite. Each case is a
- * round trip that leaves the record as it found it.
+ * The endpoint is MCP_EVAL_ENDPOINT, as for the read suite. Each case that
+ * changes data is a round trip that leaves the record as it found it. The
+ * document case only previews.
  *
- * cancel_tracking_request has no live case: a cancel cannot be undone, and
- * every run would have to create a new, billable tracking request. Its
- * fixture tests cover it.
+ * cancel_tracking_request and relink_document have no live case. A cancel
+ * cannot be undone, and every run would have to create a new, billable
+ * tracking request. A relink cannot be undone exactly. Their fixture tests
+ * cover them. update_document is only previewed: its actions cannot be undone
+ * exactly, and reextract uses processing time.
  */
 
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
@@ -185,6 +188,32 @@ if (!enableWrite || !sandboxToken) {
           });
         }
       }
+    });
+
+    it('previews a document fix without confirming it', async ({ skip }) => {
+      if (!served.includes('update_document')) {
+        return skip();
+      }
+      const documents = structured(
+        await client.callTool('list_documents', { page_size: 1 }),
+      );
+      const first = Array.isArray(documents.items)
+        ? documents.items.find(isRecord)
+        : undefined;
+      if (!first || typeof first.id !== 'string') return skip();
+
+      // No confirmation_token, so nothing is written.
+      const preview = structured(
+        await client.callTool('update_document', {
+          id: first.id,
+          action: 'reextract',
+        }),
+      );
+      expect(preview.status).toBe('confirmation_required');
+      expect(typeof preview.confirmation_token).toBe('string');
+      expect(isRecord(preview.preview) && preview.preview.action).toBe(
+        'reextract',
+      );
     });
   });
 }

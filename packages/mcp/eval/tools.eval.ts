@@ -733,6 +733,70 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
+    const servedTools = async () =>
+      (await client.listTools()).map((tool) => tool.name);
+
+    it('list_webhooks returns no secret, header value or URL query string', async ({
+      skip,
+    }) => {
+      if (!(await servedTools()).includes('list_webhooks')) return skip();
+      const { result, score } = await evaluate(
+        'list_webhooks',
+        { page_size: 5, include_event_catalog: true },
+        {
+          predicates: [
+            {
+              name: 'webhooks carry only safe fields, or an explained gate',
+              test: (p) =>
+                isRecord(p) &&
+                (p.error === 'FeatureNotEnabled' ||
+                  (Array.isArray(p.webhooks) &&
+                    p.webhooks.every(
+                      (webhook) =>
+                        isRecord(webhook) &&
+                        !('secret' in webhook) &&
+                        !('headers' in webhook) &&
+                        typeof webhook.has_secret === 'boolean' &&
+                        isRecord(webhook.url) &&
+                        (webhook.url.path === null ||
+                          !String(webhook.url.path).includes('?')),
+                    ))),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
+    it('list_webhook_notifications returns delivery rows or explains the gate', async ({
+      skip,
+    }) => {
+      if (!(await servedTools()).includes('list_webhook_notifications')) {
+        return skip();
+      }
+      const { result, score } = await evaluate(
+        'list_webhook_notifications',
+        { page_size: 5 },
+        {
+          predicates: [
+            {
+              name: 'rows with a delivery status, or an explained gate',
+              test: (p) =>
+                isRecord(p) &&
+                (p.error === 'FeatureNotEnabled' ||
+                  (Array.isArray(p.notifications) &&
+                    p.notifications.every(
+                      (row) => isRecord(row) && 'delivery_status' in row,
+                    ))),
+            },
+          ],
+        },
+      );
+      expect(result.isError).toBe(false);
+      expect(score.contractPass).toBe(true);
+    });
+
     // ---- list filtering and pagination ----
 
     const listItems = (p: unknown): Record<string, unknown>[] =>

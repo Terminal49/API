@@ -59,6 +59,11 @@ all pass (`contractPass`) — a single failure fails the test:
 **Latency** is a _soft_ check: recorded in the score and the report, but a slow
 response alone never fails the suite.
 
+The webhook read cases check that `list_webhooks` returns no secret, header
+value, or URL query string, and that `list_webhook_notifications` returns
+delivery rows. Both skip when the gateway does not list the opt-in `developer`
+toolset.
+
 Negative cases assert error behavior: an unknown id and a missing required
 argument must produce tool errors, while a gibberish search must return an empty
 result set (not an error).
@@ -75,15 +80,23 @@ could create a real tracking request.
 [`writes.eval.ts`](./writes.eval.ts) runs the write tools against a dedicated
 sandbox account. It runs only when `MCP_EVAL_ENABLE_WRITE=1` and
 `MCP_EVAL_SANDBOX_TOKEN` are both set, and it uses that token, never
-`MCP_EVAL_TOKEN`. Each case is a round trip that leaves the record as it found
-it:
+`MCP_EVAL_TOKEN`. Each case except the document case is a round trip that
+leaves the record as it found it. The document case only previews. The cases:
 
 - stop a shipment with a confirmed preview, then resume it;
 - refuse a stop with an edited confirmation token;
 - add a reference number to a shipment, then remove it with a confirmed
-  preview.
+  preview;
+- preview a `reextract` of the first document with `update_document`, without
+  confirming it, so it changes nothing. A document fix cannot be undone
+  exactly, so the case never confirms one. `relink_document` has no live case,
+  because a relink repeats Terminal49's matching and can add or remove
+  shipment and container links that nothing puts back; its fixture tests
+  cover it. The case
+  depends on the `documents_write` toolset. It skips when the gateway does not
+  list `update_document` or the account has no document.
 
-Every case skips when the gateway does not list the write tools, which
+Every other case skips when the gateway does not list the write tools, which
 happens when its toolsets leave out `tracking_lifecycle` or `reference_numbers`,
 or when the sandbox account has no shipment. The two stop cases also skip when the sandbox key cannot stop
 tracking (`FeatureNotEnabled`) or the first shipment is already stopped. The
