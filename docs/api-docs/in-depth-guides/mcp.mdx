@@ -163,7 +163,7 @@ Once configured, verify everything works:
   <Step title="Ask Claude to list tools">
     > "List the tools available in the Terminal49 MCP server."
 
-    Claude should respond with a list of 30 tools including `search_container`, `track_container`, the list tools, and the trade intelligence tools.
+    Claude should respond with a list of 34 tools including `search_container`, `track_container`, the list tools, the write tools, and the trade intelligence tools.
   </Step>
   <Step title="Search for a test container">
     > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
@@ -237,24 +237,24 @@ printf '%s\n' \
 | `search_docs` | Search the public Terminal49 documentation | `query: string`, `limit?` (1-10, default 5) |
 | `whoami` | Identify the credential, its account, available features, and the session's toolsets | none |
 
-The `operations` toolset adds `set_party_role` and `set_custom_field` and is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to leave them out. The `tracking_lifecycle` toolset adds `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`, and the `reference_numbers` toolset adds `add_reference_numbers` and `remove_reference_numbers`; a deployment serves each only when `T49_MCP_TOOLSETS` lists it.
+The default toolsets also serve three write toolsets. `operations` adds `set_party_role` and `set_custom_field`, `reference_numbers` adds `add_reference_numbers` and `remove_reference_numbers`, and `documents_write` adds `relink_document` and `update_document`. Send `X-T49-MCP-Toolsets: core,documents,operations,trade` to keep the earlier default list without the reference number and document tools, or `X-T49-MCP-Read-Only: true` to use only reads.
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `stop_shipment_tracking` | Stop updates for a shipment and its containers. Asks you to approve a preview first. | `shipment_id: uuid`, `confirmation_token?: string` |
-| `resume_shipment_tracking` | Start tracking a stopped shipment again | `shipment_id: uuid` |
-| `cancel_tracking_request` | Cancel a pending tracking request. Asks you to approve a preview first. It cannot be undone. | `tracking_request_id: uuid`, `confirmation_token?: string` |
-| `add_reference_numbers` | Add reference numbers to a container, shipment, or tracking request, keeping the ones already there | `entity_type`, `entity_id: uuid`, `add: string[]` |
-| `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request. Asks you to approve a preview first. | `entity_type`, `entity_id: uuid`, `remove: string[]`, `confirmation_token?: string` |
 | `set_party_role` | Attach, replace, or detach a party on up to 50 containers or shipments. `add` runs at once; `remove`, and a `replace` that detaches another party, ask you to approve a preview of every record that changes. | `container_ids?` or `shipment_ids?` (1 to 50), `role`, `party_id: uuid`, `action` (`add`, `replace`, or `remove`), `confirmation_token?: string` |
 | `set_custom_field` | Set or clear a custom field on up to 50 containers or shipments. Filling empty fields runs at once; overwriting or clearing a value asks you to approve a preview of every record that changes. | `entity` (`container` or `shipment`), `ids` (1 to 50), `api_slug`, `value` (string, number, boolean, string array, or `null` to clear), `confirmation_token?: string` |
+| `add_reference_numbers` | Add reference numbers to a container, shipment, or tracking request, keeping the ones already there | `entity_type`, `entity_id: uuid`, `add: string[]` |
+| `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request. Asks you to approve a preview first. | `entity_type`, `entity_id: uuid`, `remove: string[]`, `confirmation_token?: string` |
+| `relink_document` | Have Terminal49 match a document to shipments and containers again. Asks you to approve a preview first, because it can remove links. | `id: uuid`, `confirmation_token?: string` |
+| `update_document` | Set a document's type, or have Terminal49 classify or extract it again. Asks you to approve a preview first. | `id: uuid`, `action`, `document_type?: string`, `classification_notes?: string`, `confirmation_token?: string` |
 
 Two more toolsets are opt-in. The hosted server does not serve them yet. A self-hosted server serves each one when `T49_MCP_TOOLSETS` lists it.
 
 | Tool | Toolset | Description | Parameters |
 |------|---------|-------------|------------|
-| `relink_document` | `documents_write` | Have Terminal49 match a document to shipments and containers again. Asks you to approve a preview first, because it can remove links. | `id: uuid`, `confirmation_token?: string` |
-| `update_document` | `documents_write` | Set a document's type, or have Terminal49 classify or extract it again. Asks you to approve a preview first. | `id: uuid`, `action`, `document_type?: string`, `classification_notes?: string`, `confirmation_token?: string` |
+| `stop_shipment_tracking` | `tracking_lifecycle` | Stop updates for a shipment and its containers. Asks you to approve a preview first. | `shipment_id: uuid`, `confirmation_token?: string` |
+| `resume_shipment_tracking` | `tracking_lifecycle` | Start tracking a stopped shipment again | `shipment_id: uuid` |
+| `cancel_tracking_request` | `tracking_lifecycle` | Cancel a pending tracking request. Asks you to approve a preview first. It cannot be undone. | `tracking_request_id: uuid`, `confirmation_token?: string` |
 | `list_webhooks` | `developer` | List webhooks and their events. Never returns the secret, header values, or URL query string. | `webhook_id?: uuid`, `include_event_catalog?: boolean`, `page?`, `page_size?` |
 | `list_webhook_notifications` | `developer` | List webhook notifications and whether each was delivered | `notification_id?: uuid`, `page?`, `page_size?` |
 
@@ -378,7 +378,7 @@ The `vercel.json` configures the MCP server (excerpt):
 | `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
 | `T49_MCP_ALLOWED_HOSTS` | No | Comma-separated host allowlist for request Host validation |
 | `T49_MCP_ALLOWED_ORIGINS` | No | Comma-separated origin allowlist for request Origin validation |
-| `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,operations,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
+| `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,operations,reference_numbers,documents_write,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
 | `T49_MCP_READ_ONLY` | No | Serves only read-only tools when set to `true` or `1`; defaults to `false` |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | Serves toolsets other than `core` and `trade` when callers share `T49_API_TOKEN`; defaults to `false` |
 | `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `relink_document`, `update_document`, and a destructive `set_party_role` or `set_custom_field` call need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
