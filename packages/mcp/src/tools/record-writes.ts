@@ -837,7 +837,11 @@ type FieldChange = { set: unknown } | { clear: true };
 
 // `format: 'mapped'` returns mapCustomFields' rows.
 const mappedCustomFieldsSchema = z.array(
-  z.object({ slug: z.string().optional(), value: z.unknown() }),
+  z.object({
+    slug: z.string().optional(),
+    value: z.unknown(),
+    updatedAt: z.string().nullable().optional(),
+  }),
 );
 
 /** An empty field: never set, cleared, or holding no options. */
@@ -872,9 +876,14 @@ export async function executeSetCustomField(
       const fields = mappedCustomFieldsSchema.parse(
         await manager.customFields(id, { format: 'mapped' }),
       );
-      const current =
-        fields.find((field) => field.slug === api_slug)?.value ?? null;
-      const state = { value: comparable(current) };
+      const field = fields.find((entry) => entry.slug === api_slug);
+      const current = field?.value ?? null;
+      // A value put back after a clear or an overwrite has a new updated_at,
+      // so an approval of the earlier state cannot confirm the change again.
+      const state = {
+        value: comparable(current),
+        updated_at: field?.updatedAt ?? null,
+      };
       if (value === null) {
         if (isEmpty(current)) return { outcome: 'unchanged', state };
         return {
