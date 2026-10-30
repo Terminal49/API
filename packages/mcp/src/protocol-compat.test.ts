@@ -9,12 +9,7 @@ import {
   createTerminal49McpServer,
   TERMINAL49_SERVER_INSTRUCTIONS,
 } from './server.js';
-import {
-  DEFAULT_TOOLSETS,
-  defaultTools,
-  selectTools,
-  TOOLSETS,
-} from './tools/registry.js';
+import { defaultTools, selectTools, TOOLSETS } from './tools/registry.js';
 
 const LEGACY_PROTOCOL_VERSIONS = [
   '2025-11-25',
@@ -264,33 +259,30 @@ describe('MCP protocol compatibility', () => {
       ),
     };
 
-    // A doc counts the default tools/list, its read-only subset, or every
-    // registered tool.
+    // A doc counts either the default tools/list or every registered tool.
     const allTools = selectTools({ toolsets: TOOLSETS, readOnly: false });
-    const counts = [
-      tools.length,
-      selectTools({ toolsets: DEFAULT_TOOLSETS, readOnly: true }).length,
-      allTools.length,
-    ];
     for (const [path, text] of Object.entries(docs)) {
-      const found = [
+      const counts = [
         ...text.matchAll(
           /\b(\d+)\*{0,2} (?:specialized )?tools\b|Tools \((\d+) (?:Available|by default)/gi,
         ),
       ].map((match) => Number(match[1] ?? match[2]));
-      expect(found.length, path).toBeGreaterThan(0);
-      for (const count of found) expect(counts, path).toContain(count);
+      expect(counts.length, path).toBeGreaterThan(0);
+      for (const count of counts) {
+        expect([tools.length, allTools.length], path).toContain(count);
+      }
     }
 
-    // The README's tool tables list every registered tool once.
-    const readmeTable = [
-      ...docs['packages/mcp/README.md'].matchAll(
-        /^\| \*\*`([a-z_]+)`\*\* \|/gm,
-      ),
-    ].map((match) => match[1]);
-    expect(readmeTable.sort()).toEqual(
-      allTools.map((tool) => tool.name).sort(),
+    // The README's first tool table lists the default tools.
+    const readme = docs['packages/mcp/README.md'];
+    const defaultTable = readme.slice(
+      readme.indexOf('| Tool |'),
+      readme.indexOf('\n\n', readme.indexOf('| Tool |')),
     );
+    const readmeTable = [
+      ...defaultTable.matchAll(/^\| \*\*`([a-z_]+)`\*\* \|/gm),
+    ].map((match) => match[1]);
+    expect(readmeTable.sort()).toEqual(tools.map((tool) => tool.name).sort());
   });
 
   it('advertises bounded, identifier-only inputs in tools/list', async () => {
@@ -441,11 +433,27 @@ describe('MCP protocol compatibility', () => {
       expect(resources).toHaveLength(3);
       expect(resourceTemplates).toHaveLength(1);
 
-      const registered = new Map<string, unknown>(
-        defaultTools().map((tool) => [tool.name, tool.annotations]),
-      );
       for (const tool of tools) {
-        expect(tool.annotations, tool.name).toEqual(registered.get(tool.name));
+        expect(tool.annotations).toMatchObject({
+          readOnlyHint: ![
+            'track_container',
+            'set_party_role',
+            'set_custom_field',
+            'stop_shipment_tracking',
+            'resume_shipment_tracking',
+            'cancel_tracking_request',
+            'add_reference_numbers',
+            'remove_reference_numbers',
+          ].includes(tool.name),
+          destructiveHint: [
+            'set_party_role',
+            'set_custom_field',
+            'stop_shipment_tracking',
+            'cancel_tracking_request',
+            'remove_reference_numbers',
+          ].includes(tool.name),
+          openWorldHint: tool.name === 'search_docs',
+        });
       }
     },
   );

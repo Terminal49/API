@@ -68,15 +68,13 @@ If you prefer a fixed credential (for example on a shared machine where the brow
 }
 ```
 
-To connect without write access, add `"X-T49-MCP-Read-Only": "true"` to `headers`. See [Limit the tools](/mcp/home#limit-the-tools).
-
 ## Test your connection
 
 Ask the Cursor agent:
 
 > "List the tools available in the Terminal49 MCP server and what they're for."
 
-It should list tools such as `search_container`, `track_container`, and `get_container`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development. The list also includes write tools, such as `add_reference_numbers`, that change your account when you ask. Changes that remove or replace data show a preview first. See [Write tools](/mcp/home#write-tools).
+It should list tools such as `search_container`, `track_container`, and `get_container`. See the [tools reference](/mcp/home#tools-reference) for the full list, and [Test Numbers](/api-docs/useful-info/test-numbers) for containers you can use during development.
 
 ## Troubleshooting
 

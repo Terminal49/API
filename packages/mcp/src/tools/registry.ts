@@ -251,7 +251,6 @@ export const DEFAULT_TOOLSETS: readonly Toolset[] = [
   'core',
   'documents',
   'operations',
-  'documents_write',
   'trade',
 ];
 

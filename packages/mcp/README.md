@@ -15,11 +15,9 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (37 by default, 39 in all)
+### 🛠️ Tools (35 by default, 39 in all)
 
-The default toolsets, `core`, `documents`, `operations`, `documents_write` and `trade`, serve 37 tools. Ten of them change account data. With `T49_MCP_READ_ONLY=true`, the default toolsets serve 27 tools.
-
-These tools are in the `core`, `documents` and `trade` toolsets:
+The default toolsets, `core`, `documents`, `operations` and `trade`, serve these 35 tools:
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -42,8 +40,15 @@ These tools are in the `core`, `documents` and `trade` toolsets:
 | **`get_tracking_request`** | Get one tracking request's status, failure reason, and shipment | Follow-up after tracking |
 | **`list_documents`** | Find documents by file name, reference, or type | Never returns extracted data or file links |
 | **`get_document`** | Get one document, with opt-in extracted data, source email, and download link | Untrusted content is labeled |
+| **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
+| **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
+| **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
+| **`add_reference_numbers`** | Add reference numbers to a container, shipment, or tracking request. Numbers already there stay. | A: runs in one call |
+| **`remove_reference_numbers`** | Remove reference numbers from a container, shipment, or tracking request | C: needs a confirmed preview |
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
+| **`set_party_role`** | Attach, replace, or detach a party (such as the drayage carrier) on up to 50 containers or shipments | C: asks before a record loses a party; add runs at once |
+| **`set_custom_field`** | Set or clear one of the account's custom fields on up to 50 containers or shipments | C: asks before overwriting or clearing a value; filling empty fields runs at once |
 | **`search_importers`** | Find US importers by name, by what they import, or both | Trade intelligence, per account |
 | **`get_importer_profile`** | One importer's totals, monthly series, ports, origins, carriers, and products | Trade intelligence, per account |
 | **`search_commodities`** | Turn a product description or HS prefix into four-digit HS codes | Trade intelligence, per account |
@@ -51,20 +56,6 @@ These tools are in the `core`, `documents` and `trade` toolsets:
 | **`get_trade_trends`** | Time series of containers, TEUs, or estimated value | Trade intelligence, per account |
 | **`get_trade_breakdown`** | Nested totals over one to three dimensions | Trade intelligence, per account |
 | **`get_trade_data_coverage`** | Where trade data starts, the latest and last full month | Trade intelligence, per account |
-
-The `operations` toolset adds seven write tools. It is in the default toolsets.
-
-| Tool | Description | Tier |
-|------|-------------|------|
-| **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
-| **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
-| **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
-| **`add_reference_numbers`** | Add reference numbers to a container, shipment, or tracking request. Numbers already there stay. | A: runs in one call |
-| **`remove_reference_numbers`** | Remove reference numbers from a container, shipment, or tracking request | C: needs a confirmed preview |
-
-The `documents_write` toolset adds two document fixes and is in the default toolsets. The `developer` toolset adds two webhook reads. It is opt-in, so a deployment serves it only when `T49_MCP_TOOLSETS` lists `developer`.
-| **`set_party_role`** | Attach, replace, or detach a party (such as the drayage carrier) on up to 50 containers or shipments | C: asks before a record loses a party; add runs at once |
-| **`set_custom_field`** | Set or clear one of the account's custom fields on up to 50 containers or shipments | C: asks before overwriting or clearing a value; filling empty fields runs at once |
 
 The `documents_write` toolset adds two document fixes, and the `developer` toolset adds two webhook reads. Both toolsets are opt-in, so a deployment serves them only when `T49_MCP_TOOLSETS` lists them.
 
@@ -414,10 +405,10 @@ npm run lint
 |----------|----------|---------|-------------|
 | `T49_API_TOKEN` | ✅ Yes | - | Terminal49 API token |
 | `T49_API_BASE_URL` | No | `https://api.terminal49.com/v2` | API base URL |
-| `T49_MCP_TOOLSETS` | No | `core,documents,operations,documents_write,trade` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
+| `T49_MCP_TOOLSETS` | No | `core,documents,operations,trade` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
 | `T49_MCP_READ_ONLY` | No | `false` | Serve only tools whose `readOnlyHint` is true. Accepts `true`, `false`, `1` or `0`, in any case. |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` and `trade` when callers share `T49_API_TOKEN` |
-| `T49_MCP_CONFIRMATION_SECRET` | Over HTTP, unless the server is read-only | - | Signs confirmation tokens. At least 32 characters. See [Confirming writes](#confirming-writes). |
+| `T49_MCP_CONFIRMATION_SECRET` | For tier C writes over HTTP | - | Signs confirmation tokens. At least 32 characters. See [Confirming writes](#confirming-writes). |
 | `OPENAI_APPS_CHALLENGE` | Only for ChatGPT submission | - | Exact domain-verification token issued by the OpenAI submission portal |
 | `NODE_ENV` | No | `development` | Environment |
 | `LOG_LEVEL` | No | `info` | Logging level |
@@ -439,14 +430,13 @@ Signed URLs, such as the document download link that `get_document` returns, are
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field` are in `operations`. `relink_document` and `update_document` are in `documents_write`. `list_webhooks` and `list_webhook_notifications` are in `developer`. The trade intelligence tools are in `trade`. Every other tool today is in `core`. The default toolsets are `core`, `documents`, `operations`, `documents_write` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field` are in `operations`. `relink_document` and `update_document` are in `documents_write`. `list_webhooks` and `list_webhook_notifications` are in `developer`. The trade intelligence tools are in `trade`. Every other tool today is in `core`. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
 - `X-T49-MCP-Read-Only: true` or `T49_MCP_READ_ONLY=true` removes every tool whose `readOnlyHint` is false, including `track_container`. Both accept `true`, `false`, `1` or `0`, in any case. Any other header value returns 400. The header cannot turn off read-only mode that the env turned on.
 - The server instructions name only the tools the session serves.
 - When the gateway uses one shared `T49_API_TOKEN`, it serves only `core` and the read-only `trade` toolset unless `T49_MCP_ALLOW_SHARED_TOKEN_WRITES=true`.
-- To serve only reads, set `T49_MCP_READ_ONLY=true`. To serve the tool list from before the write tools, set `T49_MCP_TOOLSETS=core,documents,trade`.
 - Toolsets are never read from the connector URL. The OAuth resource stays the root origin.
 
 ### Confirming writes

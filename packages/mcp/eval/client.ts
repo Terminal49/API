@@ -11,7 +11,6 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { defaultTools } from '../src/tools/registry.js';
 
 const PROTOCOL_VERSION = '2025-06-18';
 const DEFAULT_ENDPOINT = 'https://mcp.terminal49.com/mcp';
@@ -71,46 +70,6 @@ export function resolveConfig(): EvalClientConfig | null {
   if (bearer) return { endpoint, scheme: 'Bearer', token: bearer };
   if (token) return { endpoint, scheme: 'Token', token };
   return null;
-}
-
-/** True when MCP_EVAL_ENABLE_WRITE opts in to evals that change data. */
-export function writesEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-  return (
-    env.MCP_EVAL_ENABLE_WRITE === '1' || env.MCP_EVAL_ENABLE_WRITE === 'true'
-  );
-}
-
-export interface SandboxConfig {
-  /** The sandbox account's API key. */
-  sandbox: EvalClientConfig;
-  /** A sandbox user's OAuth token, for the writes that reject API keys. */
-  user?: EvalClientConfig;
-}
-
-/**
- * Credentials for the live write evals. Returns null unless writes are
- * enabled and MCP_EVAL_SANDBOX_TOKEN is set. It never reads MCP_EVAL_TOKEN or
- * MCP_EVAL_BEARER, so a write eval cannot reach the read eval's account.
- */
-export function resolveSandboxConfig(
-  env: NodeJS.ProcessEnv = process.env,
-): SandboxConfig | null {
-  const endpoint = env.MCP_EVAL_ENDPOINT?.trim() || DEFAULT_ENDPOINT;
-  const token = env.MCP_EVAL_SANDBOX_TOKEN?.trim();
-  if (!writesEnabled(env) || !token) return null;
-  const bearer = env.MCP_EVAL_SANDBOX_BEARER?.trim();
-  return {
-    sandbox: { endpoint, scheme: 'Token', token },
-    ...(bearer ? { user: { endpoint, scheme: 'Bearer', token: bearer } } : {}),
-  };
-}
-
-/** Write tools a default gateway serves that `served` does not list. */
-export function missingDefaultWriteTools(served: readonly string[]): string[] {
-  return defaultTools()
-    .filter((tool) => !tool.annotations.readOnlyHint)
-    .map((tool) => tool.name)
-    .filter((name) => !served.includes(name));
 }
 
 interface JsonRpcResponse {

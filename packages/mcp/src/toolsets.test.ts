@@ -74,10 +74,10 @@ describe('resolveToolSelection', () => {
     const selection = resolveToolSelection({
       env: {},
       credentialType: 'api_key',
-      toolsetsHeader: 'developer',
+      toolsetsHeader: 'operations,developer',
     });
 
-    expect(selection.toolsets).toEqual([]);
+    expect(selection.toolsets).toEqual(['operations']);
   });
 
   it('ignores an empty toolsets header', () => {

@@ -11,10 +11,6 @@ ChatGPT directory.
       submission JSONs. Every tier C tool must be destructive and take an
       optional `confirmation_token`. CI enforces both in
       [`annotations.test.ts`](./src/annotations.test.ts).
-- [ ] Confirm production has `T49_MCP_CONFIRMATION_SECRET` set: a tier C tool
-      called without a token returns `confirmation_required`, not
-      `not_permitted`. Run the [sandbox write evals](./eval/README.md#write-evals)
-      against production.
 - [ ] Confirm tool names remain at most 64 characters, list `page_size` stays
       bounded to 1–25, and the advertised `include` choices/defaults remain
       lean. CI locks these contracts in
@@ -43,9 +39,7 @@ ChatGPT directory.
       `get_container_transport_events` for full history.
 - [ ] Recheck the [privacy policy](https://terminal49.com/privacy) and MCP data
       practices: tools access the authenticated private account, use only tool
-      arguments, and change data only through `track_container` and the write
-      tools, at the user's request. Tools that remove or replace data return a
-      preview first.
+      arguments, and only `track_container` creates data.
 - [ ] Populate and run `mcpdemo` with at least three working prompts. Exercise
       every tool in MCP Inspector and a Claude custom connector; use the
       [live eval](./eval/README.md) as the automated baseline.

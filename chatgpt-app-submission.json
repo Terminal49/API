@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "Terminal49",
     "subtitle": "Track shipping containers",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count container worklists, inspect routes, transport events, and documents, and, where trade intelligence is enabled, research US ocean import markets (importers, products, origins, ports, and carriers) through ChatGPT. At the user's request it can also track containers, stop or resume tracking, and edit reference numbers, parties, custom fields, and document types. Changes that remove or replace data show a preview first and run only after the user confirms.",
+    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, create new tracking requests, and, where trade intelligence is enabled, research US ocean import markets (importers, products, origins, ports, and carriers) through ChatGPT.",
     "category": "BUSINESS"
   },
   "tools": {
@@ -320,42 +320,6 @@
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
-    "set_custom_field": {
-      "annotations": {
-        "readOnlyHint": false,
-        "openWorldHint": false,
-        "destructiveHint": true
-      },
-      "justifications": {
-        "read_only_justification": "Sets or clears one of the account's own custom fields on the user's containers or shipments when the user asks; it changes those records.",
-        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
-        "destructive_justification": "Setting a field overwrites its previous value, and null clears it. A call that would overwrite or clear a value never changes anything on its first call: it builds a preview of every record that changes, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. A call that only fills empty fields runs at once. The container or shipment is not deleted."
-      }
-    },
-    "relink_document": {
-      "annotations": {
-        "readOnlyHint": false,
-        "openWorldHint": false,
-        "destructiveHint": false
-      },
-      "justifications": {
-        "read_only_justification": "Asks Terminal49 to match one document in the user's account to its shipments and containers again.",
-        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Runs reference matching again in the background. It does not delete or edit the document, its type or its extracted data."
-      }
-    },
-    "update_document": {
-      "annotations": {
-        "readOnlyHint": false,
-        "openWorldHint": false,
-        "destructiveHint": true
-      },
-      "justifications": {
-        "read_only_justification": "Sets the type of one document in the user's Terminal49 account, or has Terminal49 classify or extract it again.",
-        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Replaces the document's type or extracted data. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview."
-      }
-    },
     "search_importers": {
       "annotations": {
         "readOnlyHint": true,
@@ -451,6 +415,18 @@
         "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
         "destructive_justification": "Replacing or detaching a party removes that party's assignment from the record. A call that would detach a party never changes anything on its first call: it builds a preview of every record that changes, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. A call that only attaches a party runs at once. The party, container, and shipment are not deleted."
       }
+    },
+    "set_custom_field": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Sets or clears one of the account's own custom fields on the user's containers or shipments when the user asks; it changes those records.",
+        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Setting a field overwrites its previous value, and null clears it. A call that would overwrite or clear a value never changes anything on its first call: it builds a preview of every record that changes, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. A call that only fills empty fields runs at once. The container or shipment is not deleted."
+      }
     }
   },
   "test_cases": [
@@ -479,11 +455,11 @@
       "expected_output_url": null
     },
     {
-      "description": "Remove a reference number from a shipment only after the user approves a preview.",
-      "user_prompt": "Remove reference number PO-1234 from the shipment with Bill of Lading COSU6123456789 in my Terminal49 account.",
+      "description": "List the 10 most recently updated shipments without nested containers.",
+      "user_prompt": "Show my 10 most recently updated shipments. Don’t include nested containers.",
       "file_attachment_urls": null,
-      "tools_triggered": "search_container, remove_reference_numbers",
-      "expected_output": "Finds the shipment, then calls remove_reference_numbers without a confirmation token. The user sees the preview of the reference numbers before and after, in the client's confirmation dialog or in the chat, and PO-1234 is removed only after the user approves it. If the shipment does not have PO-1234, it reports that nothing was changed.",
+      "tools_triggered": "list_shipments",
+      "expected_output": "Returns up to 10 of the most recently updated shipments with a page size of 10, include_containers=false, no carrier, status, or port filters, and no nested containers. Mentions pagination if present.",
       "expected_output_url": null
     },
     {

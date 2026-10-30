@@ -445,13 +445,20 @@ describe('MCP server wiring', () => {
       get_trade_breakdown: { dims: ['pod_coast'] },
       get_trade_data_coverage: {},
     };
-    const target = { entity_type: 'shipment', entity_id: id };
     const writeArgs: Record<string, Record<string, unknown>> = {
       stop_shipment_tracking: { shipment_id: id },
       resume_shipment_tracking: { shipment_id: id },
       cancel_tracking_request: { tracking_request_id: id },
-      add_reference_numbers: { ...target, add: ['PO-1'] },
-      remove_reference_numbers: { ...target, remove: ['PO-1'] },
+      add_reference_numbers: {
+        entity_type: 'shipment',
+        entity_id: id,
+        add: ['PO-1'],
+      },
+      remove_reference_numbers: {
+        entity_type: 'shipment',
+        entity_id: id,
+        remove: ['PO-1'],
+      },
       set_party_role: {
         container_ids: [id],
         role: 'pickup_dray_carrier',
@@ -464,8 +471,6 @@ describe('MCP server wiring', () => {
         api_slug: 'sales_rep',
         value: 'X',
       },
-      relink_document: { id },
-      update_document: { id, action: 'reclassify' },
     };
     const newWrites = new Set<string>(
       TOOL_REGISTRY.filter(
