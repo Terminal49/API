@@ -108,7 +108,12 @@ export class RetryInterceptor {
         const retryAfterMs = parseRetryAfterMs(
           currentResponse.headers.get('Retry-After'),
         );
-        await this.sleep(computeBackoffDelay(replayable.retries, retryAfterMs));
+        replayable.request.signal.throwIfAborted();
+        void currentResponse.body?.cancel().catch(() => {});
+        await this.sleep(
+          computeBackoffDelay(replayable.retries, retryAfterMs),
+          replayable.request.signal,
+        );
         replayable.retries++;
 
         try {
@@ -147,11 +152,20 @@ export class RetryInterceptor {
 
     if (
       replayable &&
+      !replayable.request.signal.aborted &&
       isRetryableNetworkError(error) &&
       this.isRetryable(replayable)
     ) {
       while (replayable.retries < this.maxRetries) {
-        await this.sleep(computeBackoffDelay(replayable.retries));
+        try {
+          await this.sleep(
+            computeBackoffDelay(replayable.retries),
+            replayable.request.signal,
+          );
+        } catch (abortError) {
+          this.replayableRequests.delete(requestKey);
+          return toNetworkError(abortError);
+        }
         replayable.retries++;
         try {
           // A recovered Response is handed back to openapi-fetch, which then
@@ -160,7 +174,10 @@ export class RetryInterceptor {
           // deletes it once the response chain finishes.
           return await this.fetchImpl(replayable.request.clone());
         } catch (retryError) {
-          if (replayable.retries >= this.maxRetries) {
+          if (
+            replayable.request.signal.aborted ||
+            replayable.retries >= this.maxRetries
+          ) {
             this.replayableRequests.delete(requestKey);
             return toNetworkError(retryError);
           }
@@ -180,9 +197,21 @@ export class RetryInterceptor {
     });
   }
 
-  private sleep(ms: number): Promise<void> {
+  private sleep(ms: number, signal: AbortSignal): Promise<void> {
+    signal.throwIfAborted();
     if (ms <= 0) return Promise.resolve();
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise((resolve, reject) => {
+      const onAbort = () => {
+        clearTimeout(timer);
+        signal.removeEventListener('abort', onAbort);
+        reject(signal.reason);
+      };
+      const timer = setTimeout(() => {
+        signal.removeEventListener('abort', onAbort);
+        resolve();
+      }, ms);
+      signal.addEventListener('abort', onAbort, { once: true });
+    });
   }
 
   private requestKey(request: Request, id?: string) {
@@ -203,8 +232,8 @@ export class ErrorMappingInterceptor {
     let errorBody: any = null;
     try {
       errorBody = await response.clone().json();
-    } catch {
-      // Ignore
+    } catch (error) {
+      if (!(error instanceof SyntaxError)) throw toNetworkError(error);
     }
 
     throw toTerminal49Error(

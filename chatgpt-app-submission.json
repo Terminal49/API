@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "Terminal49",
     "subtitle": "Track shipping containers",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, create new tracking requests, and, where trade intelligence is enabled, research US ocean import markets (importers, products, origins, ports, and carriers) through ChatGPT.",
+    "description": "Terminal49 helps users get live visibility into every ocean shipment and container. Track by container, bill of lading, or booking across all major carriers; find what needs attention, from ETA delays to holds, fees, and last free days; filter and count container worklists; create new tracking requests; and update shipment records. Direct connections to North American ports, terminals, and rail make it the most complete import data available. Where trade intelligence is enabled, it also researches US ocean import markets: importers, products, origins, ports, and carriers.",
     "category": "BUSINESS"
   },
   "tools": {

@@ -96,12 +96,12 @@ export const setPartyRoleInputSchema = z
     container_ids: recordIds
       .optional()
       .describe(
-        'Terminal49 container IDs (UUIDs), 1 to 50. Pass container_ids or shipment_ids, not both.',
+        'Terminal49 IDs of the containers to change. Pass container_ids or shipment_ids, not both.',
       ),
     shipment_ids: recordIds
       .optional()
       .describe(
-        'Terminal49 shipment IDs (UUIDs), 1 to 50. Pass container_ids or shipment_ids, not both.',
+        'Terminal49 IDs of the shipments to change. Pass container_ids or shipment_ids, not both.',
       ),
     role: z
       .enum(SHIPMENT_PARTY_ROLES)
@@ -141,8 +141,12 @@ const customFieldValueSchema = z.union([
 export const setCustomFieldInputSchema = z.strictObject({
   entity: z
     .enum(['container', 'shipment'])
-    .describe('Whether ids are container or shipment IDs.'),
-  ids: recordIds.describe('Terminal49 container or shipment IDs, 1 to 50.'),
+    .describe(
+      'The kind of record the field is on. Every ID in ids must be this kind.',
+    ),
+  ids: recordIds.describe(
+    'Terminal49 IDs of the containers or shipments to change.',
+  ),
   api_slug: z
     .string()
     .trim()
