@@ -12,7 +12,7 @@ import {
   executeSetCustomField,
   executeSetPartyRole,
 } from './record-writes.js';
-import { tokenOf, writeContext } from '../test/write-context.js';
+import { auditEvents, tokenOf, writeContext } from '../test/write-context.js';
 
 const C1 = '11111111-1111-4111-8111-111111111111';
 const C2 = '22222222-2222-4222-8222-222222222222';
@@ -1129,6 +1129,99 @@ describe('set_custom_field', () => {
         writeContext(client),
       ),
     ).rejects.toThrow();
+  });
+});
+
+describe('set_party_role party lookup', () => {
+  const logged: string[] = [];
+
+  beforeEach(() => {
+    logged.length = 0;
+    vi.spyOn(console, 'error').mockImplementation((line: string) => {
+      logged.push(line);
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const args = {
+    container_ids: [C1],
+    role: 'pickup_dray_carrier',
+    party_id: PARTY,
+    action: 'add',
+  } as const;
+
+  it('returns rate_limited, and audits it, when Terminal49 limits the party lookup', async () => {
+    const client = fakeClient();
+    client.parties.get.mockRejectedValue(
+      Object.assign(new Error('Too many requests'), {
+        name: 'RateLimitError',
+        status: 429,
+        retryAfterMs: 30_000,
+      }),
+    );
+
+    const result = await executeSetPartyRole(
+      args,
+      client,
+      writeContext(client),
+    );
+
+    expect(result).toEqual({
+      error: 'rate_limited',
+      message:
+        'Terminal49 is limiting how often this change can be made. Nothing was changed.',
+      alternative: 'Wait 30 seconds and try again.',
+      retry_after_s: 30,
+    });
+    expect(client.containers.partyRoles).not.toHaveBeenCalled();
+    expect(auditEvents(logged)).toEqual([
+      expect.objectContaining({
+        tool: 'set_party_role',
+        outcome: 'rate_limited',
+      }),
+    ]);
+  });
+
+  it('audits a party_id that names no party', async () => {
+    const client = fakeClient();
+    client.parties.get.mockRejectedValue(notFound());
+
+    await executeSetPartyRole(
+      { ...args, party_id: MISSING_PARTY },
+      client,
+      writeContext(client),
+    );
+
+    expect(auditEvents(logged)).toEqual([
+      expect.objectContaining({
+        tool: 'set_party_role',
+        outcome: 'party_not_found',
+      }),
+    ]);
+  });
+
+  it('gives up on a party lookup that outlasts the read budget and touches no record', async () => {
+    const client = fakeClient();
+    client.parties.get.mockReturnValue(new Promise(() => {}));
+
+    const result = await executeSetPartyRole(
+      args,
+      client,
+      writeContext(client, { writeDeadlineAt: Date.now() + 40 }),
+    );
+
+    expect(client.containers.partyRoles).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      updated: [],
+      unchanged: [],
+      failed: [],
+      not_attempted: [C1],
+      summary:
+        'Assigned pickup_dray_carrier on 0 containers; 0 already had it; 0 failed. Ran out of time before 1 more; call again with not_attempted.',
+    });
   });
 });
 

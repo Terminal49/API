@@ -423,11 +423,17 @@ interface WriteCounts {
   failed: number;
 }
 
-interface BatchPlan<Change, Value> {
+interface BatchPlan<Change, Value, Stop> {
   tool: 'set_party_role' | 'set_custom_field';
   entityType: 'container' | 'shipment';
   ids: string[];
   args: Record<string, unknown> & { confirmation_token?: string };
+  /**
+   * Runs once per call before any record is read, inside the read budget. A
+   * result ends the call before any record is touched; a throw fails the
+   * call the way a record read would, so a 429 becomes rate_limited.
+   */
+  prepare?(): Promise<Stop | undefined>;
   /** Reads one record and decides what it needs. A throw fails the record. */
   planRecord(id: string): Promise<Planned<Change, Value>>;
   /** Applies one planned change. A throw fails the record. */
@@ -456,18 +462,34 @@ function result(
   return { ...fields, summary: text };
 }
 
+/** The work's result, or out_of_time once the deadline passes first. */
+function byDeadline<T>(
+  work: Promise<T>,
+  deadlineAt: number,
+): Promise<T | 'out_of_time'> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<'out_of_time'>((resolve) => {
+    timer = setTimeout(
+      resolve,
+      Math.max(deadlineAt - Date.now(), 0),
+      'out_of_time',
+    );
+  });
+  return Promise.race([work, late]).finally(() => clearTimeout(timer));
+}
+
 /**
  * Runs a batch write through the confirmed write flow. The read phase plans
  * every record; the write phase runs only the planned changes, after the
  * user's approval when any of them is destructive.
  */
-async function runBatchWrite<Change, Value>(
+async function runBatchWrite<Change, Value, Stop = never>(
   context: ToolContext,
-  plan: BatchPlan<Change, Value>,
+  plan: BatchPlan<Change, Value, Stop>,
 ): Promise<
   ConfirmedWriteResult<
     BatchPreview<Value>,
-    RecordWriteResult,
+    RecordWriteResult | Stop,
     RecordWriteResult
   >
 > {
@@ -486,12 +508,29 @@ async function runBatchWrite<Change, Value>(
     entityId: plan.ids.length === 1 ? plan.ids[0] : undefined,
     args: plan.args,
     async read(): Promise<
-      ConfirmedWriteRead<BatchPreview<Value>, RecordWriteResult>
+      ConfirmedWriteRead<BatchPreview<Value>, RecordWriteResult | Stop>
     > {
       // Reads get half of what is left, so one slow record cannot hold every
       // write until the deadline; a record not read in time is reported as
       // not attempted.
       const readDeadlineAt = Date.now() + (deadlineAt - Date.now()) / 2;
+      if (plan.prepare) {
+        const prepared = await byDeadline(plan.prepare(), readDeadlineAt);
+        if (prepared === 'out_of_time') {
+          return {
+            stop: result(
+              {
+                updated: [],
+                unchanged: [],
+                failed: [],
+                not_attempted: plan.ids,
+              },
+              plan.summary,
+            ),
+          };
+        }
+        if (prepared !== undefined) return { stop: prepared };
+      }
       const read = await forEachRecord(
         plan.ids,
         (id) => plan.planRecord(id),
@@ -656,22 +695,25 @@ export async function executeSetPartyRole(
     return client.containers.addPartyRole(id, { role, partyId: party_id });
   };
 
-  // Read once per call, before any record: a party_id that names no party
-  // stops the call, and the name labels the party in the preview.
-  const name = await lookupPartyName(client, party_id);
-  if (name === null) return partyNotFound(party_id);
-  const target: PartyRef = { party_id, party_name: name ?? null };
-  const label = name ?? party_id;
+  let target: PartyRef = { party_id, party_name: null };
+  let label = party_id;
   const ref = (assignment: PartyRole): PartyRef => ({
     party_id: assignment.party_id ?? '',
     party_name: assignment.party_name,
   });
 
-  return runBatchWrite<PartyChange, PartyRef[]>(context, {
+  return runBatchWrite<PartyChange, PartyRef[], PartyNotFound>(context, {
     tool: 'set_party_role',
     entityType: noun,
     ids,
     args: parsed,
+    async prepare() {
+      const name = await lookupPartyName(client, party_id);
+      if (name === null) return partyNotFound(party_id);
+      target = { party_id, party_name: name ?? null };
+      label = name ?? party_id;
+      return undefined;
+    },
     async planRecord(id) {
       const inRole = formatPartyRoles(
         await manager.partyRoles(id, { format: 'raw' }),
@@ -793,8 +835,7 @@ export async function executeSetPartyRole(
 
 type FieldChange = { set: unknown } | { clear: true };
 
-// `format: 'mapped'` returns mapCustomFields' rows; only the slug and the
-// stored value matter here.
+// `format: 'mapped'` returns mapCustomFields' rows.
 const mappedCustomFieldsSchema = z.array(
   z.object({ slug: z.string().optional(), value: z.unknown() }),
 );
