@@ -67,7 +67,6 @@
       "Inspect routes and transport events",
       "Check supported shipping lines",
       "Create new tracking requests",
-      "Stop or resume shipment tracking and cancel pending tracking requests",
       "Set parties and custom field values on containers and shipments",
       "Research US ocean import markets: importers, products, origin countries, ports, and carriers"
     ]
