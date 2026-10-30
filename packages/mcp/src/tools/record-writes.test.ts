@@ -1,11 +1,18 @@
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vite-plus/test';
 import type { Terminal49Client } from '@terminal49/sdk';
 import {
   CALL_BUDGET_MS,
   executeSetCustomField,
   executeSetPartyRole,
 } from './record-writes.js';
-import { tokenOf, writeContext } from '../test/write-context.js';
+import { auditEvents, tokenOf, writeContext } from '../test/write-context.js';
 
 const C1 = '11111111-1111-4111-8111-111111111111';
 const C2 = '22222222-2222-4222-8222-222222222222';
@@ -43,6 +50,8 @@ function fakeClient() {
 }
 
 type Client = ReturnType<typeof fakeClient>;
+type PartyRoleArgs = Parameters<typeof executeSetPartyRole>[0];
+type CustomFieldArgs = Parameters<typeof executeSetCustomField>[0];
 
 function partyRoleDoc(
   ...roles: { id: string; role: string; partyId: string }[]
@@ -1122,5 +1131,231 @@ describe('set_custom_field', () => {
         writeContext(client),
       ),
     ).rejects.toThrow();
+  });
+});
+
+describe('set_party_role party lookup', () => {
+  const logged: string[] = [];
+
+  beforeEach(() => {
+    logged.length = 0;
+    vi.spyOn(console, 'error').mockImplementation((line: string) => {
+      logged.push(line);
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const args: PartyRoleArgs = {
+    container_ids: [C1],
+    role: 'pickup_dray_carrier',
+    party_id: PARTY,
+    action: 'add',
+  };
+
+  it('returns rate_limited, and audits it, when Terminal49 limits the party lookup', async () => {
+    const client = fakeClient();
+    client.parties.get.mockRejectedValue(
+      Object.assign(new Error('Too many requests'), {
+        name: 'RateLimitError',
+        status: 429,
+        retryAfterMs: 30_000,
+      }),
+    );
+
+    const result = await executeSetPartyRole(
+      args,
+      client,
+      writeContext(client),
+    );
+
+    expect(result).toEqual({
+      error: 'rate_limited',
+      message:
+        'Terminal49 is limiting how often this change can be made. Nothing was changed.',
+      alternative: 'Wait 30 seconds and try again.',
+      retry_after_s: 30,
+    });
+    expect(client.containers.partyRoles).not.toHaveBeenCalled();
+    expect(auditEvents(logged)).toEqual([
+      expect.objectContaining({
+        tool: 'set_party_role',
+        outcome: 'rate_limited',
+      }),
+    ]);
+  });
+
+  it('audits a party_id that names no party', async () => {
+    const client = fakeClient();
+    client.parties.get.mockRejectedValue(notFound());
+
+    await executeSetPartyRole(
+      { ...args, party_id: MISSING_PARTY },
+      client,
+      writeContext(client),
+    );
+
+    expect(auditEvents(logged)).toEqual([
+      expect.objectContaining({
+        tool: 'set_party_role',
+        outcome: 'party_not_found',
+      }),
+    ]);
+  });
+
+  it('gives up on a party lookup that outlasts the read budget and touches no record', async () => {
+    const client = fakeClient();
+    client.parties.get.mockReturnValue(new Promise(() => {}));
+
+    const result = await executeSetPartyRole(
+      args,
+      client,
+      writeContext(client, { writeDeadlineAt: Date.now() + 40 }),
+    );
+
+    expect(client.containers.partyRoles).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      updated: [],
+      unchanged: [],
+      failed: [],
+      not_attempted: [C1],
+      summary:
+        'Assigned pickup_dray_carrier on 0 containers; 0 already had it; 0 failed. Ran out of time before 1 more; call again with not_attempted.',
+    });
+  });
+});
+
+describe('record writes without a confirmation secret', () => {
+  it('still runs a call that only adds', async () => {
+    const client = fakeClient();
+    client.containers.partyRoles.mockResolvedValue(partyRoleDoc());
+
+    const result = await executeSetPartyRole(
+      {
+        container_ids: [C1],
+        role: 'pickup_dray_carrier',
+        party_id: PARTY,
+        action: 'add',
+      },
+      client,
+      writeContext(client, { confirmationSecret: undefined }),
+    );
+
+    expect(client.containers.addPartyRole).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({ updated: [C1] });
+  });
+
+  it('refuses a call in which a record would lose a value, naming the missing variable', async () => {
+    const client = fakeClient();
+    client.containers.customFields.mockResolvedValue([
+      { slug: 'sales_rep', value: 'Sofia Cortina' },
+    ]);
+
+    const result = await executeSetCustomField(
+      { entity: 'container', ids: [C1], api_slug: 'sales_rep', value: null },
+      client,
+      writeContext(client, { confirmationSecret: undefined }),
+    );
+
+    expect(client.containers.deleteCustomField).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      error: 'not_permitted',
+      message: expect.stringContaining('T49_MCP_CONFIRMATION_SECRET'),
+    });
+  });
+});
+
+/**
+ * The server remembers spent confirmations per process, so a replay has to
+ * be refused by the approval's binding alone when it reaches another
+ * instance. A fresh module tree stands in for that instance.
+ */
+describe('an approval replayed on another server instance', () => {
+  afterEach(() => {
+    vi.resetModules();
+  });
+
+  it('cannot clear a custom field again after the value was put back', async () => {
+    const client = fakeClient();
+    let updatedAt = '2026-10-01T00:00:00Z';
+    client.containers.customFields.mockImplementation(async () => [
+      { slug: 'po_number', value: 'PO-1', updatedAt },
+    ]);
+    const args: CustomFieldArgs = {
+      entity: 'container',
+      ids: [C1],
+      api_slug: 'po_number',
+      value: null,
+    };
+
+    const preview = await executeSetCustomField(
+      args,
+      client,
+      writeContext(client),
+    );
+    const confirmation_token = tokenOf(preview);
+    await executeSetCustomField(
+      { ...args, confirmation_token },
+      client,
+      writeContext(client),
+    );
+    expect(client.containers.deleteCustomField).toHaveBeenCalledTimes(1);
+
+    updatedAt = '2026-10-01T00:04:00Z';
+    vi.resetModules();
+    const other = await import('./record-writes.js');
+    const replay = await other.executeSetCustomField(
+      { ...args, confirmation_token },
+      client,
+      writeContext(client),
+    );
+
+    expect(replay).toMatchObject({ status: 'stale_preview' });
+    expect(client.containers.deleteCustomField).toHaveBeenCalledTimes(1);
+  });
+
+  it('cannot detach a party again after it was attached back', async () => {
+    const client = fakeClient();
+    let assignment = 'pr-1';
+    client.containers.partyRoles.mockImplementation(async () =>
+      partyRoleDoc({
+        id: assignment,
+        role: 'pickup_dray_carrier',
+        partyId: PARTY,
+      }),
+    );
+    const args: PartyRoleArgs = {
+      container_ids: [C1],
+      role: 'pickup_dray_carrier',
+      party_id: PARTY,
+      action: 'remove',
+    };
+
+    const preview = await executeSetPartyRole(
+      args,
+      client,
+      writeContext(client),
+    );
+    const confirmation_token = tokenOf(preview);
+    await executeSetPartyRole(
+      { ...args, confirmation_token },
+      client,
+      writeContext(client),
+    );
+    expect(client.containers.removePartyRole).toHaveBeenCalledTimes(1);
+
+    assignment = 'pr-2';
+    vi.resetModules();
+    const other = await import('./record-writes.js');
+    const replay = await other.executeSetPartyRole(
+      { ...args, confirmation_token },
+      client,
+      writeContext(client),
+    );
+
+    expect(replay).toMatchObject({ status: 'stale_preview' });
+    expect(client.containers.removePartyRole).toHaveBeenCalledTimes(1);
   });
 });

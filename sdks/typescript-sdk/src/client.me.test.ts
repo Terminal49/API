@@ -100,11 +100,11 @@ describe('Terminal49Client.me', () => {
       id: apiKeyDoc.data.id,
       kind: 'api_key',
       channel: 'api',
-      name: 'Production key',
+      name: 'Example fixture key',
       user: null,
       account: {
-        id: 'b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a',
-        companyName: 'Acme Logistics',
+        id: 'account-1',
+        companyName: 'Example Fixture Shipper',
         companyType: 'shipper',
         plan: 'free_plan',
         trackingSlots: {
@@ -132,16 +132,16 @@ describe('Terminal49Client.me', () => {
     expect(me.channel).toBe('mcp');
     expect(me.name).toBeUndefined();
     expect(me.account).toMatchObject({
-      companyName: 'Acme Logistics',
+      companyName: 'Example Fixture Shipper',
       companyType: 'freight_forwarder',
-      scac: 'ACML',
+      scac: 'SYNU',
       plan: 'customer',
       trackingSlots: null,
     });
     expect(me.user).toMatchObject({
       id: userDoc.data.id,
-      email: 'ops@example.com',
-      name: 'Jordan Lee',
+      email: 'fixture@example.test',
+      name: 'Example Operator',
       role: 'account_manager',
       jobRole: 'forwarder',
       jobTitle: 'Operations lead',

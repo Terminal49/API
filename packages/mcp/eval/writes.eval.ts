@@ -46,7 +46,6 @@ if (!enableWrite || !sandboxToken) {
   let served: string[] = [];
   let shipmentId: string | undefined;
 
-  /** Previews a tier C call, then confirms it with the token it returned. */
   const confirmed = async (tool: string, args: Record<string, unknown>) => {
     const preview = structured(await client.callTool(tool, args));
     if (preview.status !== 'confirmation_required') return preview;
@@ -79,7 +78,6 @@ if (!enableWrite || !sandboxToken) {
     it('stops a shipment with a confirmed preview, then resumes it', async ({
       skip,
     }) => {
-      // The gateway lists these tools only when its toolsets include operations.
       if (!served.includes('stop_shipment_tracking') || !shipmentId) {
         return skip();
       }
@@ -110,7 +108,9 @@ if (!enableWrite || !sandboxToken) {
           shipment_id: shipmentId,
           confirmation_token: previewed.confirmation_token,
         });
-        needsResume = structured(stopped).error === undefined;
+        // Only a stop this eval made needs undoing; a lost response keeps
+        // the default, because the stop may have happened.
+        needsResume = structured(stopped).status === 'stopped';
         expect(stopped.isError).toBe(false);
         expect(structured(stopped).status).toBe('stopped');
 

@@ -7,6 +7,7 @@
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import { z } from 'zod';
 import {
   type ContainerStatusResult,
   resolveContainerStatus,
@@ -20,11 +21,12 @@ import { dayDeltaInZone, formatInZone } from '../lib/temporal.js';
 import {
   type CustomFieldsResult,
   type CustomFieldValue,
+  customFieldValueSchema,
   loadCustomFields,
 } from './custom-fields.js';
 import {
   loadPartyRoles,
-  type PartyRole,
+  partyRoleSchema,
   type PartyRolesResult,
 } from './party-roles.js';
 
@@ -47,94 +49,117 @@ export interface GetContainerArgs {
   include?: ContainerInclude[];
 }
 
-export interface ContainerStatus {
-  id: string;
-  container_number: string;
-  /** Authoritative headline status from the API `current_status`. */
-  status: string;
-  status_source: ContainerStatusResult['status_source'];
-  equipment: {
-    type: string | null;
-    length: number | null;
-    height: string | null;
-    weight_lbs: number | null;
-  };
-  location: {
-    current_location: string | null;
-    available_for_pickup: boolean | null;
-    availability_known: boolean | null;
-    pod_arrived_at: string | null;
-    pod_arrived_at_local: string;
-    pod_discharged_at: string | null;
-    pod_discharged_at_local: string;
-    pod_timezone: string | null;
-  };
-  demurrage: {
-    pickup_lfd: string | null;
-    pickup_lfd_local: string;
-    /** Per-channel LFDs from import_deadlines (terminal/rail/line). */
-    last_free_days: {
-      terminal: string | null;
-      rail: string | null;
-      line: string | null;
-    };
-    pickup_appointment_at: string | null;
-    fees_at_pod_terminal: DemurrageEvaluation['fees'];
-    fees_total_amount: number | null;
-    fees_currency_code: string | null;
-    holds_at_pod_terminal: unknown[] | null;
-    urgency: DemurrageEvaluation['urgency'];
-    urgency_suppressed: boolean;
-    urgency_reason: string | null;
-    days_until_lfd: number | null;
-  };
-  rail: {
-    pod_rail_carrier: string | null;
-    pod_rail_loaded_at: string | null;
-    destination_eta: string | null;
-    destination_ata: string | null;
-  };
-  shipment: {
-    id: string;
-    ref_numbers: string[];
-    line: string;
-    shipping_line_name?: string;
-    port_of_lading_name?: string;
-    port_of_discharge_name?: string;
-    destination_name?: string;
-    /** When the shipment stopped updating; null while it is still tracked. */
-    line_tracking_stopped_at: string | null;
-  } | null;
-  pod_terminal: {
-    id: string;
-    name: string;
-    firms_code: string;
-  } | null;
-  custom_fields: CustomFieldValue[] | null;
-  custom_fields_note?: string;
-  /** Present only when party_roles is requested. */
-  party_roles?: PartyRole[] | null;
-  party_roles_note?: string;
-  events?: {
-    count: number;
-    latest_event?: {
-      event: string;
-      timestamp: string;
-      value: unknown;
-      data_source: string | null;
-      invalidated_at: string | null;
-      location?: string;
-    };
-    rail_events_count?: number;
-  };
-  created_at: string;
-  _metadata: {
-    container_state: string;
-    status_is_authoritative: boolean;
-    derived_lifecycle: string;
-    includes_loaded: string[];
-  };
-}
+// Values copied straight from API attributes are nullish: the API can omit
+// them, and a missing optional field must not fail the whole tool call.
+const apiString = z.string().nullish();
+
+// Fee and hold items are passed through from the terminal as reported.
+const terminalFeeSchema = z.looseObject({
+  type: apiString,
+  amount: z.union([z.number(), z.string()]).nullish(),
+  currency_code: apiString,
+});
+
+/**
+ * Output contract for get_container. Agents that script tool calls read field
+ * names from this schema, so every key `formatContainerResponse` emits is listed.
+ */
+export const containerStatusSchema = z.object({
+  id: z.string(),
+  container_number: z.string(),
+  status: z.string(),
+  status_source: z.enum(['current_status', 'derived']),
+  equipment: z.object({
+    type: z.string().nullable(),
+    length: z.number().nullable(),
+    height: z.string().nullable(),
+    weight_lbs: z.number().nullable(),
+  }),
+  location: z.object({
+    current_location: z.string().nullable(),
+    available_for_pickup: z.boolean().nullable(),
+    availability_known: z.boolean().nullable(),
+    pod_arrived_at: z.string().nullable(),
+    pod_arrived_at_local: z.string(),
+    pod_discharged_at: z.string().nullable(),
+    pod_discharged_at_local: z.string(),
+    pod_timezone: z.string().nullable(),
+  }),
+  demurrage: z.object({
+    pickup_lfd: z.string().nullable(),
+    pickup_lfd_local: z.string(),
+    last_free_days: z.object({
+      terminal: z.string().nullable(),
+      rail: z.string().nullable(),
+      line: z.string().nullable(),
+    }),
+    pickup_appointment_at: z.string().nullable(),
+    fees_at_pod_terminal: z.array(terminalFeeSchema).nullable(),
+    fees_total_amount: z.number().nullable(),
+    fees_currency_code: z.string().nullable(),
+    holds_at_pod_terminal: z.array(z.unknown()).nullable(),
+    urgency: z.enum(['overdue', 'imminent', 'none', 'unknown']),
+    urgency_suppressed: z.boolean(),
+    urgency_reason: z.string().nullable(),
+    days_until_lfd: z.number().nullable(),
+  }),
+  rail: z.object({
+    pod_rail_carrier: z.string().nullable(),
+    pod_rail_loaded_at: z.string().nullable(),
+    destination_eta: z.string().nullable(),
+    destination_ata: z.string().nullable(),
+  }),
+  shipment: z
+    .object({
+      id: z.string(),
+      // The API allows null entries in ref_numbers.
+      ref_numbers: z.array(z.string().nullable()),
+      line: apiString,
+      shipping_line_name: apiString,
+      port_of_lading_name: apiString,
+      port_of_discharge_name: apiString,
+      destination_name: apiString,
+      line_tracking_stopped_at: z.string().nullable(),
+    })
+    .nullable(),
+  pod_terminal: z
+    .object({
+      id: z.string(),
+      name: apiString,
+      firms_code: apiString,
+    })
+    .nullable(),
+  custom_fields: z.array(customFieldValueSchema).nullable(),
+  custom_fields_note: z.string().optional(),
+  // Present only when party_roles is requested.
+  party_roles: z.array(partyRoleSchema).nullable().optional(),
+  party_roles_note: z.string().optional(),
+  events: z
+    .object({
+      count: z.number(),
+      latest_event: z
+        .object({
+          event: apiString,
+          timestamp: apiString,
+          value: z.unknown(),
+          data_source: z.string().nullable(),
+          invalidated_at: z.string().nullable(),
+          location: apiString,
+        })
+        .optional(),
+      rail_events_count: z.number().optional(),
+    })
+    .optional(),
+  created_at: apiString,
+  _metadata: z.object({
+    container_state: z.string(),
+    status_is_authoritative: z.boolean(),
+    derived_lifecycle: z.string(),
+    includes_loaded: z.array(z.string()),
+  }),
+});
+
+export type ContainerStatus = z.input<typeof containerStatusSchema>;
 
 /** Merge requested includes onto the defaults, de-duplicated, order-stable. */
 export function resolveIncludes(

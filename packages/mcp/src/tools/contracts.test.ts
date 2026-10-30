@@ -646,7 +646,7 @@ describe('MCP tool contracts', () => {
       shipping_line: { scac: 'MAEU', name: 'Maersk' },
       containers: { count: 1 },
     });
-    expect(result._mapped).toBeUndefined();
+    expect(result).not.toHaveProperty('_mapped');
   });
 
   describe.each(['primary', 'fallback'] as const)(
@@ -798,8 +798,8 @@ describe('MCP tool contracts', () => {
     expect(result._metadata.source).toBe('transport_events_subresource');
     expect(result._metadata.container_found).toBe(true);
     // No duplicate mapped payload should be surfaced.
-    expect(result.summary).toBeUndefined();
-    expect(result.mapped).toBeUndefined();
+    expect(result).not.toHaveProperty('summary');
+    expect(result).not.toHaveProperty('mapped');
   });
 
   it('get_container_transport_events falls back to the container include path when the dedicated sub-resource 404s', async () => {
@@ -871,7 +871,7 @@ describe('MCP tool contracts', () => {
     });
     expect(result._metadata.source).toBe('container_include_fallback');
     // It must NOT masquerade a success-shaped empty timeline carrying an error.
-    expect(result._metadata.error).toBeUndefined();
+    expect(result._metadata).not.toHaveProperty('error');
   });
 
   it('get_container_transport_events surfaces a real error for a genuinely missing container', async () => {
@@ -916,7 +916,7 @@ describe('MCP tool contracts', () => {
     expect(result.total_events).toBe(0);
     expect(result.timeline).toEqual([]);
     // Empty-but-valid is distinct from a bad container id: no error metadata.
-    expect(result._metadata.error).toBeUndefined();
+    expect(result._metadata).not.toHaveProperty('error');
     expect(result._metadata.container_found).toBe(true);
   });
 

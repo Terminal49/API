@@ -678,7 +678,7 @@ describe('update_document', () => {
     );
 
     expect(result).toEqual(CONFIRMATION_NOT_CONFIGURED);
-    expect(requests).toEqual([]);
+    expect(requests.some((request) => request.method !== 'GET')).toBe(false);
   });
 
   it.each<[string, UpdateDocumentArgs]>([

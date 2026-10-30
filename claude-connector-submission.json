@@ -10,20 +10,18 @@
   "listing": {
     "name": "Terminal49",
     "tagline": "Track ocean shipments",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and, where trade intelligence is enabled, research US ocean import markets (importers, products, origins, ports, and carriers). At the user's request it can also track containers, stop or resume tracking, cancel pending tracking requests, and set parties and custom field values on containers and shipments. Changes that remove or replace data show a preview first and run only after the user confirms.",
+    "description": "Terminal49 helps users get live visibility into every ocean shipment and container. Track by container, bill of lading, or booking across all major carriers; find what needs attention, from ETA delays to holds, fees, and last free days; filter and count container worklists; create new tracking requests; and update shipment records. Changes that remove or replace data show a preview first and run only after the user confirms. Direct connections to North American ports, terminals, and rail make it the most complete import data available. Where trade intelligence is enabled, it also researches US ocean import markets: importers, products, origins, ports, and carriers.",
     "categories": [
       "Business"
     ],
     "slug": "terminal49",
-    "documentation_url": "https://docs.terminal49.com/mcp/home",
+    "documentation_url": "https://terminal49.com/docs/mcp/home",
     "privacy_policy_url": "https://terminal49.com/privacy",
     "terms_of_service_url": "https://terminal49.com/terms",
     "support_email": "support@terminal49.com",
     "icon": "public/store-icons/terminal49-light.png",
     "icon_dark": "public/store-icons/terminal49-dark.png",
     "tool_names": [
-      "add_reference_numbers",
-      "cancel_tracking_request",
       "get_container",
       "get_container_route",
       "get_container_transport_events",
@@ -45,15 +43,12 @@
       "list_shipments",
       "list_tracking_requests",
       "rank_importers",
-      "remove_reference_numbers",
-      "resume_shipment_tracking",
       "search_commodities",
       "search_container",
       "search_docs",
       "search_importers",
       "set_custom_field",
       "set_party_role",
-      "stop_shipment_tracking",
       "summarize_containers",
       "track_container",
       "whoami"
@@ -72,8 +67,6 @@
       "Inspect routes and transport events",
       "Check supported shipping lines",
       "Create new tracking requests",
-      "Stop or resume shipment tracking and cancel pending tracking requests",
-      "Edit reference numbers on containers, shipments, and tracking requests",
       "Set parties and custom field values on containers and shipments",
       "Research US ocean import markets: importers, products, origin countries, ports, and carriers"
     ]

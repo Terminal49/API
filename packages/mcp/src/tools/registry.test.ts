@@ -65,6 +65,37 @@ describe('tool registry', () => {
     );
   });
 
+  it('serves the tracking lifecycle tools only when that toolset is asked for', () => {
+    const lifecycle = TOOL_REGISTRY.filter(
+      (tool) => tool.toolset === 'tracking_lifecycle',
+    ).map((tool) => tool.name);
+
+    expect(lifecycle).toEqual([
+      'stop_shipment_tracking',
+      'resume_shipment_tracking',
+      'cancel_tracking_request',
+    ]);
+    expect(DEFAULT_TOOLSETS).not.toContain('tracking_lifecycle');
+    for (const name of lifecycle) {
+      expect(defaultTools().map((tool) => tool.name)).not.toContain(name);
+    }
+  });
+
+  it('serves the reference number tools only when that toolset is asked for', () => {
+    const referenceNumbers = TOOL_REGISTRY.filter(
+      (tool) => tool.toolset === 'reference_numbers',
+    ).map((tool) => tool.name);
+
+    expect(referenceNumbers).toEqual([
+      'add_reference_numbers',
+      'remove_reference_numbers',
+    ]);
+    expect(DEFAULT_TOOLSETS).not.toContain('reference_numbers');
+    for (const name of referenceNumbers) {
+      expect(defaultTools().map((tool) => tool.name)).not.toContain(name);
+    }
+  });
+
   it('registers only tools in the requested toolsets', () => {
     expect(Object.keys(registeredTools({ toolsets: ['documents'] }))).toEqual(
       TOOL_REGISTRY.filter((tool) => tool.toolset === 'documents').map(

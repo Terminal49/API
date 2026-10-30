@@ -143,9 +143,11 @@ The toolset names are:
 
 - `core`: every tool except the document reads, the webhook reads, the write tools below, and the trade intelligence tools. `whoami` reports the toolsets a session serves.
 - `documents`: `list_documents` and `get_document`.
-- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field`. It is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
-- `documents_write`: `relink_document` and `update_document`. The hosted server does not serve this toolset yet. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists it.
-- `developer`: `list_webhooks` and `list_webhook_notifications`. The hosted server does not serve this toolset. A self-hosted server serves it when `T49_MCP_TOOLSETS` lists it.
+- `operations`: `set_party_role` and `set_custom_field`. It is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
+- `tracking_lifecycle`: `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
+- `reference_numbers`: `add_reference_numbers` and `remove_reference_numbers`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
+- `documents_write`: `relink_document` and `update_document`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
+- `developer`: `list_webhooks` and `list_webhook_notifications`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
 - `trade`: the [trade intelligence tools](#trade-intelligence-tools).
 
 ```json
@@ -687,7 +689,7 @@ Returns the records that changed, those that already matched, and any that faile
 
 **Good for**
 
-- "Set the drayage carrier to Manzo Transport on these containers." (`replace`)
+- "Set the drayage carrier to Ray Drayage on these containers." (`replace`)
 
 ---
 
@@ -910,10 +912,10 @@ Extracted data and the source email are text that people outside your account wr
 
 ### Write tools
 
-The `operations` toolset holds seven tools that change your account's data: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field`. It is in the default toolsets. The `documents_write` toolset holds two more, `relink_document` and `update_document`; the hosted server does not serve it yet. Each write tool has a tier:
+Nine tools change your account's data. The `operations` toolset, which is in the default toolsets, holds `set_party_role` and `set_custom_field`. Three toolsets that a deployment serves only when `T49_MCP_TOOLSETS` lists them hold the rest: `tracking_lifecycle` holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`; `reference_numbers` holds `add_reference_numbers` and `remove_reference_numbers`; and `documents_write` holds `relink_document` and `update_document`. Each write tool has a tier:
 
 - **Tier A** tools run in one call. The result names the tool that undoes the change, when there is one.
-- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode. `stop_shipment_tracking` and `cancel_tracking_request` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
+- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode. `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers` and `update_document` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
 
 A call that needs your approval never changes anything the first time. It reads the record, or every record in the batch, and builds a preview of the record now and after the change. For a batch, the preview lists each record that changes and counts the rest, and one approval covers the whole call. How you approve the preview depends on your AI client.
 
@@ -927,7 +929,7 @@ Either way, the approval expires after 5 minutes and works only for the same too
 The confirmation step makes sure you see the current state before a destructive change. Terminal49 still decides what your credential can do.
 </Note>
 
-Write tools return these results with `isError: false`, so the AI client can explain them: `rate_limited` when Terminal49 limits the request rate, with `retry_after_s` when Terminal49 says how long to wait, `not_permitted` when the server is not set up to confirm changes, and the codes listed for each tool. Each of these results says that nothing was changed.
+Write tools return these results with `isError: false`, so the AI client can explain them: `rate_limited` when Terminal49 limits the request rate, with `retry_after_s` when Terminal49 says how long to wait, `not_permitted` when the change needs your approval and the server has no secret to sign approvals with, and the codes listed for each tool. Each of these results says that nothing was changed.
 
 ---
 
@@ -1038,7 +1040,7 @@ Remove reference numbers from a container, shipment, or tracking request. Tier C
 - `status: "noop"` when Terminal49 refuses the shorter list. Nothing changed.
 - `unreadable_reference_numbers` when Terminal49 returns the record's list in a form the tool cannot read. No token is issued.
 
-The token covers the whole list. If any reference number on the record changes after the preview, you get a new preview.
+The token covers the whole list. If any reference number on the record changes between the preview and your approval, you get a new preview. A change that lands while the confirmed write is running can still be lost, because Terminal49 replaces the whole list and has no conditional update.
 
 **Good for**
 - "Remove the wrong PO number from this shipment."
@@ -1396,7 +1398,7 @@ These Terminal49 API capabilities are available through the [SDK](/api-docs/in-d
 | Webhook setup | Create, edit, delete, or test webhooks | Configure via the [webhooks guide](/api-docs/in-depth-guides/webhooks) |
 
 <Info>
-Stopping and resuming shipment tracking, cancelling a tracking request, editing reference numbers, and setting parties and custom field values are MCP tools in the `operations` toolset. Fixing a document's type, extraction, or links are tools in the `documents_write` toolset, and reading webhooks and their notifications are tools in the `developer` toolset. The hosted server does not serve those two toolsets yet. Other shipment edits still need the REST API or the SDK.
+Stopping and resuming shipment tracking, and cancelling a tracking request, are MCP tools in the `tracking_lifecycle` toolset; editing reference numbers is in the `reference_numbers` toolset; fixing a document's type, extraction, or links is in the `documents_write` toolset; and reading webhooks and their notifications is in the `developer` toolset. The hosted server does not serve any of those four toolsets yet. Editing a shipment still needs the REST API or the SDK.
 </Info>
 
 ---

@@ -7,10 +7,17 @@ ChatGPT directory.
       `npm run build --workspace @terminal49/mcp`, and
       `npm run lint --workspace @terminal49/mcp`.
 - [ ] Confirm every tool has a non-empty `title`, `readOnlyHint`, and
-      `destructiveHint`. Confirm the tools in the default toolsets match the
-      submission JSONs. Every tier C tool must be destructive and take an
-      optional `confirmation_token`. CI enforces both in
+      `destructiveHint`. Confirm the only write tools in the default toolsets
+      are `track_container`, `set_party_role`, and `set_custom_field`, that
+      only the two `set_*` tools are destructive (they detach parties and
+      overwrite or clear field values), and that every tier C tool is
+      destructive and takes an optional `confirmation_token`. CI enforces all
+      of this in
       [`annotations.test.ts`](./src/annotations.test.ts).
+- [ ] Before a ChatGPT resubmission, confirm every tool on the dashboard's
+      **MCPs** tab has the annotations and justifications from
+      [`chatgpt-app-submission.json`](../../chatgpt-app-submission.json). OpenAI
+      holds new tools until they're approved, so rescan after each deploy.
 - [ ] Confirm tool names remain at most 64 characters, list `page_size` stays
       bounded to 1–25, and the advertised `include` choices/defaults remain
       lean. CI locks these contracts in
@@ -39,7 +46,8 @@ ChatGPT directory.
       `get_container_transport_events` for full history.
 - [ ] Recheck the [privacy policy](https://terminal49.com/privacy) and MCP data
       practices: tools access the authenticated private account, use only tool
-      arguments, and only `track_container` creates data.
+      arguments, and only `track_container`, `set_party_role`, and
+      `set_custom_field` change data.
 - [ ] Populate and run `mcpdemo` with at least three working prompts. Exercise
       every tool in MCP Inspector and a Claude custom connector; use the
       [live eval](./eval/README.md) as the automated baseline.

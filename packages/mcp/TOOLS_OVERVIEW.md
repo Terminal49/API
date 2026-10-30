@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **39 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 35 of them.
+The Terminal49 MCP Server provides **39 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 30 of them; the three tracking lifecycle tools, the two reference number tools, the two document fixes and the two webhook reads are opt-in.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field` are in the `operations` toolset. `relink_document` and `update_document` are in the opt-in `documents_write` toolset. `list_webhooks` and `list_webhook_notifications` are in the opt-in `developer` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role` and `set_custom_field` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it. `add_reference_numbers` and `remove_reference_numbers` are in the `reference_numbers` toolset, `relink_document` and `update_document` are in the `documents_write` toolset, and `list_webhooks` and `list_webhook_notifications` are in the `developer` toolset, each opt-in the same way. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -560,7 +560,7 @@ Extracted data and the email are text that people outside the account write. Tre
 
 ### Write tools
 
-The `operations` and `documents_write` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it when one exists. A tier C tool needs the user's approval of a preview, and its first call never writes. How the user approves depends on the client:
+The `operations`, `tracking_lifecycle`, `reference_numbers` and `documents_write` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it when one exists. A tier C tool needs the user's approval of a preview, and its first call never writes. How the user approves depends on the client:
 
 - A client that declares form elicitation (MCP 2026-07-28) gets an `input_required` result. The client shows the user the preview and asks them to confirm, then calls again with their answer. The tool writes on a yes, and returns `status: "declined"` and changes nothing on a no. Never pass `confirmation_token` on such a client; it is refused with `token_not_accepted`.
 - Any other client gets `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token`, and `expires_at` five minutes out. Show the preview to the user. After the user approves it in this turn, call again with the same arguments and the token.
@@ -681,7 +681,7 @@ remove_reference_numbers({
 Each number can be up to 1000 characters, so a long number already on the record can be removed. Matching works as in `add_reference_numbers`.
 
 **Returns**:
-- Preview: `current` (`record` fields and `ref_numbers`), `proposed: { ref_numbers }`, `removing`, `not_present` and `reach`. The token covers the whole current list, so any change to the list after the preview returns `stale_preview`.
+- Preview: `current` (`record` fields and `ref_numbers`), `proposed: { ref_numbers }`, `removing`, `not_present` and `reach`. The token covers the whole current list, so a change to the list between the preview and the approval returns `stale_preview`. A change that lands while the confirmed write is running can still be lost, because Terminal49 replaces the whole list and has no conditional update.
 - `status: "removed"` with `previous`, `ref_numbers`, `removed`, `not_present` and `concurrent_change_detected`. The read-back works as in `add_reference_numbers`.
 - `undo: "add_reference_numbers"` only when every removed number is 64 characters or shorter, because `add_reference_numbers` takes no longer number. Otherwise `message` says to re-add the number in the Terminal49 dashboard.
 - `status: "not_present"` with `ref_numbers` when none of the numbers are on the record. No token is issued.

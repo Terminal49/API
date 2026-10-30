@@ -89,6 +89,17 @@ describe('confirmation token', () => {
     expect(check(parts.join('.'))).toEqual({ ok: false, reason: 'mismatch' });
   });
 
+  it.each(['0', '00', '0000'])(
+    'rejects a token whose expiry is padded with %j',
+    (padding) => {
+      const [prefix, issued, state, signature] = issue().split('.');
+
+      expect(
+        check([prefix, `${padding}${issued}`, state, signature].join('.')),
+      ).toEqual({ ok: false, reason: 'malformed' });
+    },
+  );
+
   it.each(['', 'not-a-token', 't49ct1.x.y.z', `${issue()}extra`])(
     'rejects a malformed token %j',
     (token) => {

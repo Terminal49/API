@@ -87,19 +87,17 @@ leaves the record as it found it. The document case only previews. The cases:
 - refuse a stop with an edited confirmation token;
 - add a reference number to a shipment, then remove it with a confirmed
   preview;
-  with a confirmed preview.
 - preview a `reextract` of the first document with `update_document`, without
   confirming it, so it changes nothing. A document fix cannot be undone
   exactly, so the case never confirms one. `relink_document` has no live case,
   because a relink repeats Terminal49's matching and can add shipment or
   container links that nothing removes; its fixture tests cover it. The case
-  depends on the `documents_write` toolset, not `operations`. It skips when
-  the gateway does not list `update_document` or the account has no
-  document.
+  depends on the `documents_write` toolset. It skips when the gateway does not
+  list `update_document` or the account has no document.
 
 Every other case skips when the gateway does not list the write tools, which
-happens when its toolsets leave out `operations`, or when the sandbox account
-has no shipment. The two stop cases also skip when the sandbox key cannot stop
+happens when its toolsets leave out `tracking_lifecycle` or `reference_numbers`,
+or when the sandbox account has no shipment. The two stop cases also skip when the sandbox key cannot stop
 tracking (`FeatureNotEnabled`) or the first shipment is already stopped. The
 reference number case does not check either, so it runs on a stopped shipment
 too.

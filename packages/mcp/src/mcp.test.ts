@@ -1084,12 +1084,13 @@ describe('trade intelligence tools', () => {
     return { tool, result };
   };
 
-  it('registers every trade intelligence tool as read-only and closed-world', () => {
+  it('registers every trade intelligence tool as read-only, idempotent and closed-world', () => {
     const tools = (createTerminal49McpServer('token') as any)._registeredTools;
     for (const name of TRADE_INTEL_TOOL_NAMES) {
       expect(tools[name].annotations, name).toEqual({
         readOnlyHint: true,
         destructiveHint: false,
+        idempotentHint: true,
         openWorldHint: false,
       });
     }
@@ -1228,6 +1229,66 @@ describe('trade intelligence tools', () => {
       'floor',
     ]) {
       expect(TERMINAL49_SERVER_INSTRUCTIONS).toContain(phrase);
+    }
+  });
+});
+
+describe('ignored-filter errors at the MCP server boundary', () => {
+  it.each(['list_containers', 'summarize_containers'])(
+    '%s exposes correction guidance without any result payload',
+    async (name) => {
+      const ignored = ['current_status', 'custom_fields.unknown'];
+      containersList.mockResolvedValue({
+        items: [{ id: 'must-not-leak' }],
+        meta: { total: 99, ignored_filters: ignored },
+      });
+      containersSummary.mockResolvedValue({
+        groups: [{ key: 'must-not-leak', count: 99 }],
+        total: 99,
+        ignored_filters: ignored,
+      });
+      const { client, handler } = await connectClientForToolCall();
+      try {
+        const result = await client.callTool({
+          name,
+          arguments:
+            name === 'summarize_containers'
+              ? { group_by: 'current_status' }
+              : {},
+        });
+        expect(result.isError).toBe(true);
+        expect(result.structuredContent).toBeUndefined();
+        const text = JSON.stringify(result.content);
+        expect(text).toContain('current_status, custom_fields.unknown');
+        expect(text).toContain('Correct the filter names');
+        expect(text).toContain('do not silently remove');
+        expect(text).not.toContain('must-not-leak');
+        expect(text).not.toContain('applied_filters');
+      } finally {
+        await client.close();
+        await handler.close();
+      }
+    },
+  );
+
+  it('keeps malformed upstream diagnostics behind the generic error boundary', async () => {
+    containersList.mockResolvedValue({
+      items: [],
+      meta: { ignored_filters: ['private upstream message: secret'] },
+    });
+    const { client, handler } = await connectClientForToolCall();
+    try {
+      const result = await client.callTool({
+        name: 'list_containers',
+        arguments: {},
+      });
+      expect(result.isError).toBe(true);
+      expect(result.structuredContent).toBeUndefined();
+      expect(JSON.stringify(result.content)).toContain('Contact support');
+      expect(JSON.stringify(result)).not.toContain('private upstream');
+    } finally {
+      await client.close();
+      await handler.close();
     }
   });
 });

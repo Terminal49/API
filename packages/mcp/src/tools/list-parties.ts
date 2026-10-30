@@ -16,7 +16,6 @@ import { httpStatus } from './soft-results.js';
 
 const PAGE_SIZE = 100;
 const MAX_PAGES = 10;
-/** The most parties {@link loadParties} reads. */
 export const MAX_LOADED_PARTIES = PAGE_SIZE * MAX_PAGES;
 
 export const PARTY_ROLES = Object.keys(
@@ -28,7 +27,7 @@ export const listPartiesInputSchema = z.strictObject({
     .string()
     .uuid()
     .describe(
-      'One party ID (UUID format) to look up, for example party_id from a party role. When set, search and limit are ignored.',
+      'One party ID to look up, for example party_id from a party role. When set, search and limit are ignored.',
     )
     .optional(),
   search: z
@@ -45,7 +44,7 @@ export const listPartiesInputSchema = z.strictObject({
     .int()
     .positive()
     .max(50)
-    .describe('Most parties to return, from 1 to 50.')
+    .describe('Most parties to return.')
     .default(25),
 });
 export type ListPartiesArgs = z.input<typeof listPartiesInputSchema>;
@@ -91,7 +90,6 @@ export const toPartySummary = ({ id, name }: PartySummary): PartySummary => ({
   name,
 });
 
-/** The best rank any of the party's names gets for this search. */
 function partyRank(party: LoadedParty, search: string): number | null {
   const ranks = party.names
     .map((alias) => matchRank(alias, search))
@@ -123,7 +121,7 @@ const rawPartyRowSchema = z.object({
   attributes: partyAttributesSchema,
 });
 
-// Strict, so an unreadable page fails the load instead of looking complete:
+// Strict, so an unreadable page fails the load instead of looking complete.
 const rawPartyPageSchema = z.object({
   data: z.array(rawPartyRowSchema),
   links: z.object({ next: z.string().nullish() }).nullish(),

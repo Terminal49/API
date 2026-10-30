@@ -110,7 +110,7 @@ describe('runStdioServer', () => {
     }
 
     beforeEach(() => {
-      vi.stubEnv('T49_MCP_TOOLSETS', 'operations');
+      vi.stubEnv('T49_MCP_TOOLSETS', 'tracking_lifecycle');
       vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.stubGlobal(
         'fetch',

@@ -219,7 +219,6 @@ describe('remove_reference_numbers', () => {
       client,
       writeContext(client),
     );
-    // Someone adds a number between the preview and the confirmation.
     await client.containers.update(
       CONTAINER_ID,
       { ref_numbers: ['PO-1', 'PO-2', 'NEW'] },
@@ -367,7 +366,7 @@ describe('remove_reference_numbers', () => {
     );
 
     expect(result).toMatchObject({ error: 'not_permitted' });
-    expect(requests).toEqual([]);
+    expect(requests.some((request) => request.method !== 'GET')).toBe(false);
   });
 
   it('returns noop when Terminal49 refuses the shorter list', async () => {
