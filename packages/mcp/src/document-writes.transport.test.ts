@@ -199,26 +199,46 @@ describe('document fix tools over the MCP client transport', () => {
     );
   });
 
-  it('relinks a document in one call', async () => {
-    const result = await callTool(
+  it('previews a relink, then relinks with the token across separate requests', async () => {
+    let relinked = 0;
+    const routes: FakeRoutes = {
+      'GET /me': { body: meBody() },
+      [`GET ${DOCUMENT_PATH}`]: { body: documentBody() },
+      [`POST ${DOCUMENT_PATH}/relink`]: () => {
+        relinked += 1;
+        return { status: 202, body: { status: 'accepted' } };
+      },
+    };
+
+    const preview = await callTool(
       'relink_document',
       { id: DOCUMENT_ID },
-      {
-        'GET /me': { body: meBody() },
-        [`GET ${DOCUMENT_PATH}`]: { body: documentBody() },
-        [`POST ${DOCUMENT_PATH}/relink`]: {
-          status: 202,
-          body: { status: 'accepted' },
-        },
-      },
+      routes,
       DOCUMENTS_WRITE,
     );
-
-    expect(result.isError).not.toBe(true);
-    expect(result.structuredContent).toMatchObject({ status: 'accepted' });
+    expect(preview.isError).not.toBe(true);
+    expect(preview.structuredContent).toMatchObject({
+      status: 'confirmation_required',
+      preview: { proposed: { rerun: 'matching' } },
+    });
     expect(
-      relinkDocumentOutputSchema.safeParse(result.structuredContent).success,
+      relinkDocumentOutputSchema.safeParse(preview.structuredContent).success,
     ).toBe(true);
+    expect(relinked).toBe(0);
+
+    const done = await callTool(
+      'relink_document',
+      {
+        id: DOCUMENT_ID,
+        confirmation_token: tokenOf(preview.structuredContent),
+      },
+      routes,
+      DOCUMENTS_WRITE,
+    );
+    expect(done.isError).not.toBe(true);
+    expect(done.structuredContent).toMatchObject({ status: 'accepted' });
+    expect(done.structuredContent).not.toHaveProperty('undo');
+    expect(relinked).toBe(1);
   });
 
   it.each(['relink_document', 'update_document'])(

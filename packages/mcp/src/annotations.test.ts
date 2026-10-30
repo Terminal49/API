@@ -167,6 +167,7 @@ describe('MCP tool annotations', () => {
     ]);
     expect(destructiveTools.sort()).toEqual([
       'cancel_tracking_request',
+      'relink_document',
       'remove_reference_numbers',
       'set_custom_field',
       'set_party_role',

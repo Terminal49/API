@@ -197,10 +197,11 @@ export const TOOL_REGISTRY = [
     name: 'relink_document',
     title: 'Relink Document',
     toolset: 'documents_write',
-    tier: 'A',
+    tier: 'C',
+    confirms: 'always',
     annotations: {
       readOnlyHint: false,
-      destructiveHint: false,
+      destructiveHint: true,
       idempotentHint: true,
       openWorldHint: false,
     },

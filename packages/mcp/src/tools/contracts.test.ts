@@ -2094,19 +2094,26 @@ describe('MCP document fix tool contracts', () => {
     vi.restoreAllMocks();
   });
 
-  it('relink_document reads the document, then calls documents.relink', async () => {
+  it('relink_document previews, then calls documents.relink with the token', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const relink = vi.fn().mockResolvedValue({ status: 'accepted' });
     const get = vi.fn().mockResolvedValue(documentBody());
     const client = asClient({ documents: { get, relink } });
 
-    const result = await executeRelinkDocument(
+    const preview = await executeRelinkDocument(
       { id: DOCUMENT_ID },
       client,
       writeContext(client),
     );
-
     expect(get).toHaveBeenCalledWith(DOCUMENT_ID, { format: 'raw' });
+    expect(relink).not.toHaveBeenCalled();
+
+    const result = await executeRelinkDocument(
+      { id: DOCUMENT_ID, confirmation_token: tokenOf(preview) },
+      client,
+      writeContext(client),
+    );
+
     expect(relink).toHaveBeenCalledWith(DOCUMENT_ID, { format: 'raw' });
     expect(result).toMatchObject({ status: 'accepted' });
   });

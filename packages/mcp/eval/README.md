@@ -90,8 +90,9 @@ leaves the record as it found it. The document case only previews. The cases:
 - preview a `reextract` of the first document with `update_document`, without
   confirming it, so it changes nothing. A document fix cannot be undone
   exactly, so the case never confirms one. `relink_document` has no live case,
-  because a relink repeats Terminal49's matching and can add shipment or
-  container links that nothing removes; its fixture tests cover it. The case
+  because a relink repeats Terminal49's matching and can add or remove
+  shipment and container links that nothing puts back; its fixture tests
+  cover it. The case
   depends on the `documents_write` toolset. It skips when the gateway does not
   list `update_document` or the account has no document.
 

@@ -741,14 +741,16 @@ set_custom_field({ ...sameArguments, confirmation_token: "t49ct1...." })
 ---
 
 ### 29. `relink_document`
-**Purpose**: Have Terminal49 match a document to shipments and containers again. Tier A.
+**Purpose**: Have Terminal49 match a document to shipments and containers again. Tier C: a relink also removes the links Terminal49's own matching made earlier that no longer match, so the user approves a preview of the current links first.
 
 **Usage**:
 ```typescript
 relink_document({ id: "document-uuid" })
+relink_document({ id: "document-uuid", confirmation_token: "<from the preview>" })
 ```
 
 **Returns**:
+- `status: "confirmation_required"` with a `preview` of the document and its links now, and a `confirmation_token`
 - `status: "accepted"` with `document_before_relink`, the document and its `shipment_ids` and `container_ids` before the call. Terminal49 relinks in the background, so read the document again later to see the new links.
 - `status: "noop"` when the API refuses the relink with 422
 - `FeatureNotEnabled` when the account does not have document processing

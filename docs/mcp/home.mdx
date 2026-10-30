@@ -915,7 +915,7 @@ Extracted data and the source email are text that people outside your account wr
 Nine tools change your account's data. The `operations` toolset, which is in the default toolsets, holds `set_party_role` and `set_custom_field`. Three toolsets that a deployment serves only when `T49_MCP_TOOLSETS` lists them hold the rest: `tracking_lifecycle` holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`; `reference_numbers` holds `add_reference_numbers` and `remove_reference_numbers`; and `documents_write` holds `relink_document` and `update_document`. Each write tool has a tier:
 
 - **Tier A** tools run in one call. The result names the tool that undoes the change, when there is one.
-- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode. `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers` and `update_document` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
+- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode. `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `relink_document` and `update_document` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
 
 A call that needs your approval never changes anything the first time. It reads the record, or every record in the batch, and builds a preview of the record now and after the change. For a batch, the preview lists each record that changes and counts the rest, and one approval covers the whole call. How you approve the preview depends on your AI client.
 
@@ -1051,13 +1051,15 @@ The token covers the whole list. If any reference number on the record changes b
 
 ### `relink_document`
 
-Have Terminal49 match a document to shipments and containers again, for example after a shipment the document names starts being tracked. Tier A. In the `documents_write` toolset.
+Have Terminal49 match a document to shipments and containers again, for example after a shipment the document names starts being tracked. Tier C, because a relink also removes the links Terminal49's own matching made earlier that no longer match, and Terminal49 keeps no copy of them. Links made by hand in the dashboard stay. In the `documents_write` toolset.
 
 **Parameters**
 - `id` *(uuid, required)* – the document's UUID
+- `confirmation_token` *(string, optional)* – the token from the preview, after you approve it
 
 **Returns**
-- `status: "accepted"` with `document_before_relink`, the document and the shipments and containers it was linked to before the call. Terminal49 relinks in the background, so the links can take a minute to change.
+- `status: "confirmation_required"` with a `preview` of the document and the shipments and containers it is linked to now, and a `confirmation_token`. The preview changes if the links or the document change before you approve.
+- `status: "accepted"` with `document_before_relink`, the document and its links before the call. Terminal49 relinks in the background, so the links can take a minute to change.
 - `status: "noop"` when Terminal49 would not relink the document. Nothing is changed.
 - `FeatureNotEnabled` when the account does not have document processing
 
