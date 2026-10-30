@@ -622,7 +622,7 @@ export const containerFilterShape = {
       customer: z
         .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
         .describe(
-          'A party UUID, comma-separated UUIDs, or a supported presence expression. Matches parties in the customer role. Get party IDs from list_parties.',
+          "A party ID stored on the customer role, comma-separated party IDs, or a supported presence expression. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead; they can differ from the party_id stored on the role. Matches parties in the customer role.",
         )
         .optional(),
       freight_forwarder: z
@@ -639,7 +639,7 @@ export const containerFilterShape = {
         .optional(),
     })
     .describe(
-      'Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles.',
+      'Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. For the customer role, use the party_id stored on that role, not the role record id. For customer IDs returned by list_parties, use filter[customer_id] instead.',
     )
     .optional(),
 } as const;

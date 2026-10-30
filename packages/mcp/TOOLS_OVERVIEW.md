@@ -348,7 +348,7 @@ list_parties({ id: "party-uuid" })
 
 With `id`, the tool reads that one party and ignores `search` and `limit`. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
 
-**When to Use**: Before `list_containers` or `summarize_containers` when a question names a company. Filter with `advanced_filters.parties`, keyed by role, such as `{ customer: "<id>" }`.
+**When to Use**: Before `list_containers` or `summarize_containers` when a question names a company. Filter a customer with `advanced_filters.customer_id`, and any other role with `advanced_filters.parties`, keyed by role, such as `{ shipper: "<id>" }`.
 
 ---
 

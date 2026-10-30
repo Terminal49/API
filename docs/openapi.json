@@ -7437,7 +7437,7 @@
           {
             "in": "query",
             "name": "filter[parties]",
-            "description": "Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.",
+            "description": "Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK. For the customer role, use the party_id stored on that role, not the role record id. For customer IDs returned by list_parties, use filter[customer_id] instead.",
             "schema": {
               "type": "object",
               "properties": {
@@ -7459,7 +7459,7 @@
                 },
                 "customer": {
                   "type": "string",
-                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                  "description": "A party ID stored on the customer role, comma-separated party IDs, or a supported presence expression. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead; they can differ from the party_id stored on the role."
                 },
                 "freight_forwarder": {
                   "type": "string",
@@ -7551,7 +7551,7 @@
           {
             "in": "query",
             "name": "filter[parties][customer][]",
-            "description": "Array alternative for the customer role. Party IDs use OR within this role.",
+            "description": "Array alternative for party IDs stored on the customer role, using OR within this role. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead.",
             "schema": {
               "type": "array",
               "items": {
@@ -8263,7 +8263,7 @@
           {
             "in": "query",
             "name": "filter[parties]",
-            "description": "Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.",
+            "description": "Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK. For the customer role, use the party_id stored on that role, not the role record id. For customer IDs returned by list_parties, use filter[customer_id] instead.",
             "schema": {
               "type": "object",
               "properties": {
@@ -8285,7 +8285,7 @@
                 },
                 "customer": {
                   "type": "string",
-                  "description": "A party UUID, comma-separated UUIDs, or a supported presence expression."
+                  "description": "A party ID stored on the customer role, comma-separated party IDs, or a supported presence expression. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead; they can differ from the party_id stored on the role."
                 },
                 "freight_forwarder": {
                   "type": "string",

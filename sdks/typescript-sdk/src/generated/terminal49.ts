@@ -6760,7 +6760,7 @@ export interface operations {
                  */
                 "filter[tags_and]"?: boolean;
                 /**
-                 * @description Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.
+                 * @description Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK. For the customer role, use the party_id stored on that role, not the role record id. For customer IDs returned by list_parties, use filter[customer_id] instead.
                  * @example {
                  *       "shipper": "00000000-0000-4000-8000-000000000001"
                  *     }
@@ -6774,7 +6774,7 @@ export interface operations {
                     notify_party?: string;
                     /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
                     customs_broker?: string;
-                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    /** @description A party ID stored on the customer role, comma-separated party IDs, or a supported presence expression. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead; they can differ from the party_id stored on the role. */
                     customer?: string;
                     /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
                     freight_forwarder?: string;
@@ -6810,7 +6810,7 @@ export interface operations {
                  */
                 "filter[parties][customs_broker][]"?: string[];
                 /**
-                 * @description Array alternative for the customer role. Party IDs use OR within this role.
+                 * @description Array alternative for party IDs stored on the customer role, using OR within this role. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead.
                  * @example [
                  *       "00000000-0000-4000-8000-000000000001"
                  *     ]
@@ -7148,7 +7148,7 @@ export interface operations {
                  */
                 "filter[tags_and]"?: boolean;
                 /**
-                 * @description Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.
+                 * @description Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK. For the customer role, use the party_id stored on that role, not the role record id. For customer IDs returned by list_parties, use filter[customer_id] instead.
                  * @example {
                  *       "shipper": "00000000-0000-4000-8000-000000000001"
                  *     }
@@ -7162,7 +7162,7 @@ export interface operations {
                     notify_party?: string;
                     /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
                     customs_broker?: string;
-                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    /** @description A party ID stored on the customer role, comma-separated party IDs, or a supported presence expression. Use the role's party_id, not its id. For customer IDs returned by list_parties, use customer_id instead; they can differ from the party_id stored on the role. */
                     customer?: string;
                     /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
                     freight_forwarder?: string;

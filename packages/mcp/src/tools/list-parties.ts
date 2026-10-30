@@ -122,8 +122,11 @@ export async function executeListParties(
   };
 }
 
+// The ID /parties returns for a customer can differ from the party ID on its
+// customer roles, so parties.customer misses; customer_id matches either.
 function usage(): string {
-  return `Filter containers by a party with list_containers or summarize_containers advanced_filters.parties, keyed by role: { "<role>": "<party id>" }. Roles: ${PARTY_ROLES.join(', ')}. Use @exists for "has any".`;
+  const roles = PARTY_ROLES.filter((role) => role !== 'customer');
+  return `For a customer, filter list_containers, summarize_containers, or list_shipments with advanced_filters.customer_id: "<party id>". For any other role, filter containers with advanced_filters.parties keyed by role: { "<role>": "<party id>" }. Roles: ${roles.join(', ')}. Use @exists for "has any".`;
 }
 
 // An unreadable page fails the load instead of reading as the last one.

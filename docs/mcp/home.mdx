@@ -650,7 +650,7 @@ Counts come from `GET /v2/containers/summary` in one request. `hold_type` counts
 
 ### `list_parties`
 
-Find the companies on the account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. Pass an ID to `list_containers` or `summarize_containers` through `advanced_filters.parties`, keyed by role, such as `{ "customer": "<id>" }`.
+Find the companies on the account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. Pass a customer's ID to `list_containers`, `summarize_containers`, or `list_shipments` through `advanced_filters.customer_id`. Pass any other party's ID to `list_containers` or `summarize_containers` through `advanced_filters.parties`, keyed by role, such as `{ "shipper": "<id>" }`.
 
 **Parameters**
 
@@ -660,7 +660,7 @@ Find the companies on the account's shipments (customers, shippers, consignees, 
 
 **Good for**
 
-- "How many containers does Acme have at the terminal?" (find Acme, then filter by `customer`)
+- "How many containers does Acme have at the terminal?" (find Acme, then filter by `advanced_filters.customer_id`)
 - "Which containers is Ray Drayage picking up?" (find the carrier, then filter by `pickup_dray_carrier`)
 
 ---

@@ -871,6 +871,85 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
+    it('list_containers customer_id finds a customer resolved by list_parties', async ({
+      skip,
+    }) => {
+      // Follow the agent path: customer name -> list_parties -> customer_id.
+      const sample = await client.callTool('list_containers', {
+        advanced_filters: { customer_id: '@exists' },
+        page_size: 1,
+      });
+      const sampledContainer = fixtureItems('list_containers', sample).filter(
+        isRecord,
+      )[0];
+      const containerId = sampledContainer?.id;
+      const containerNumber = sampledContainer?.number;
+      if (
+        typeof containerId !== 'string' ||
+        typeof containerNumber !== 'string'
+      )
+        return skip();
+      const container = await client.callTool('get_container', {
+        id: containerId,
+      });
+      expect(container.http).toBe(200);
+      expect(container.isError).toBe(false);
+      const shipmentId =
+        isRecord(container.payload) && isRecord(container.payload.shipment)
+          ? readString(container.payload.shipment, 'id')
+          : undefined;
+      if (!shipmentId) return skip();
+      const shipment = await client.callTool('get_shipment_details', {
+        id: shipmentId,
+        include_containers: false,
+        include_party_roles: true,
+      });
+      expect(shipment.http).toBe(200);
+      expect(shipment.isError).toBe(false);
+      const roles =
+        isRecord(shipment.payload) &&
+        Array.isArray(shipment.payload.party_roles)
+          ? shipment.payload.party_roles.filter(isRecord)
+          : [];
+      const name = roles.find((r) => r.role === 'customer')?.party_name;
+      if (typeof name !== 'string') return skip();
+      const parties = await client.callTool('list_parties', {
+        search: name,
+        limit: 25,
+      });
+      expect(parties.http).toBe(200);
+      expect(parties.isError).toBe(false);
+      const matches =
+        isRecord(parties.payload) && Array.isArray(parties.payload.parties)
+          ? parties.payload.parties
+              .filter(isRecord)
+              .filter((p) => p.name === name)
+          : [];
+      if (matches.length !== 1) return skip();
+      const partyId = matches[0]?.id;
+      if (typeof partyId !== 'string') return skip();
+      const { score } = await evaluate(
+        'list_containers',
+        {
+          advanced_filters: { customer_id: partyId },
+          number: containerNumber,
+          page_size: 5,
+        },
+        {
+          requiredKeys: ['items'],
+          predicates: [
+            {
+              name: `customer_id for ${name} returns the sampled container`,
+              test: (p) => listItems(p).some((item) => item.id === containerId),
+              detail: (p) => `total=${String(listTotal(p))}`,
+            },
+          ],
+        },
+        'customer-id-filter',
+      );
+      expect(score.contractPass).toBe(true);
+    });
+
     it('list_containers rejects a filter given at both levels', async () => {
       const { result } = await evaluate(
         'list_containers',
