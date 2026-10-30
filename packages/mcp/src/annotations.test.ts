@@ -251,6 +251,15 @@ describe('MCP tool annotations', () => {
     }
   });
 
+  it('describes the default write tools in the MCP Registry listing', () => {
+    const server = JSON.parse(
+      readFileSync(new URL('../../../server.json', import.meta.url), 'utf8'),
+    ) as { description: string };
+    // The registry schema caps the description at 100 characters.
+    expect(server.description.length).toBeLessThanOrEqual(100);
+    expect(server.description).toContain('edit references, parties');
+  });
+
   it('lists exactly the default toolset tools, with live annotations, in the store submissions', () => {
     const tools = getRegisteredTools();
     const chatGpt = JSON.parse(
