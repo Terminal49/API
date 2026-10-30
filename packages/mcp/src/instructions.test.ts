@@ -22,7 +22,6 @@ import {
   type Toolset,
 } from './tools/registry.js';
 
-/** How every write tool's description opens, so a model can tell it from a read. */
 const WRITE_DESCRIPTION_LEAD = 'Changes account data. ';
 
 /** The rules a model needs whenever a tool in the session can change data. */
