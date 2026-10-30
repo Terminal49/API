@@ -16,7 +16,6 @@ import { httpStatus } from './soft-results.js';
 
 const PAGE_SIZE = 100;
 const MAX_PAGES = 10;
-/** The most parties {@link loadParties} reads. */
 export const MAX_LOADED_PARTIES = PAGE_SIZE * MAX_PAGES;
 
 export const PARTY_ROLES = Object.keys(
@@ -91,7 +90,6 @@ export const toPartySummary = ({ id, name }: PartySummary): PartySummary => ({
   name,
 });
 
-/** The best rank any of the party's names gets for this search. */
 function partyRank(party: LoadedParty, search: string): number | null {
   const ranks = party.names
     .map((alias) => matchRank(alias, search))
@@ -123,7 +121,7 @@ const rawPartyRowSchema = z.object({
   attributes: partyAttributesSchema,
 });
 
-// Strict, so an unreadable page fails the load instead of looking complete:
+// Strict, so an unreadable page fails the load instead of looking complete.
 const rawPartyPageSchema = z.object({
   data: z.array(rawPartyRowSchema),
   links: z.object({ next: z.string().nullish() }).nullish(),

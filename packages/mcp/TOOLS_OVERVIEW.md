@@ -681,7 +681,7 @@ remove_reference_numbers({
 Each number can be up to 1000 characters, so a long number already on the record can be removed. Matching works as in `add_reference_numbers`.
 
 **Returns**:
-- Preview: `current` (`record` fields and `ref_numbers`), `proposed: { ref_numbers }`, `removing`, `not_present` and `reach`. The token covers the whole current list, so any change to the list after the preview returns `stale_preview`.
+- Preview: `current` (`record` fields and `ref_numbers`), `proposed: { ref_numbers }`, `removing`, `not_present` and `reach`. The token covers the whole current list, so a change to the list between the preview and the approval returns `stale_preview`. A change that lands while the confirmed write is running can still be lost, because Terminal49 replaces the whole list and has no conditional update.
 - `status: "removed"` with `previous`, `ref_numbers`, `removed`, `not_present` and `concurrent_change_detected`. The read-back works as in `add_reference_numbers`.
 - `undo: "add_reference_numbers"` only when every removed number is 64 characters or shorter, because `add_reference_numbers` takes no longer number. Otherwise `message` says to re-add the number in the Terminal49 dashboard.
 - `status: "not_present"` with `ref_numbers` when none of the numbers are on the record. No token is issued.

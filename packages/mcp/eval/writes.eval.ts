@@ -44,7 +44,6 @@ if (!enableWrite || !sandboxToken) {
   let served: string[] = [];
   let shipmentId: string | undefined;
 
-  /** Previews a tier C call, then confirms it with the token it returned. */
   const confirmed = async (tool: string, args: Record<string, unknown>) => {
     const preview = structured(await client.callTool(tool, args));
     if (preview.status !== 'confirmation_required') return preview;

@@ -1995,7 +1995,8 @@ export function createTerminal49McpServer(
       {
         description:
           'Remove reference numbers from a container, shipment, or tracking request. Searches, filters, and integrations that use a removed number stop finding the record. ' +
-          'The preview shows the list now, the list after, and which numbers are not on the record. The approval stops working if the list changes in the meantime. ' +
+          'The preview shows the list now, the list after, and which numbers are not on the record. If the list changes between the preview and the approval, you get a new preview. ' +
+          'Terminal49 replaces the whole list and has no conditional update, so a number someone else adds while the confirmed write is running is lost, and concurrent_change_detected does not report it. ' +
           'Returns removed with the list before (previous) and after (ref_numbers), or not_present when none of the numbers are on the record. concurrent_change_detected works as in add_reference_numbers.',
         inputSchema: removeReferenceNumbersInputSchema,
         outputSchema: removeReferenceNumbersOutputSchema,

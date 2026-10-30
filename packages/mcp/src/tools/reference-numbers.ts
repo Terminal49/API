@@ -34,7 +34,6 @@ export const referenceEntityInput = {
     ),
 };
 
-/** At most this many reference numbers in one call. */
 export const MAX_REFERENCE_NUMBERS_PER_CALL = 20;
 
 /**
@@ -128,7 +127,6 @@ export interface UnreadableReferenceNumbers extends SoftResult<'unreadable_refer
   record: ReferenceTarget;
 }
 
-/** Returned instead of a write when the record's list could not be read. */
 export function unreadableReferenceNumbers(
   record: ReferenceTarget,
 ): UnreadableReferenceNumbers {
@@ -172,7 +170,6 @@ export async function writeReferenceNumbers(
   }[entityType]();
 }
 
-/** The list with each value once, in first-seen order. */
 export function uniqueValues(values: readonly string[]): string[] {
   return [...new Set(values)];
 }
@@ -214,9 +211,7 @@ export async function readBackReferenceNumbers(
         concurrent_change_detected: !sameValues(ref_numbers, sent),
       };
     }
-  } catch {
-    // Reported below with the list that was sent.
-  }
+  } catch {}
   return {
     ref_numbers: sent,
     concurrent_change_detected: null,

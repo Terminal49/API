@@ -1040,7 +1040,7 @@ Remove reference numbers from a container, shipment, or tracking request. Tier C
 - `status: "noop"` when Terminal49 refuses the shorter list. Nothing changed.
 - `unreadable_reference_numbers` when Terminal49 returns the record's list in a form the tool cannot read. No token is issued.
 
-The token covers the whole list. If any reference number on the record changes after the preview, you get a new preview.
+The token covers the whole list. If any reference number on the record changes between the preview and your approval, you get a new preview. A change that lands while the confirmed write is running can still be lost, because Terminal49 replaces the whole list and has no conditional update.
 
 **Good for**
 - "Remove the wrong PO number from this shipment."
