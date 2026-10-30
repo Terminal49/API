@@ -47,10 +47,12 @@ const PARAGRAPHS: readonly Paragraph[] = [
         text: 'Resolve a container, Bill of Lading (BOL), booking, or reference number with search_container, then use get_container or get_shipment_details, and get_container_transport_events for milestones.',
       },
       {
-        text: ' Resolve a carrier name to its SCAC with get_supported_shipping_lines',
+        text: ' Resolve a carrier name to its SCAC with get_supported_shipping_lines before track_container.',
       },
-      { text: ' before track_container' },
-      { text: '.' },
+      {
+        text: ' Resolve a carrier name to its SCAC with get_supported_shipping_lines.',
+        unless: ['track_container'],
+      },
       {
         text: ' Resolve a company to a party ID with list_parties.',
         unless: ['set_party_role'],

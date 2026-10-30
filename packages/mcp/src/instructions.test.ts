@@ -182,6 +182,23 @@ describe('server instructions', () => {
     }
   });
 
+  it('leaves no empty or punctuation-only paragraph in any selection', () => {
+    for (const toolsets of toolsetSubsets()) {
+      for (const readOnly of [false, true]) {
+        const instructions = buildServerInstructions(
+          selectTools({ toolsets, readOnly }),
+        );
+
+        for (const paragraph of instructions.split('\n\n')) {
+          expect(
+            paragraph,
+            `${toolsets.join(',')} readOnly=${readOnly}`,
+          ).toMatch(/\w/);
+        }
+      }
+    }
+  });
+
   it('stays within the 2 KB that Claude Code keeps for every selection', () => {
     for (const toolsets of toolsetSubsets()) {
       for (const readOnly of [false, true]) {
