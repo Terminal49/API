@@ -3,6 +3,7 @@ import { Terminal49Client } from '@terminal49/sdk';
 export interface FakeResponse {
   status?: number;
   body?: unknown;
+  headers?: Record<string, string>;
 }
 
 export interface FakeRequest {
@@ -45,11 +46,19 @@ export function fakeApiFetch(routes: FakeRoutes) {
         : (route ?? { status: 404 });
     const status = response.status ?? 200;
     return new Response(
-      JSON.stringify(
-        response.body ??
-          (status >= 400 ? { errors: [{ status: String(status) }] } : {}),
-      ),
-      { status, headers: { 'Content-Type': 'application/vnd.api+json' } },
+      status === 204
+        ? null
+        : JSON.stringify(
+            response.body ??
+              (status >= 400 ? { errors: [{ status: String(status) }] } : {}),
+          ),
+      {
+        status,
+        headers: {
+          'Content-Type': 'application/vnd.api+json',
+          ...response.headers,
+        },
+      },
     );
   };
   return { fetch, requests };
