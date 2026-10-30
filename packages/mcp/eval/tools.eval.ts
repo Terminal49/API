@@ -733,15 +733,12 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
-    // ---- webhook reads (opt-in developer toolset) ----
-
     const servedTools = async () =>
       (await client.listTools()).map((tool) => tool.name);
 
     it('list_webhooks returns no secret, header value or URL query string', async ({
       skip,
     }) => {
-      // The gateway lists it only when its toolsets include developer.
       if (!(await servedTools()).includes('list_webhooks')) return skip();
       const { result, score } = await evaluate(
         'list_webhooks',

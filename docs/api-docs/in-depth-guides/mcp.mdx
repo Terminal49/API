@@ -381,7 +381,7 @@ The `vercel.json` configures the MCP server (excerpt):
 | `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,operations,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
 | `T49_MCP_READ_ONLY` | No | Serves only read-only tools when set to `true` or `1`; defaults to `false` |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | Serves toolsets other than `core` and `trade` when callers share `T49_API_TOKEN`; defaults to `false` |
-| `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `update_document`, and a destructive `set_party_role` or `set_custom_field` call need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
+| `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, `remove_reference_numbers`, `relink_document`, `update_document`, and a destructive `set_party_role` or `set_custom_field` call need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
 | `SENTRY_DSN` | No | Enables Sentry MCP Monitoring |
 | `SENTRY_ENVIRONMENT` | No | Sentry environment name; defaults to `NODE_ENV` |
 | `SENTRY_RELEASE` | No | Sentry release identifier; defaults to `VERCEL_GIT_COMMIT_SHA` |

@@ -426,7 +426,6 @@ describe('update_document', () => {
           reach: DOCUMENT_REACH[action],
         },
       });
-      // Only set_type needs the type list.
       expect(requests.map((request) => request.path)).toEqual([DOCUMENT_PATH]);
 
       const result = await executeUpdateDocument(

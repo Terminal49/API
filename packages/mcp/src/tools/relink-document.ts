@@ -56,7 +56,7 @@ export const relinkDocumentOutputSchema = confirmedWriteResultSchema(
 );
 
 export const RELINK_REACH =
-  "Terminal49 matches the document's references again in the background. It links the shipments and containers they match now, and removes the links its own matching made earlier that no longer match. Links made by hand in the dashboard stay. Terminal49 keeps no copy of the removed links.";
+  "Terminal49 matches the document's references again in the background. If the document has no current reference extraction, it extracts the references first. It adds links to the shipments and containers they match, except links a user removed earlier, and it removes the links its own matching made earlier that no longer match. Links made by hand in the dashboard stay. Terminal49 keeps no copy of the removed links.";
 
 interface RelinkAccepted {
   status: 'accepted';
@@ -108,8 +108,8 @@ export async function executeRelinkDocument(
         throw error;
       }
       return {
-        // The links are what a relink replaces; updated_at catches any other
-        // edit, such as a new extraction that changes what matches.
+        // The links are what a relink replaces. updated_at catches an edit that
+        // changes it, but a new extraction can finish without changing it.
         state: {
           shipment_ids: document.shipment_ids,
           container_ids: document.container_ids,

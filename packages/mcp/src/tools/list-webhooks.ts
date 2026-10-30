@@ -96,7 +96,6 @@ const rawCategorySchema = z.object({
   }),
 });
 
-/** Keeps every well-formed category and event, and drops only the malformed ones. */
 function toCatalog(catalog: z.infer<typeof rawCatalogSchema>): EventCategory[] {
   return catalog.data.flatMap((record) => {
     const category = rawCategorySchema.safeParse(record);

@@ -40,7 +40,6 @@ export const DOCUMENT_ACTIONS = [
 
 type DocumentAction = (typeof DOCUMENT_ACTIONS)[number];
 
-/** Classification notes longer than this are refused. */
 export const MAX_CLASSIFICATION_NOTES_CHARS = 256;
 
 export const updateDocumentInputSchema = z
@@ -199,7 +198,6 @@ async function loadDocumentTypes(
     .document_types.filter((type) => type.code.length > 0);
 }
 
-/** Checks the inputs each action needs, before any request. */
 function checkActionInputs(args: z.output<typeof updateDocumentInputSchema>) {
   if (args.action === 'set_type') {
     if (!args.document_type) {

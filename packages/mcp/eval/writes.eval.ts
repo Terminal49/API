@@ -6,8 +6,9 @@
  * account and only when both are set:
  *   MCP_EVAL_ENABLE_WRITE=1
  *   MCP_EVAL_SANDBOX_TOKEN=<API key of the sandbox account>
- * The endpoint is MCP_EVAL_ENDPOINT, as for the read suite. Each case is a
- * round trip that leaves the record as it found it.
+ * The endpoint is MCP_EVAL_ENDPOINT, as for the read suite. Each case that
+ * changes data is a round trip that leaves the record as it found it. The
+ * document case only previews.
  *
  * cancel_tracking_request and relink_document have no live case. A cancel
  * cannot be undone, and every run would have to create a new, billable
@@ -190,8 +191,6 @@ if (!enableWrite || !sandboxToken) {
     });
 
     it('previews a document fix without confirming it', async ({ skip }) => {
-      // The gateway lists update_document only when its toolsets include
-      // documents_write.
       if (!served.includes('update_document')) {
         return skip();
       }

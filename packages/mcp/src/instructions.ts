@@ -118,7 +118,6 @@ function mentionedTools(text: string): ToolName[] {
   );
 }
 
-/** The rules for changing account records, when a registered tool can. */
 function writeRules(tools: readonly RegisteredTool[]): string {
   const servesWrite = tools.some((tool) => tool.tier !== 'read');
   return servesWrite
