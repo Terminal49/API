@@ -38,14 +38,14 @@ const PARAGRAPHS: readonly Paragraph[] = [
     aboutTools: true,
     segments: [
       {
-        text: 'track_container starts tracking a number. set_party_role and set_custom_field can replace, detach, or clear values on containers and shipments: call them only when the user asks for that change. The other tools only fetch data.',
+        text: 'Call track_container only when the user asks to track or add a number. set_party_role and set_custom_field can replace, detach, or clear values on containers and shipments: call them only when the user asks for that change. The other tools only fetch data.',
       },
       {
         text: 'set_party_role and set_custom_field can replace, detach, or clear values on containers and shipments: call them only when the user asks for that change. The other tools only fetch data.',
         unless: ['track_container'],
       },
       {
-        text: 'Only track_container changes the account: it starts tracking a number. The other tools only fetch data.',
+        text: 'Call track_container only when the user asks to track or add a number. The other tools only fetch data.',
         unless: ['set_party_role', 'set_custom_field'],
       },
       {
