@@ -19,7 +19,7 @@
 
 ### 🛠️ Tools (33 Available)
 
-The default toolsets, `core`, `documents`, `operations` and `trade`, serve all 33 tools:
+The default toolsets, `core`, `documents`, `operations` and `trade`, serve these 30:
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -42,9 +42,6 @@ The default toolsets, `core`, `documents`, `operations` and `trade`, serve all 3
 | **`get_tracking_request`** | Get one tracking request's status, failure reason, and shipment | Follow-up after tracking |
 | **`list_documents`** | Find documents by file name, reference, or type | Never returns extracted data or file links |
 | **`get_document`** | Get one document, with opt-in extracted data, source email, and download link | Untrusted content is labeled |
-| **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
-| **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
-| **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
 | **`set_party_role`** | Attach, replace, or detach a party (such as the drayage carrier) on up to 50 containers or shipments | C: asks before a record loses a party; add runs at once |
@@ -56,6 +53,14 @@ The default toolsets, `core`, `documents`, `operations` and `trade`, serve all 3
 | **`get_trade_trends`** | Time series of containers, TEUs, or estimated value | Trade intelligence, per account |
 | **`get_trade_breakdown`** | Nested totals over one to three dimensions | Trade intelligence, per account |
 | **`get_trade_data_coverage`** | Where trade data starts, the latest and last full month | Trade intelligence, per account |
+
+The opt-in `tracking_lifecycle` toolset adds three more. A deployment serves them only when `T49_MCP_TOOLSETS` lists it:
+
+| Tool | Description | Key Features |
+|------|-------------|--------------|
+| **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
+| **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
+| **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -419,7 +424,7 @@ Signed URLs, such as the document download link that `get_document` returns, are
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `set_party_role` and `set_custom_field` are in `operations`. The trade intelligence tools are in `trade`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `tracking_lifecycle`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `set_party_role` and `set_custom_field` are in `operations`. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in `tracking_lifecycle`, which no deployment serves until `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
