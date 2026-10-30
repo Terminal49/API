@@ -1264,3 +1264,96 @@ describe('record writes without a confirmation secret', () => {
     });
   });
 });
+
+/**
+ * The server remembers spent confirmations per process, so a replay has to
+ * be refused by the approval's binding alone when it reaches another
+ * instance. A fresh module tree stands in for that instance.
+ */
+describe('an approval replayed on another server instance', () => {
+  afterEach(() => {
+    vi.resetModules();
+  });
+
+  it('cannot clear a custom field again after the value was put back', async () => {
+    const client = fakeClient();
+    let updatedAt = '2026-10-01T00:00:00Z';
+    client.containers.customFields.mockImplementation(async () => [
+      { slug: 'po_number', value: 'PO-1', updatedAt },
+    ]);
+    const args = {
+      entity: 'container',
+      ids: [C1],
+      api_slug: 'po_number',
+      value: null,
+    } as const;
+
+    const preview = await executeSetCustomField(
+      args,
+      client,
+      writeContext(client),
+    );
+    const confirmation_token = tokenOf(preview);
+    await executeSetCustomField(
+      { ...args, confirmation_token },
+      client,
+      writeContext(client),
+    );
+    expect(client.containers.deleteCustomField).toHaveBeenCalledTimes(1);
+
+    updatedAt = '2026-10-01T00:04:00Z';
+    vi.resetModules();
+    const other = await import('./record-writes.js');
+    const replay = await other.executeSetCustomField(
+      { ...args, confirmation_token },
+      client,
+      writeContext(client),
+    );
+
+    expect(replay).toMatchObject({ status: 'stale_preview' });
+    expect(client.containers.deleteCustomField).toHaveBeenCalledTimes(1);
+  });
+
+  it('cannot detach a party again after it was attached back', async () => {
+    const client = fakeClient();
+    let assignment = 'pr-1';
+    client.containers.partyRoles.mockImplementation(async () =>
+      partyRoleDoc({
+        id: assignment,
+        role: 'pickup_dray_carrier',
+        partyId: PARTY,
+      }),
+    );
+    const args = {
+      container_ids: [C1],
+      role: 'pickup_dray_carrier',
+      party_id: PARTY,
+      action: 'remove',
+    } as const;
+
+    const preview = await executeSetPartyRole(
+      args,
+      client,
+      writeContext(client),
+    );
+    const confirmation_token = tokenOf(preview);
+    await executeSetPartyRole(
+      { ...args, confirmation_token },
+      client,
+      writeContext(client),
+    );
+    expect(client.containers.removePartyRole).toHaveBeenCalledTimes(1);
+
+    assignment = 'pr-2';
+    vi.resetModules();
+    const other = await import('./record-writes.js');
+    const replay = await other.executeSetPartyRole(
+      { ...args, confirmation_token },
+      client,
+      writeContext(client),
+    );
+
+    expect(replay).toMatchObject({ status: 'stale_preview' });
+    expect(client.containers.removePartyRole).toHaveBeenCalledTimes(1);
+  });
+});
