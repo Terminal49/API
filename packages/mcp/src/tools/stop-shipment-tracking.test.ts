@@ -533,7 +533,7 @@ describe('stop_shipment_tracking', () => {
     );
 
     expect(result).toMatchObject({ error: 'not_permitted' });
-    expect(requests).toEqual([]);
+    expect(requests.map((entry) => entry.method)).not.toContain('PATCH');
   });
 
   it('returns rate_limited when Terminal49 limits the stop call', async () => {

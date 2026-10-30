@@ -97,7 +97,9 @@ function record(initial = 'active') {
       read: async (): Promise<Read> =>
         status === 'idle'
           ? { stop: { status: 'nothing_to_do' } }
-          : { state: { status }, preview: { status } },
+          : status === 'additive'
+            ? { additive: { status } }
+            : { state: { status }, preview: { status } },
       write,
     }),
   };
@@ -256,7 +258,22 @@ describe('runConfirmedWrite', () => {
     expect(target.write).not.toHaveBeenCalled();
   });
 
-  it('refuses to preview or write without a secret, and logs why', async () => {
+  it('runs a change that needs no approval without a secret', async () => {
+    const target = record('additive');
+
+    await expect(
+      runConfirmedWrite(
+        context({ confirmationSecret: undefined }),
+        target.plan({}),
+      ),
+    ).resolves.toEqual({ status: 'done' });
+    expect(target.write).toHaveBeenCalledTimes(1);
+    expect(logged.map((line) => JSON.parse(line).event)).not.toContain(
+      'mcp.config.error',
+    );
+  });
+
+  it('refuses to preview or write a change that needs approval without a secret, and logs why', async () => {
     const target = record();
     const plan = target.plan({});
     const read = vi.spyOn(plan, 'read');
@@ -264,9 +281,12 @@ describe('runConfirmedWrite', () => {
 
     const result = await runConfirmedWrite(ctx, plan);
 
-    expect(result).toMatchObject({ error: 'not_permitted' });
+    expect(result).toMatchObject({
+      error: 'not_permitted',
+      message: expect.stringContaining('T49_MCP_CONFIRMATION_SECRET'),
+    });
     expect(target.write).not.toHaveBeenCalled();
-    expect(read).not.toHaveBeenCalled();
+    expect(read).toHaveBeenCalledTimes(1);
     expect(logged.map((line) => JSON.parse(line).event)).toContain(
       'mcp.config.error',
     );

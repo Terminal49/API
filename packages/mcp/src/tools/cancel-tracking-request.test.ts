@@ -334,6 +334,6 @@ describe('cancel_tracking_request', () => {
         writeContext(client, { confirmationSecret: undefined }),
       ),
     ).resolves.toMatchObject({ error: 'not_permitted' });
-    expect(requests).toEqual([]);
+    expect(patches(requests)).toEqual([]);
   });
 });
