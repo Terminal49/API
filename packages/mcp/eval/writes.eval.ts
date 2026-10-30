@@ -95,7 +95,9 @@ if (!enableWrite || !sandboxToken) {
           shipment_id: shipmentId,
           confirmation_token: previewed.confirmation_token,
         });
-        needsResume = structured(stopped).error === undefined;
+        // Only a stop this eval made needs undoing; a lost response keeps
+        // the default, because the stop may have happened.
+        needsResume = structured(stopped).status === 'stopped';
         expect(stopped.isError).toBe(false);
         expect(structured(stopped).status).toBe('stopped');
 
