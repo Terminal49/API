@@ -1706,7 +1706,7 @@ export function createTerminal49McpServer(
       {
         description:
           "Find the companies on this account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. " +
-          'Use it before list_containers or summarize_containers when a question names a company, then filter with advanced_filters.parties keyed by role, for example { "customer": "<id>" }. ' +
+          'Use it before list_containers, summarize_containers, or list_shipments when a question names a company, then filter a customer with advanced_filters.customer_id and other roles with advanced_filters.parties keyed by role, for example { "shipper": "<id>" }. ' +
           'Pass id instead of search to get the name of one party. The result has total_matched, parties (each with id and name), truncated, and usage.',
         inputSchema: z.preprocess(stripLegacyIntent, listPartiesInputSchema),
         outputSchema: z.object({

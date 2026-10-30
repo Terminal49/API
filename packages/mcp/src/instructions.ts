@@ -68,7 +68,7 @@ const PARAGRAPHS: readonly Paragraph[] = [
         text: ' Resolve a carrier name to its SCAC with get_supported_shipping_lines.',
       },
       {
-        text: ' Resolve a company to a party ID with list_parties.',
+        text: ' Resolve a company to an ID with list_parties, then filter customers by advanced_filters.customer_id and other roles by advanced_filters.parties.',
       },
       {
         text: ' Use search_docs for how-to and API questions and cite the returned links.',
