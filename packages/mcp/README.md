@@ -145,6 +145,9 @@ submission metadata are checked in at the repository root:
 - `server.json` — official MCP Registry metadata used for Copilot discovery
 - `public/store-icons/terminal49-{light,dark}.png` — 512×512 brand icons
 
+Cline and other clients that read a marketplace install guide from the server
+subfolder use `packages/mcp/llms-install.md`.
+
 ### Verify the domain for ChatGPT
 
 OpenAI generates a unique domain-verification token during submission. Add that
@@ -176,19 +179,20 @@ available for clients that support theme-specific assets.
 
 ### Publish for Copilot discovery
 
-GitHub's Copilot registry is a curated downstream discovery surface. Publish
-`server.json` to the official MCP Registry to make Terminal49 eligible for that
-surface:
+GitHub's Copilot registry is a curated downstream discovery surface. The root
+`server.json` is the official MCP Registry entry
+(`io.github.Terminal49/terminal49`).
 
-```bash
-mcp-publisher validate server.json
-mcp-publisher login github
-mcp-publisher publish server.json
-```
+[`.github/workflows/publish-mcp.yml`](../../.github/workflows/publish-mcp.yml)
+publishes that file to `https://registry.modelcontextprotocol.io`. It runs when
+a push to `main` changes `server.json`, and a maintainer can start it with
+`workflow_dispatch` on `main`. The job authenticates with GitHub OIDC
+(`mcp-publisher login github-oidc`) and then runs `mcp-publisher publish`. The
+`io.github.Terminal49` namespace is authorized for OIDC from this organization
+repository, so the workflow needs no registry secret.
 
-The publisher must authenticate as an owner of the `Terminal49` GitHub
-organization because the registry name uses its `io.github.Terminal49`
-namespace.
+Bump `version` in `server.json` for each metadata change. The registry keeps
+published versions, and a second publish of the same version is rejected.
 
 ---
 
