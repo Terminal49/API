@@ -29,7 +29,7 @@ MCP_EVAL_TOKEN="<key>" npm run eval --workspace @terminal49/mcp
 | `MCP_EVAL_TOKEN`         | Terminal49 API key → `Authorization: Token`             | —                                |
 | `MCP_EVAL_ENDPOINT`      | Gateway `/mcp` URL                                      | `https://mcp.terminal49.com/mcp` |
 | `MCP_EVAL_ENABLE_WRITE`  | Opt in to `track_container` and the write evals         | unset (skipped)                  |
-| `MCP_EVAL_ALLOW_SPARSE`  | Allow detail cases to skip when the account has no data | unset (strict)                   |
+| `MCP_EVAL_ALLOW_SPARSE`  | Let cases skip on a sparse account or write gateway     | unset (strict)                   |
 | `MCP_EVAL_SANDBOX_TOKEN` | API key of the sandbox account for the write evals      | unset (write evals skipped)      |
 
 > OAuth access tokens are short-lived (~5 min). For repeatable/CI runs, prefer a
@@ -92,13 +92,15 @@ leaves the record as it found it. The document case only previews. The cases:
   exactly, so the case never confirms one. `relink_document` has no live case,
   because a relink repeats Terminal49's matching and can add or remove
   shipment and container links that nothing puts back; its fixture tests
-  cover it. The case
-  depends on the `documents_write` toolset. It skips when the gateway does not
-  list `update_document` or the account has no document.
+  cover it. The case skips when the account has no document.
 
-Every other case skips when the gateway does not list the write tools, which
-happens when its toolsets leave out `tracking_lifecycle` or `reference_numbers`,
-or when the sandbox account has no shipment. The two stop cases also skip when the sandbox key cannot stop
+The suite fails before any case runs when the gateway does not list every
+write tool in the default toolsets, so a gateway that lost `reference_numbers`
+or `documents_write` cannot pass with its cases skipped.
+`MCP_EVAL_ALLOW_SPARSE=1` lets those cases skip instead. The two stop cases
+skip when the gateway does not serve the opt-in `tracking_lifecycle` toolset.
+The shipment cases skip when the sandbox account has no shipment, and the two
+stop cases also skip when the sandbox key cannot stop
 tracking (`FeatureNotEnabled`) or the first shipment is already stopped. The
 reference number case does not check either, so it runs on a stopped shipment
 too.

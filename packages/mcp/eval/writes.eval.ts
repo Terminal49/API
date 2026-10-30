@@ -18,6 +18,7 @@
  */
 
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
+import { defaultTools } from '../src/tools/registry.js';
 import { EvalClient, isRecord, type ToolResult } from './client.js';
 import { fixtureItems } from './fixtures.js';
 
@@ -25,6 +26,9 @@ const enableWrite =
   process.env.MCP_EVAL_ENABLE_WRITE === '1' ||
   process.env.MCP_EVAL_ENABLE_WRITE === 'true';
 const sandboxToken = process.env.MCP_EVAL_SANDBOX_TOKEN?.trim();
+const allowSparse =
+  process.env.MCP_EVAL_ALLOW_SPARSE === '1' ||
+  process.env.MCP_EVAL_ALLOW_SPARSE === 'true';
 const endpoint =
   process.env.MCP_EVAL_ENDPOINT?.trim() || 'https://mcp.terminal49.com/mcp';
 
@@ -63,9 +67,20 @@ if (!enableWrite || !sandboxToken) {
       const init = await client.initialize();
       expect(init.http).toBe(200);
       served = (await client.listTools()).map((tool) => tool.name);
-      if (!served.includes('stop_shipment_tracking')) return;
+      // A gateway that lost a default write toolset would otherwise pass with
+      // its cases skipped.
+      const missing = defaultTools()
+        .filter((tool) => tool.tier !== 'read' && !served.includes(tool.name))
+        .map((tool) => tool.name);
+      if (missing.length > 0 && !allowSparse) {
+        throw new Error(
+          `the gateway does not list the default write tools ${missing.join(', ')}. ` +
+            'Point MCP_EVAL_ENDPOINT at a gateway that serves the default toolsets, ' +
+            'or set MCP_EVAL_ALLOW_SPARSE=1 to permit skipping those cases.',
+        );
+      }
 
-      // Takes the first shipment. The case skips if it is already stopped.
+      // Takes the first shipment. The stop cases skip if it is already stopped.
       const shipments = await client.callTool('list_shipments', {
         page_size: 10,
       });
