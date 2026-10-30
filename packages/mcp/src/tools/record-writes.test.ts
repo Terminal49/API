@@ -1,4 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vite-plus/test';
 import type { Terminal49Client } from '@terminal49/sdk';
 import {
   CALL_BUDGET_MS,
@@ -1122,5 +1129,45 @@ describe('set_custom_field', () => {
         writeContext(client),
       ),
     ).rejects.toThrow();
+  });
+});
+
+describe('record writes without a confirmation secret', () => {
+  it('still runs a call that only adds', async () => {
+    const client = fakeClient();
+    client.containers.partyRoles.mockResolvedValue(partyRoleDoc());
+
+    const result = await executeSetPartyRole(
+      {
+        container_ids: [C1],
+        role: 'pickup_dray_carrier',
+        party_id: PARTY,
+        action: 'add',
+      },
+      client,
+      writeContext(client, { confirmationSecret: undefined }),
+    );
+
+    expect(client.containers.addPartyRole).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({ updated: [C1] });
+  });
+
+  it('refuses a call in which a record would lose a value, naming the missing variable', async () => {
+    const client = fakeClient();
+    client.containers.customFields.mockResolvedValue([
+      { slug: 'sales_rep', value: 'Sofia Cortina' },
+    ]);
+
+    const result = await executeSetCustomField(
+      { entity: 'container', ids: [C1], api_slug: 'sales_rep', value: null },
+      client,
+      writeContext(client, { confirmationSecret: undefined }),
+    );
+
+    expect(client.containers.deleteCustomField).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      error: 'not_permitted',
+      message: expect.stringContaining('T49_MCP_CONFIRMATION_SECRET'),
+    });
   });
 });

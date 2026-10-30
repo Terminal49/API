@@ -217,12 +217,17 @@ export function checkConfirmationToken(
 
 export type NotPermittedResult = SoftResult<'not_permitted'>;
 
-/** Returned by a tier C tool when the server has no confirmation secret. */
+/**
+ * Returned by a tier C tool when the change needs the user's approval and the
+ * server has no confirmation secret to sign it with. A change that needs no
+ * approval still runs without the secret.
+ */
 export const CONFIRMATION_NOT_CONFIGURED: NotPermittedResult = {
   error: 'not_permitted',
   message:
-    'This Terminal49 MCP server is not set up to confirm changes, so it cannot make this change. Nothing was changed.',
-  alternative: 'Make this change in the Terminal49 dashboard.',
+    "This change needs the user's approval, and this Terminal49 MCP server has no T49_MCP_CONFIRMATION_SECRET to sign approvals with, so it cannot make the change. Nothing was changed.",
+  alternative:
+    'Ask whoever runs this MCP server to set T49_MCP_CONFIRMATION_SECRET, or make this change in the Terminal49 dashboard.',
 };
 
 export interface InvalidConfirmationResult extends SoftResult<'invalid_confirmation'> {
@@ -760,18 +765,6 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
       : channel.requestState !== undefined;
   const phase: WritePhase = confirming ? 'execute' : 'preview';
   const secret = context.confirmationSecret;
-  if (!secret) {
-    logMcpEvent({
-      event: 'mcp.config.error',
-      error: 'ConfirmationSecretMissing',
-      reason:
-        'T49_MCP_CONFIRMATION_SECRET is unset or shorter than 32 characters, so tier C writes are refused.',
-      tool: plan.tool,
-      timestamp: new Date().toISOString(),
-    });
-    await audit(phase, CONFIRMATION_NOT_CONFIGURED.error);
-    return { ...CONFIRMATION_NOT_CONFIGURED };
-  }
   if (channel.kind === 'elicitation' && token !== undefined) {
     await audit('execute', 'token_not_accepted');
     return tokenNotAccepted(plan.tool);
@@ -813,6 +806,18 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
       const done = await commit(read.additive, undefined);
       await audit('execute', auditOutcome(done));
       return done;
+    }
+    if (!secret) {
+      logMcpEvent({
+        event: 'mcp.config.error',
+        error: 'ConfirmationSecretMissing',
+        reason:
+          'T49_MCP_CONFIRMATION_SECRET is unset or shorter than 32 characters, so changes that need approval are refused.',
+        tool: plan.tool,
+        timestamp: new Date().toISOString(),
+      });
+      await audit(phase, CONFIRMATION_NOT_CONFIGURED.error);
+      return { ...CONFIRMATION_NOT_CONFIGURED };
     }
     const binding: ConfirmationBinding = {
       tool: plan.tool,
