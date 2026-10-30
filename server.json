@@ -4,7 +4,7 @@
   "title": "Terminal49",
   "description": "Live ocean container and shipment tracking with ETAs, holds, fees, and last free days.",
   "version": "1.1.0",
-  "websiteUrl": "https://terminal49.com/ai",
+  "websiteUrl": "https://terminal49.com/docs/mcp/home",
   "repository": {
     "url": "https://github.com/Terminal49/API",
     "source": "github",
