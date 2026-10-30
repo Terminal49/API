@@ -145,7 +145,7 @@ describe('MCP tool annotations', () => {
     // MCP: destructiveHint false means the tool only adds. set_party_role
     // detaches parties (remove, replace) and set_custom_field overwrites or
     // clears values, so both must say true. track_container only creates.
-    const tools = getRegisteredTools();
+    const tools = getRegisteredTools(TOOLSETS);
     const writes = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
       .map(([name]) => name);
@@ -178,6 +178,18 @@ describe('MCP tool annotations', () => {
     expect(tools.set_party_role?.annotations?.idempotentHint).toBe(true);
     expect(tools.set_custom_field?.annotations?.idempotentHint).toBe(true);
     expect(tools.track_container?.annotations?.idempotentHint).toBe(false);
+  });
+
+  it('marks every read-only tool as idempotent', () => {
+    const tools = getRegisteredTools(TOOLSETS);
+    const reads = Object.entries(tools).filter(
+      ([, tool]) => tool.annotations?.readOnlyHint,
+    );
+
+    expect(reads.length).toBeGreaterThan(0);
+    for (const [name, tool] of reads) {
+      expect(tool.annotations?.idempotentHint, name).toBe(true);
+    }
   });
 
   it('gives every tier C tool an optional confirmation_token input', () => {
@@ -298,7 +310,7 @@ describe('MCP tool annotations', () => {
     expect(claude.listing).toMatchObject({
       name: 'Terminal49',
       tagline: 'Track ocean shipments',
-      documentation_url: 'https://docs.terminal49.com/mcp/home',
+      documentation_url: 'https://terminal49.com/docs/mcp/home',
       privacy_policy_url: 'https://terminal49.com/privacy',
       terms_of_service_url: 'https://terminal49.com/terms',
       support_email: 'support@terminal49.com',

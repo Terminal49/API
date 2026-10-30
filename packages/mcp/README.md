@@ -2,6 +2,8 @@
 
 **Vercel-native** Model Context Protocol server for Terminal49's API, built with TypeScript and the official MCP SDK.
 
+`@terminal49/mcp` is a private workspace in this repository. Connect a client to the hosted server at `https://mcp.terminal49.com` (Streamable HTTP). OAuth 2.1 needs no API key: the client discovers `https://auth.terminal49.com` and opens a browser sign-in. Clients that can't run that flow send `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys. The `Bearer` scheme is used for OAuth access tokens. A local stdio process reads `T49_API_TOKEN` instead. Build steps are in [Local Development](#local-development).
+
 ## 🚀 Quick Deploy to Vercel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Terminal49/API)
@@ -17,7 +19,7 @@
 
 ### 🛠️ Tools (35 Available)
 
-The default toolsets, `core`, `documents`, `operations` and `trade`, serve all 35 tools:
+The default toolsets, `core`, `documents`, `operations` and `trade`, serve these 30:
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -40,11 +42,6 @@ The default toolsets, `core`, `documents`, `operations` and `trade`, serve all 3
 | **`get_tracking_request`** | Get one tracking request's status, failure reason, and shipment | Follow-up after tracking |
 | **`list_documents`** | Find documents by file name, reference, or type | Never returns extracted data or file links |
 | **`get_document`** | Get one document, with opt-in extracted data, source email, and download link | Untrusted content is labeled |
-| **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
-| **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
-| **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
-| **`add_reference_numbers`** | Add reference numbers to a container, shipment, or tracking request. Numbers already there stay. | A: runs in one call |
-| **`remove_reference_numbers`** | Remove reference numbers from a container, shipment, or tracking request | C: needs a confirmed preview |
 | **`search_docs`** | Search the public Terminal49 documentation | Returns links to cite |
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
 | **`set_party_role`** | Attach, replace, or detach a party (such as the drayage carrier) on up to 50 containers or shipments | C: asks before a record loses a party; add runs at once |
@@ -56,6 +53,16 @@ The default toolsets, `core`, `documents`, `operations` and `trade`, serve all 3
 | **`get_trade_trends`** | Time series of containers, TEUs, or estimated value | Trade intelligence, per account |
 | **`get_trade_breakdown`** | Nested totals over one to three dimensions | Trade intelligence, per account |
 | **`get_trade_data_coverage`** | Where trade data starts, the latest and last full month | Trade intelligence, per account |
+
+Two opt-in toolsets add five more. A deployment serves `tracking_lifecycle` or `reference_numbers` only when `T49_MCP_TOOLSETS` lists it:
+
+| Tool | Description | Key Features |
+|------|-------------|--------------|
+| **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
+| **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
+| **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
+| **`add_reference_numbers`** | Add reference numbers to a container, shipment, or tracking request. Numbers already there stay. | A: runs in one call |
+| **`remove_reference_numbers`** | Remove reference numbers from a container, shipment, or tracking request | C: needs a confirmed preview |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -91,7 +98,7 @@ Tool results separate the human-readable answer from agent-steering metadata. Th
 - Type-safe Zod schemas for all tool inputs
 - Cleaner, maintainable code (71% code reduction in HTTP handler)
 - **MCP SDK**: @modelcontextprotocol/sdk ^1.29.0
-- **Terminal49 SDK**: @terminal49/sdk 0.2.0
+- **Terminal49 SDK**: @terminal49/sdk 0.6.0
 
 #### ✅ Production Transport Support
 - **HTTP (streamable)**: `POST /api/mcp` - stateless, JSON responses
@@ -132,11 +139,11 @@ Tool results separate the human-readable answer from agent-steering metadata. Th
   └── package.json
 ```
 
-MCP uses published `@terminal49/sdk` by default, with optional local override for contributors.
+The MCP server depends on the workspace package `@terminal49/sdk`. Build that package before you build `packages/mcp`.
 
 **Transport:**
 - **HTTP**: Vercel serverless function at `/api/mcp` (for hosted use)
-- **stdio**: Local binary for Claude Desktop (run via `npm run mcp:stdio`)
+- **stdio**: Local process for Claude Desktop (`node packages/mcp/dist/index.js` after the build in [Local Development](#local-development))
 
 ---
 
@@ -197,47 +204,45 @@ namespace.
 
 ---
 
+<a id="local-development"></a>
+
 ## 🛠️ Local Development
 
 ### Prerequisites
-- Node.js 24.x
-- Terminal49 API token ([get yours here](https://app.terminal49.com/developers/api-keys))
+
+- Node.js 24.22.1 or a newer Node 24 release (`.tool-versions` pins `24.22.1`)
+- A Terminal49 API key ([create one](https://app.terminal49.com/developers/api-keys)) for tool calls that reach the API
 
 ### Setup
 
+`@terminal49/mcp` is a private workspace. From a clone of this repository, on Node.js 24.22.1 or a newer Node 24 release:
+
 ```bash
-cd packages/mcp
-npm install
-T49_SDK_SOURCE=published npm run sdk:setup
-cp .env.example .env
-# Add your T49_API_TOKEN to .env
+git clone https://github.com/Terminal49/API.git
+cd API
+npm ci
+npm run build --workspace @terminal49/sdk
+npm run build --workspace @terminal49/mcp
 ```
 
-Use a local SDK build during MCP development:
+The MCP server depends on the workspace package `@terminal49/sdk`. Build that package first, as the commands above do. The stdio entrypoint is `packages/mcp/dist/index.js`. It reads `T49_API_TOKEN` and exits if that variable is unset.
+
+### Run locally
 
 ```bash
-cd packages/mcp
-T49_SDK_SOURCE=local npm run sdk:setup
-```
-
-### Run Locally
-
-```bash
-# Stdio mode (for Claude Desktop testing)
-npm run mcp:stdio
-
-# Development mode with auto-reload
-npm run dev
+T49_API_TOKEN=YOUR_API_KEY node packages/mcp/dist/index.js
 ```
 
 ### Test the API
 
-```bash
-# List tools
-echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | npm run mcp:stdio
+Smoke-test `initialize`, then `tools/list`:
 
-# Get container
-echo '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"get_container","arguments":{"id":"123e4567-e89b-12d3-a456-426614174000"}},"id":2}' | npm run mcp:stdio
+```bash
+printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"smoke","version":"1.0"}}}' \
+  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+  | T49_API_TOKEN=YOUR_API_KEY node packages/mcp/dist/index.js
 ```
 
 ---
@@ -421,7 +426,7 @@ Signed URLs, such as the document download link that `get_document` returns, are
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field` are in `operations`. The trade intelligence tools are in `trade`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `tracking_lifecycle`, `reference_numbers`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `set_party_role` and `set_custom_field` are in `operations`. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in `tracking_lifecycle`, and `add_reference_numbers` and `remove_reference_numbers` are in `reference_numbers`. No deployment serves either until `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
@@ -432,7 +437,7 @@ Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`
 
 ### Confirming writes
 
-Each write tool has a tier in the registry. A tier A tool, such as `resume_shipment_tracking` or `add_reference_numbers`, is additive or reversible and runs in one call. Its result names the tool that undoes it. A tier C tool, such as `stop_shipment_tracking`, `cancel_tracking_request` or `unassign_party`, has `destructiveHint: true`, carries `_meta["anthropic/requiresUserInteraction"]: true` so Claude Code prompts on every call, and needs the user's approval of a preview. Its first call never writes. It reads the record, builds a `preview` with `current`, `proposed` and `reach`, and issues a confirmation token: an HMAC-SHA256, keyed with `T49_MCP_CONFIRMATION_SECRET`, over the channel, the tool name, the other arguments, the account, the credential, an expiry five minutes out, a random nonce and a fingerprint of the record fields the preview showed. Which channel carries the token depends on the request.
+Each write tool has a tier in the registry. A tier A tool, such as `resume_shipment_tracking` or `add_reference_numbers`, is additive or reversible and runs in one call. Its result names the tool that undoes it. A tier C tool, such as `stop_shipment_tracking`, `cancel_tracking_request` or `remove_reference_numbers`, has `destructiveHint: true`, carries `_meta["anthropic/requiresUserInteraction"]: true` so Claude Code prompts on every call, and needs the user's approval of a preview. Its first call never writes. It reads the record, builds a `preview` with `current`, `proposed` and `reach`, and issues a confirmation token: an HMAC-SHA256, keyed with `T49_MCP_CONFIRMATION_SECRET`, over the channel, the tool name, the other arguments, the account, the credential, an expiry five minutes out, a random nonce and a fingerprint of the record fields the preview showed. Which channel carries the token depends on the request.
 
 **Elicitation channel.** A request whose 2026-07-28 `_meta` envelope declares form elicitation (`io.modelcontextprotocol/clientCapabilities.elicitation.form`, or a bare `elicitation: {}`) gets an `input_required` result per the MCP multi round-trip pattern: one embedded `elicitation/create` request whose message is the preview as text and whose form has one boolean `confirm` field, plus the token as `requestState`. The client shows the user the preview, then retries the call with the user's answer in `inputResponses` and the `requestState` echoed back. The tool verifies the state against the same call, account, credential, expiry and record fingerprint, and:
 
@@ -456,11 +461,11 @@ On the elicitation channel the human decides, because only the client can answer
 
 **Batch tools.** `set_party_role` and `set_custom_field` change up to 50 records per call and are tier C with `confirms: "destructive_only"` in the registry. Every call reads each record first and plans one change per record. A call whose changes only add (`action: "add"`, a `replace` that detaches nobody, or filling fields that are empty) writes at once, with no preview and no token. A call in which any record would lose a party or a value asks once for the whole batch: the `preview` lists each record that changes (`id`, `current`, `proposed`), counts the `unchanged` ones, and names records that cannot be changed with their error. The approval's fingerprint covers the state of every record the call read, changing or not, so a change to any of them between the preview and the approval asks again. A batch that mixes additive and destructive records asks for all of it. After the approval the result keeps the per-record shape (`updated`, `unchanged`, `failed`, `not_attempted`, `summary`); a record that fails after approval does not release the approval, because other records in the batch may have been written, and a repeat call plans again from the current state. Reads get half of the call's remaining time budget so one slow record cannot hold every write until the deadline.
 
-Every tier C tool fingerprints the fields its write changes: `stop_shipment_tracking` the stop time, `cancel_tracking_request` the status, `remove_reference_numbers` the whole reference list, `set_party_role` the party assignments in the role on every record, and `set_custom_field` the field's value on every record. A tier A tool can put those fields back, as `resume_shipment_tracking` does after a stop and `add_reference_numbers` after a remove, so the fingerprint alone would let one approval confirm the same write again. The server therefore remembers each confirmation that made a write until it expires, and refuses a second use with `invalid_confirmation` and reason `used`. A write that Terminal49 refuses with a 4xx status, such as `rate_limited`, changed nothing, so the same confirmation still works on retry. After a 5xx or a lost response the write may have happened, so the confirmation stays used and the caller previews again. That memory is per process. On a deployment with several instances, such as the HTTP gateway, another instance can still accept the confirmation once more within its five minutes.
+Every tier C tool fingerprints the fields its write changes: `stop_shipment_tracking` the stop time, `cancel_tracking_request` the status, `set_party_role` the party role assignments (by assignment id) in the role on every record, and `set_custom_field` the field's value and its `updated_at` on every record. For the two batch tools a restored record never matches again: a party attached back gets a new assignment id, and a value put back gets a new `updated_at`, so an approval confirms its change once however many instances serve the gateway. The shipment resource has no such field, so after `resume_shipment_tracking` a shipment looks as it did before the stop. The server therefore also remembers each confirmation that made a write until it expires, and refuses a second use with `invalid_confirmation` and reason `used`. A write that Terminal49 refuses with a 4xx status, such as `rate_limited`, changed nothing, so the same confirmation still works on retry. After a 5xx or a lost response the write may have happened, so the confirmation stays used and the caller previews again. That memory is per process. On a deployment with several instances, such as the HTTP gateway, another instance can still accept a `stop_shipment_tracking` confirmation once more within its five minutes, after a resume.
 
-The HTTP gateway reads `T49_MCP_CONFIRMATION_SECRET` and has no fallback, because serverless instances share no memory. Without a secret of at least 32 characters, tier C tools return `not_permitted` and the server logs `mcp.config.error`. Set it in Vercel before you serve `operations`. stdio uses the variable when it is at least 32 characters. Otherwise it makes a random secret per process, and warns on stderr when the variable is set but too short. Rotating the secret only means an open preview must be requested again.
+The HTTP gateway reads `T49_MCP_CONFIRMATION_SECRET` and has no fallback, because serverless instances share no memory. Without a secret of at least 32 characters, a tier C call that needs the user's approval returns `not_permitted` with a message that names the variable, and the server logs `mcp.config.error`; a call that only adds, such as `set_party_role` with `action: "add"`, still runs. Set it in Vercel before you serve `operations`, `tracking_lifecycle` or `reference_numbers`. stdio uses the variable when it is at least 32 characters. Otherwise it makes a random secret per process, and warns on stderr when the variable is set but too short. Rotating the secret only means an open preview must be requested again.
 
-Each call to a write tool, `track_container` included, emits one `mcp.write.audit` event to the log and a Sentry breadcrumb, and to PostHog when the account is known. It carries the tool, tier, phase, outcome, entity type and ID, account ID and credential type, and nothing else. Values, reference numbers, party names, URLs and tokens never reach it. When `assign_party` creates a party, it emits a second event with entity type `party`, the new party ID and outcome `created`.
+Each call to a write tool, `track_container` included, emits one `mcp.write.audit` event to the log and a Sentry breadcrumb, and to PostHog when the account is known. It carries the tool, tier, phase, outcome, entity type and ID, account ID and credential type, and nothing else. Values, reference numbers, party names, URLs and tokens never reach it.
 
 ---
 
@@ -548,7 +553,7 @@ vercel logs
 ## 📚 Documentation
 
 - **MCP Protocol:** https://modelcontextprotocol.io/
-- **Terminal49 API:** https://docs.terminal49.com
+- **Terminal49 API:** https://terminal49.com/docs
 - **Vercel Functions:** https://vercel.com/docs/functions
 - **TypeScript MCP SDK:** https://github.com/modelcontextprotocol/typescript-sdk
 
@@ -574,7 +579,7 @@ Copyright 2024 Terminal49. All rights reserved.
 ## 🆘 Support
 
 - **Issues:** [GitHub Issues](https://github.com/Terminal49/API/issues)
-- **Documentation:** https://docs.terminal49.com
+- **Documentation:** https://terminal49.com/docs
 - **Email:** support@terminal49.com
 
 ---

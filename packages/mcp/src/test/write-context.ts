@@ -21,7 +21,7 @@ export function writeContext(
 ): ToolContext {
   return createToolContext(client, {
     credentialType: 'api_key',
-    toolsets: ['core', 'operations'],
+    toolsets: ['core', 'operations', 'tracking_lifecycle', 'reference_numbers'],
     writeToolsAvailable: true,
     credentialHash: 'credential-hash',
     confirmationSecret: TEST_CONFIRMATION_SECRET,

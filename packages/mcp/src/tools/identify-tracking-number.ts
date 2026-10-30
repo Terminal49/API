@@ -26,7 +26,7 @@ export const identifyTrackingNumberInputSchema = z.object({
     .min(4)
     .max(64)
     .describe(
-      'One container, Bill of Lading, or booking number (4 to 64 characters). Identifier only; never pass conversation text.',
+      'One container, Bill of Lading, or booking number. Identifier only; never pass conversation text.',
     ),
 });
 

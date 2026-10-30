@@ -96,12 +96,12 @@ export const setPartyRoleInputSchema = z
     container_ids: recordIds
       .optional()
       .describe(
-        'Terminal49 container IDs (UUIDs), 1 to 50. Pass container_ids or shipment_ids, not both.',
+        'Terminal49 IDs of the containers to change. Pass container_ids or shipment_ids, not both.',
       ),
     shipment_ids: recordIds
       .optional()
       .describe(
-        'Terminal49 shipment IDs (UUIDs), 1 to 50. Pass container_ids or shipment_ids, not both.',
+        'Terminal49 IDs of the shipments to change. Pass container_ids or shipment_ids, not both.',
       ),
     role: z
       .enum(SHIPMENT_PARTY_ROLES)
@@ -141,8 +141,12 @@ const customFieldValueSchema = z.union([
 export const setCustomFieldInputSchema = z.strictObject({
   entity: z
     .enum(['container', 'shipment'])
-    .describe('Whether ids are container or shipment IDs.'),
-  ids: recordIds.describe('Terminal49 container or shipment IDs, 1 to 50.'),
+    .describe(
+      'The kind of record the field is on. Every ID in ids must be this kind.',
+    ),
+  ids: recordIds.describe(
+    'Terminal49 IDs of the containers or shipments to change.',
+  ),
   api_slug: z
     .string()
     .trim()
@@ -419,11 +423,17 @@ interface WriteCounts {
   failed: number;
 }
 
-interface BatchPlan<Change, Value> {
+interface BatchPlan<Change, Value, Stop> {
   tool: 'set_party_role' | 'set_custom_field';
   entityType: 'container' | 'shipment';
   ids: string[];
   args: Record<string, unknown> & { confirmation_token?: string };
+  /**
+   * Runs once per call before any record is read, inside the read budget. A
+   * result ends the call before any record is touched; a throw fails the
+   * call the way a record read would, so a 429 becomes rate_limited.
+   */
+  prepare?(): Promise<Stop | undefined>;
   /** Reads one record and decides what it needs. A throw fails the record. */
   planRecord(id: string): Promise<Planned<Change, Value>>;
   /** Applies one planned change. A throw fails the record. */
@@ -452,18 +462,34 @@ function result(
   return { ...fields, summary: text };
 }
 
+/** The work's result, or out_of_time once the deadline passes first. */
+function byDeadline<T>(
+  work: Promise<T>,
+  deadlineAt: number,
+): Promise<T | 'out_of_time'> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<'out_of_time'>((resolve) => {
+    timer = setTimeout(
+      resolve,
+      Math.max(deadlineAt - Date.now(), 0),
+      'out_of_time',
+    );
+  });
+  return Promise.race([work, late]).finally(() => clearTimeout(timer));
+}
+
 /**
  * Runs a batch write through the confirmed write flow. The read phase plans
  * every record; the write phase runs only the planned changes, after the
  * user's approval when any of them is destructive.
  */
-async function runBatchWrite<Change, Value>(
+async function runBatchWrite<Change, Value, Stop = never>(
   context: ToolContext,
-  plan: BatchPlan<Change, Value>,
+  plan: BatchPlan<Change, Value, Stop>,
 ): Promise<
   ConfirmedWriteResult<
     BatchPreview<Value>,
-    RecordWriteResult,
+    RecordWriteResult | Stop,
     RecordWriteResult
   >
 > {
@@ -482,12 +508,29 @@ async function runBatchWrite<Change, Value>(
     entityId: plan.ids.length === 1 ? plan.ids[0] : undefined,
     args: plan.args,
     async read(): Promise<
-      ConfirmedWriteRead<BatchPreview<Value>, RecordWriteResult>
+      ConfirmedWriteRead<BatchPreview<Value>, RecordWriteResult | Stop>
     > {
       // Reads get half of what is left, so one slow record cannot hold every
       // write until the deadline; a record not read in time is reported as
       // not attempted.
       const readDeadlineAt = Date.now() + (deadlineAt - Date.now()) / 2;
+      if (plan.prepare) {
+        const prepared = await byDeadline(plan.prepare(), readDeadlineAt);
+        if (prepared === 'out_of_time') {
+          return {
+            stop: result(
+              {
+                updated: [],
+                unchanged: [],
+                failed: [],
+                not_attempted: plan.ids,
+              },
+              plan.summary,
+            ),
+          };
+        }
+        if (prepared !== undefined) return { stop: prepared };
+      }
       const read = await forEachRecord(
         plan.ids,
         (id) => plan.planRecord(id),
@@ -652,22 +695,25 @@ export async function executeSetPartyRole(
     return client.containers.addPartyRole(id, { role, partyId: party_id });
   };
 
-  // Read once per call, before any record: a party_id that names no party
-  // stops the call, and the name labels the party in the preview.
-  const name = await lookupPartyName(client, party_id);
-  if (name === null) return partyNotFound(party_id);
-  const target: PartyRef = { party_id, party_name: name ?? null };
-  const label = name ?? party_id;
+  let target: PartyRef = { party_id, party_name: null };
+  let label = party_id;
   const ref = (assignment: PartyRole): PartyRef => ({
     party_id: assignment.party_id ?? '',
     party_name: assignment.party_name,
   });
 
-  return runBatchWrite<PartyChange, PartyRef[]>(context, {
+  return runBatchWrite<PartyChange, PartyRef[], PartyNotFound>(context, {
     tool: 'set_party_role',
     entityType: noun,
     ids,
     args: parsed,
+    async prepare() {
+      const name = await lookupPartyName(client, party_id);
+      if (name === null) return partyNotFound(party_id);
+      target = { party_id, party_name: name ?? null };
+      label = name ?? party_id;
+      return undefined;
+    },
     async planRecord(id) {
       const inRole = formatPartyRoles(
         await manager.partyRoles(id, { format: 'raw' }),
@@ -789,10 +835,13 @@ export async function executeSetPartyRole(
 
 type FieldChange = { set: unknown } | { clear: true };
 
-// `format: 'mapped'` returns mapCustomFields' rows; only the slug and the
-// stored value matter here.
+// `format: 'mapped'` returns mapCustomFields' rows.
 const mappedCustomFieldsSchema = z.array(
-  z.object({ slug: z.string().optional(), value: z.unknown() }),
+  z.object({
+    slug: z.string().optional(),
+    value: z.unknown(),
+    updatedAt: z.string().nullable().optional(),
+  }),
 );
 
 /** An empty field: never set, cleared, or holding no options. */
@@ -827,9 +876,14 @@ export async function executeSetCustomField(
       const fields = mappedCustomFieldsSchema.parse(
         await manager.customFields(id, { format: 'mapped' }),
       );
-      const current =
-        fields.find((field) => field.slug === api_slug)?.value ?? null;
-      const state = { value: comparable(current) };
+      const field = fields.find((entry) => entry.slug === api_slug);
+      const current = field?.value ?? null;
+      // A value put back after a clear or an overwrite has a new updated_at,
+      // so an approval of the earlier state cannot confirm the change again.
+      const state = {
+        value: comparable(current),
+        updated_at: field?.updatedAt ?? null,
+      };
       if (value === null) {
         if (isEmpty(current)) return { outcome: 'unchanged', state };
         return {

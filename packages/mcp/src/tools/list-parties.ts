@@ -28,7 +28,7 @@ export const listPartiesInputSchema = z.strictObject({
     .string()
     .uuid()
     .describe(
-      'One party ID (UUID format) to look up, for example party_id from a party role. When set, search and limit are ignored.',
+      'One party ID to look up, for example party_id from a party role. When set, search and limit are ignored.',
     )
     .optional(),
   search: z
@@ -45,7 +45,7 @@ export const listPartiesInputSchema = z.strictObject({
     .int()
     .positive()
     .max(50)
-    .describe('Most parties to return, from 1 to 50.')
+    .describe('Most parties to return.')
     .default(25),
 });
 export type ListPartiesArgs = z.input<typeof listPartiesInputSchema>;

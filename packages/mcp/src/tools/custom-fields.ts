@@ -12,14 +12,17 @@ import {
   AuthorizationError,
   FeatureNotEnabledError,
 } from '@terminal49/sdk';
+import { z } from 'zod';
 
-export interface CustomFieldValue {
-  name: string | null;
-  slug: string;
-  value: unknown;
-  display_value: string | null;
-  data_type: string | null;
-}
+export const customFieldValueSchema = z.object({
+  name: z.string().nullable(),
+  slug: z.string(),
+  value: z.unknown(),
+  display_value: z.string().nullable(),
+  data_type: z.string().nullable(),
+});
+
+export type CustomFieldValue = z.infer<typeof customFieldValueSchema>;
 
 export interface CustomFieldsResult {
   custom_fields: CustomFieldValue[] | null;

@@ -143,7 +143,9 @@ The toolset names are:
 
 - `core`: every tool except the document reads, the write tools below, and the trade intelligence tools. `whoami` reports the toolsets a session serves.
 - `documents`: `list_documents` and `get_document`.
-- `operations`: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field`. It is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
+- `operations`: `set_party_role` and `set_custom_field`. It is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
+- `tracking_lifecycle`: `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
+- `reference_numbers`: `add_reference_numbers` and `remove_reference_numbers`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
 - `documents_write`: no tools yet.
 - `developer`: no tools yet.
 - `trade`: the [trade intelligence tools](#trade-intelligence-tools).
@@ -172,7 +174,7 @@ Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPU
 
 Signed URLs, such as a document download link, are replaced with `[REDACTED_URL]` in logs, Sentry, and PostHog, even when output recording is on. Confirmation tokens are replaced with `[REDACTED_CONFIRMATION_TOKEN]` in the same places.
 
-Each call to a write tool, `track_container` included, logs one `mcp.write.audit` event, adds a Sentry breadcrumb, and sends a PostHog event when the account is known. The event names the tool, its tier, the phase, the outcome, the record type and ID, the account ID, and the credential type. It never carries values, reference numbers, party names, URLs, or tokens. When `assign_party` creates a party, it logs a second event with the record type `party`, the new party ID, and the outcome `created`.
+Each call to a write tool, `track_container` included, logs one `mcp.write.audit` event, adds a Sentry breadcrumb, and sends a PostHog event when the account is known. The event names the tool, its tier, the phase, the outcome, the record type and ID, the account ID, and the credential type. It never carries values, reference numbers, party names, URLs, or tokens.
 
 ---
 
@@ -687,7 +689,7 @@ Returns the records that changed, those that already matched, and any that faile
 
 **Good for**
 
-- "Set the drayage carrier to Manzo Transport on these containers." (`replace`)
+- "Set the drayage carrier to Ray Drayage on these containers." (`replace`)
 
 ---
 
@@ -910,10 +912,10 @@ Extracted data and the source email are text that people outside your account wr
 
 ### Write tools
 
-The `operations` toolset holds seven tools that change your account's data: `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field`. It is in the default toolsets. Each write tool has a tier:
+Seven tools change your account's data. The `operations` toolset, which is in the default toolsets, holds `set_party_role` and `set_custom_field`. The `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it, holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`. The `reference_numbers` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it, holds `add_reference_numbers` and `remove_reference_numbers`. Each write tool has a tier:
 
 - **Tier A** tools run in one call. The result names the tool that undoes the change.
-- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode. `stop_shipment_tracking` and `cancel_tracking_request` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
+- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode. `stop_shipment_tracking`, `cancel_tracking_request` and `remove_reference_numbers` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
 
 A call that needs your approval never changes anything the first time. It reads the record, or every record in the batch, and builds a preview of the record now and after the change. For a batch, the preview lists each record that changes and counts the rest, and one approval covers the whole call. How you approve the preview depends on your AI client.
 
@@ -927,7 +929,7 @@ Either way, the approval expires after 5 minutes and works only for the same too
 The confirmation step makes sure you see the current state before a destructive change. Terminal49 still decides what your credential can do.
 </Note>
 
-Write tools return these results with `isError: false`, so the AI client can explain them: `rate_limited` when Terminal49 limits the request rate, with `retry_after_s` when Terminal49 says how long to wait, `not_permitted` when the server is not set up to confirm changes, and the codes listed for each tool. Each of these results says that nothing was changed, except when `assign_party` created a party it could not link.
+Write tools return these results with `isError: false`, so the AI client can explain them: `rate_limited` when Terminal49 limits the request rate, with `retry_after_s` when Terminal49 says how long to wait, `not_permitted` when the change needs your approval and the server has no secret to sign approvals with, and the codes listed for each tool. Each of these results says that nothing was changed.
 
 ---
 
@@ -1292,7 +1294,7 @@ These Terminal49 API capabilities are available through the [SDK](/api-docs/in-d
 | Webhooks | Real-time event notifications | Configure via the [webhooks guide](/api-docs/in-depth-guides/webhooks) |
 
 <Info>
-Stopping and resuming shipment tracking, cancelling a tracking request, editing reference numbers, and assigning parties are MCP tools in the `operations` toolset. The hosted server does not serve that toolset yet. Other shipment edits still need the REST API or the SDK.
+Stopping and resuming shipment tracking, and cancelling a tracking request, are MCP tools in the `tracking_lifecycle` toolset, and editing reference numbers is in the `reference_numbers` toolset. The hosted server does not serve either toolset yet. Editing a shipment still needs the REST API or the SDK.
 </Info>
 
 ---

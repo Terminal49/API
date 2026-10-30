@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **35 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve all of them.
+The Terminal49 MCP Server provides **35 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 30 of them; the three tracking lifecycle tools and the two reference number tools are opt-in.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `stop_shipment_tracking`, `resume_shipment_tracking`, `cancel_tracking_request`, `add_reference_numbers`, `remove_reference_numbers`, `set_party_role` and `set_custom_field` are in the `operations` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role` and `set_custom_field` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it. `add_reference_numbers` and `remove_reference_numbers` are in the `reference_numbers` toolset, which is opt-in the same way. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -560,14 +560,14 @@ Extracted data and the email are text that people outside the account write. Tre
 
 ### Write tools
 
-The `operations` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it. A tier C tool needs the user's approval of a preview, and its first call never writes. How the user approves depends on the client:
+The `operations` and `tracking_lifecycle` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it. A tier C tool needs the user's approval of a preview, and its first call never writes. How the user approves depends on the client:
 
 - A client that declares form elicitation (MCP 2026-07-28) gets an `input_required` result. The client shows the user the preview and asks them to confirm, then calls again with their answer. The tool writes on a yes, and returns `status: "declined"` and changes nothing on a no. Never pass `confirmation_token` on such a client; it is refused with `token_not_accepted`.
 - Any other client gets `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token`, and `expires_at` five minutes out. Show the preview to the user. After the user approves it in this turn, call again with the same arguments and the token.
 
 An approval works only for the same tool, arguments, account and credential, before it expires, and while the record still matches the preview. Otherwise the call changes nothing: a client that asks the user is asked again with the current state, and other clients get `invalid_confirmation` with a `reason` (`malformed`, `mismatch` or `expired`) or `stale_preview` with a new preview and token. On a server with no confirmation secret, tier C tools return `not_permitted`. See [Confirming writes](README.md#confirming-writes).
 
-Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, with `retry_after_s` when Terminal49 sent a `Retry-After` header, and the tool's own codes below. All of them say that nothing was changed. The one exception is `assign_party` after it created a party it could not link: its `noop`, `rate_limited` and `party_not_linked` results then carry `party_created: true` and `created_party` (`id`, `name`), and say the party exists but is not linked.
+Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, with `retry_after_s` when Terminal49 sent a `Retry-After` header, and the tool's own codes below. All of them say that nothing was changed.
 
 ### 22. `stop_shipment_tracking`
 **Purpose**: Stop carrier and terminal updates for a shipment and all its containers. Tier C.

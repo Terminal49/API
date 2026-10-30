@@ -31,7 +31,7 @@ vi.mock('@sentry/node', () => ({
 }));
 
 const CONFIRMING = {
-  toolsets: ['operations'] as const,
+  toolsets: ['reference_numbers'] as const,
   confirmationSecret: TEST_CONFIRMATION_SECRET,
 };
 describe('reference number tools over the MCP client transport', () => {
@@ -100,4 +100,43 @@ describe('reference number tools over the MCP client transport', () => {
     ).toBe(true);
     expect(stored.current()).toEqual(['PO-1']);
   });
+
+  it.each([
+    ['add_reference_numbers', 'container', 'container', { add: ['PO-1'] }],
+    ['add_reference_numbers', 'shipment', 'shipment', { add: ['PO-1'] }],
+    [
+      'add_reference_numbers',
+      'tracking_request',
+      'tracking request',
+      { add: ['PO-1'] },
+    ],
+    [
+      'remove_reference_numbers',
+      'container',
+      'container',
+      { remove: ['PO-1'] },
+    ],
+    ['remove_reference_numbers', 'shipment', 'shipment', { remove: ['PO-1'] }],
+    [
+      'remove_reference_numbers',
+      'tracking_request',
+      'tracking request',
+      { remove: ['PO-1'] },
+    ],
+  ])(
+    'names the missing record when %s reads a 404 for a %s',
+    async (name, entityType, label, change) => {
+      const result = await callTool(
+        name,
+        { entity_type: entityType, entity_id: REF_CONTAINER_ID, ...change },
+        { 'GET /me': { body: meBody() } },
+        CONFIRMING,
+      );
+
+      expect(result.isError).toBe(true);
+      expect(result.text).toBe(
+        `No ${label} found with id ${REF_CONTAINER_ID}.`,
+      );
+    },
+  );
 });

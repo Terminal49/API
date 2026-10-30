@@ -11,6 +11,8 @@ export const TOOLSETS = [
   'core',
   'documents',
   'operations',
+  'tracking_lifecycle',
+  'reference_numbers',
   'documents_write',
   'developer',
   'trade',
@@ -62,6 +64,7 @@ function readTool<const Name extends string>(
     annotations: {
       readOnlyHint: true,
       destructiveHint: false,
+      idempotentHint: true,
       openWorldHint: false,
     },
   };
@@ -130,7 +133,7 @@ export const TOOL_REGISTRY = [
   {
     name: 'stop_shipment_tracking',
     title: 'Stop Shipment Tracking',
-    toolset: 'operations',
+    toolset: 'tracking_lifecycle',
     tier: 'C',
     confirms: 'always',
     annotations: {
@@ -143,7 +146,7 @@ export const TOOL_REGISTRY = [
   {
     name: 'resume_shipment_tracking',
     title: 'Resume Shipment Tracking',
-    toolset: 'operations',
+    toolset: 'tracking_lifecycle',
     tier: 'A',
     annotations: {
       readOnlyHint: false,
@@ -155,7 +158,7 @@ export const TOOL_REGISTRY = [
   {
     name: 'cancel_tracking_request',
     title: 'Cancel Tracking Request',
-    toolset: 'operations',
+    toolset: 'tracking_lifecycle',
     tier: 'C',
     confirms: 'always',
     annotations: {
@@ -168,7 +171,7 @@ export const TOOL_REGISTRY = [
   {
     name: 'add_reference_numbers',
     title: 'Add Reference Numbers',
-    toolset: 'operations',
+    toolset: 'reference_numbers',
     tier: 'A',
     annotations: {
       readOnlyHint: false,
@@ -180,7 +183,7 @@ export const TOOL_REGISTRY = [
   {
     name: 'remove_reference_numbers',
     title: 'Remove Reference Numbers',
-    toolset: 'operations',
+    toolset: 'reference_numbers',
     tier: 'C',
     confirms: 'always',
     annotations: {
@@ -198,6 +201,7 @@ export const TOOL_REGISTRY = [
     annotations: {
       readOnlyHint: true,
       destructiveHint: false,
+      idempotentHint: true,
       openWorldHint: true,
     },
   },

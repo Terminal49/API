@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import {
+  collectionPath,
+  generatePostmanCollection,
+  specPath,
+} from './generate-postman.mjs';
 
 const root = new URL('../', import.meta.url);
 const spec = JSON.parse(
@@ -58,4 +63,34 @@ test('/me exposes the optional account selector in the generated request', () =>
   assert.ok(header, 'Missing account-selection header');
   assert.equal(header.disabled, true);
   assert.equal(header.value, '<uuid>');
+});
+
+test('generation is deterministic and matches the committed collection', async () => {
+  const specText = readFileSync(specPath, 'utf8');
+  const first = await generatePostmanCollection(specText);
+  const second = await generatePostmanCollection(specText);
+  assert.equal(first, second);
+  assert.equal(
+    first,
+    readFileSync(collectionPath, 'utf8'),
+    'Run: node tools/generate-postman.mjs',
+  );
+});
+
+test('every item and response has a unique id', () => {
+  const ids = [];
+  const walk = (entries) => {
+    for (const entry of entries ?? []) {
+      if (entry.request || !entry.item) {
+        assert.equal(typeof entry.id, 'string', entry.name);
+        assert.ok(entry.id.length > 0, entry.name);
+        ids.push(entry.id);
+      }
+      walk(entry.item);
+      walk(entry.response);
+    }
+  };
+  walk(collection.item);
+  assert.ok(ids.length > 0);
+  assert.equal(new Set(ids).size, ids.length);
 });

@@ -196,6 +196,11 @@ export function checkConfirmationToken(
   if (!match) return { ok: false, reason: 'malformed' };
   const [, encodedExpiry = '', nonce = '', state = '', signature = ''] = match;
   const expiresAt = Number.parseInt(encodedExpiry, 36);
+  // The MAC covers the expiry as a number, so a zero-padded copy of a token
+  // would verify too and count as a different, unspent confirmation.
+  if (expiresAt.toString(36) !== encodedExpiry) {
+    return { ok: false, reason: 'malformed' };
+  }
   // The MAC covers the expiry, the nonce and the state tag, so an edit to any
   // of them is a mismatch, never a stale preview.
   if (!sameMac(signature, tokenMac(secret, binding, expiresAt, nonce, state))) {
@@ -212,12 +217,17 @@ export function checkConfirmationToken(
 
 export type NotPermittedResult = SoftResult<'not_permitted'>;
 
-/** Returned by a tier C tool when the server has no confirmation secret. */
+/**
+ * Returned by a tier C tool when the change needs the user's approval and the
+ * server has no confirmation secret to sign it with. A change that needs no
+ * approval still runs without the secret.
+ */
 export const CONFIRMATION_NOT_CONFIGURED: NotPermittedResult = {
   error: 'not_permitted',
   message:
-    'This Terminal49 MCP server is not set up to confirm changes, so it cannot make this change. Nothing was changed.',
-  alternative: 'Make this change in the Terminal49 dashboard.',
+    "This change needs the user's approval, and this Terminal49 MCP server has no T49_MCP_CONFIRMATION_SECRET to sign approvals with, so it cannot make the change. Nothing was changed.",
+  alternative:
+    'Ask whoever runs this MCP server to set T49_MCP_CONFIRMATION_SECRET, or make this change in the Terminal49 dashboard.',
 };
 
 export interface InvalidConfirmationResult extends SoftResult<'invalid_confirmation'> {
@@ -713,13 +723,22 @@ function elicitConfirmation<Preview>(
  */
 const spentTokens = new Map<string, number>();
 
+/**
+ * The key a spent token is remembered by: its signature, which a checked
+ * token cannot change without failing the check, rather than its text.
+ */
+function spentKey(token: string): string {
+  return token.slice(token.lastIndexOf('.') + 1);
+}
+
 /** Marks a token used. False when it already confirmed a write. */
 function spendToken(token: string, now: number = Date.now()): boolean {
   for (const [spent, expiresAt] of spentTokens) {
     if (expiresAt <= now) spentTokens.delete(spent);
   }
-  if (spentTokens.has(token)) return false;
-  spentTokens.set(token, now + CONFIRMATION_TTL_MS);
+  const key = spentKey(token);
+  if (spentTokens.has(key)) return false;
+  spentTokens.set(key, now + CONFIRMATION_TTL_MS);
   return true;
 }
 
@@ -746,18 +765,6 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
       : channel.requestState !== undefined;
   const phase: WritePhase = confirming ? 'execute' : 'preview';
   const secret = context.confirmationSecret;
-  if (!secret) {
-    logMcpEvent({
-      event: 'mcp.config.error',
-      error: 'ConfirmationSecretMissing',
-      reason:
-        'T49_MCP_CONFIRMATION_SECRET is unset or shorter than 32 characters, so tier C writes are refused.',
-      tool: plan.tool,
-      timestamp: new Date().toISOString(),
-    });
-    await audit(phase, CONFIRMATION_NOT_CONFIGURED.error);
-    return { ...CONFIRMATION_NOT_CONFIGURED };
-  }
   if (channel.kind === 'elicitation' && token !== undefined) {
     await audit('execute', 'token_not_accepted');
     return tokenNotAccepted(plan.tool);
@@ -782,7 +789,7 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
     } catch (error) {
       const status = httpStatus(error);
       if (status === undefined || status < 400 || status >= 500) throw error;
-      if (confirmation) spentTokens.delete(confirmation);
+      if (confirmation) spentTokens.delete(spentKey(confirmation));
       const answer = await plan.refused?.(error, preview);
       if (answer === undefined) throw error;
       return answer;
@@ -799,6 +806,18 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
       const done = await commit(read.additive, undefined);
       await audit('execute', auditOutcome(done));
       return done;
+    }
+    if (!secret) {
+      logMcpEvent({
+        event: 'mcp.config.error',
+        error: 'ConfirmationSecretMissing',
+        reason:
+          'T49_MCP_CONFIRMATION_SECRET is unset or shorter than 32 characters, so changes that need approval are refused.',
+        tool: plan.tool,
+        timestamp: new Date().toISOString(),
+      });
+      await audit(phase, CONFIRMATION_NOT_CONFIGURED.error);
+      return { ...CONFIRMATION_NOT_CONFIGURED };
     }
     const binding: ConfirmationBinding = {
       tool: plan.tool,
