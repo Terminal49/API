@@ -50,6 +50,8 @@ function fakeClient() {
 }
 
 type Client = ReturnType<typeof fakeClient>;
+type PartyRoleArgs = Parameters<typeof executeSetPartyRole>[0];
+type CustomFieldArgs = Parameters<typeof executeSetCustomField>[0];
 
 function partyRoleDoc(
   ...roles: { id: string; role: string; partyId: string }[]
@@ -1146,12 +1148,12 @@ describe('set_party_role party lookup', () => {
     vi.restoreAllMocks();
   });
 
-  const args = {
+  const args: PartyRoleArgs = {
     container_ids: [C1],
     role: 'pickup_dray_carrier',
     party_id: PARTY,
     action: 'add',
-  } as const;
+  };
 
   it('returns rate_limited, and audits it, when Terminal49 limits the party lookup', async () => {
     const client = fakeClient();
@@ -1281,12 +1283,12 @@ describe('an approval replayed on another server instance', () => {
     client.containers.customFields.mockImplementation(async () => [
       { slug: 'po_number', value: 'PO-1', updatedAt },
     ]);
-    const args = {
+    const args: CustomFieldArgs = {
       entity: 'container',
       ids: [C1],
       api_slug: 'po_number',
       value: null,
-    } as const;
+    };
 
     const preview = await executeSetCustomField(
       args,
@@ -1324,12 +1326,12 @@ describe('an approval replayed on another server instance', () => {
         partyId: PARTY,
       }),
     );
-    const args = {
+    const args: PartyRoleArgs = {
       container_ids: [C1],
       role: 'pickup_dray_carrier',
       party_id: PARTY,
       action: 'remove',
-    } as const;
+    };
 
     const preview = await executeSetPartyRole(
       args,
