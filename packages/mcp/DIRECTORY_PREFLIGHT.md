@@ -8,11 +8,12 @@ ChatGPT directory.
       `npm run lint --workspace @terminal49/mcp`.
 - [ ] Confirm every tool has a non-empty `title`, `readOnlyHint`, and
       `destructiveHint`. Confirm the only write tools in the default toolsets
-      are `track_container`, `set_party_role`, and `set_custom_field`, that
-      only the two `set_*` tools are destructive (they detach parties and
-      overwrite or clear field values), and that every tier C tool is
-      destructive and takes an optional `confirmation_token`. CI enforces all
-      of this in
+      are `track_container`, `set_party_role`, `set_custom_field`,
+      `add_reference_numbers`, `remove_reference_numbers`, `relink_document`,
+      and `update_document`, that `track_container` and
+      `add_reference_numbers` are the only ones that are not destructive, and
+      that every tier C tool is destructive and takes an optional
+      `confirmation_token`. CI enforces all of this in
       [`annotations.test.ts`](./src/annotations.test.ts).
 - [ ] Before a ChatGPT resubmission, confirm every tool on the dashboard's
       **MCPs** tab has the annotations and justifications from

@@ -111,7 +111,7 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (30 by default)
+## 🛠️ Available Tools (34 by default)
 
 | Tool | Description |
 |------|-------------|
@@ -131,6 +131,10 @@ Search for bill of lading 123456789
 | `list_parties` | Find parties by company name or ID |
 | `set_party_role` | Attach, replace, or detach a party on up to 50 containers or shipments; asks before a record loses a party |
 | `set_custom_field` | Set or clear a custom field on up to 50 containers or shipments; asks before overwriting or clearing a value |
+| `add_reference_numbers` | Add reference numbers to a container, shipment, or tracking request, keeping the ones already there |
+| `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request, after a confirmed preview |
+| `relink_document` | Have Terminal49 match a document to shipments and containers again, after a confirmed preview |
+| `update_document` | Set a document's type, or have Terminal49 classify or extract it again, after a confirmed preview |
 | `list_custom_field_definitions` | List the account's custom fields |
 | `list_tracking_requests` | Browse tracking requests |
 | `get_tracking_request` | Get one tracking request |
@@ -146,22 +150,15 @@ Search for bill of lading 123456789
 | `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
 | `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
 
-A deployment serves 30 tools by default. Four opt-in toolsets add the other nine, so all 39 tools exist. `tracking_lifecycle` adds three write tools, `reference_numbers` two, `documents_write` two, and `developer` two read tools. A deployment serves an opt-in toolset only when `T49_MCP_TOOLSETS` lists it. `stop_shipment_tracking`, `cancel_tracking_request` and `remove_reference_numbers` return a preview first and change data only after you approve it. A client that declares MCP 2026-07-28 form elicitation shows an `input_required` dialog and asks you to confirm. Any other client gets the preview and a `confirmation_token`, and sends the token back on a second call after you approve. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+A deployment serves 34 tools by default. Two opt-in toolsets add the other five, so all 39 tools exist. `tracking_lifecycle` adds three write tools, and `developer` adds two read tools. A deployment serves an opt-in toolset only when `T49_MCP_TOOLSETS` lists it. To keep a session read-only, send `X-T49-MCP-Read-Only: true`.
 
-| Tool | Description |
-|------|-------------|
-| `stop_shipment_tracking` | Stop updates for a shipment and its containers, after a confirmed preview |
-| `resume_shipment_tracking` | Start tracking a stopped shipment again |
-| `cancel_tracking_request` | Cancel a pending tracking request, after a confirmed preview. It cannot be undone. |
-| `add_reference_numbers` | Add reference numbers to a container, shipment, or tracking request, keeping the ones already there |
-| `remove_reference_numbers` | Remove reference numbers from a container, shipment, or tracking request, after a confirmed preview |
-
-Two more opt-in toolsets add four tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists them.
+`remove_reference_numbers`, `relink_document`, `update_document`, `stop_shipment_tracking` and `cancel_tracking_request` return a preview first and change data only after you approve it. `set_party_role` and `set_custom_field` do the same when a record would lose a party or a value. A client that declares MCP 2026-07-28 form elicitation shows an `input_required` dialog and asks you to confirm. Any other client gets the preview and a `confirmation_token`, and sends the token back on a second call after you approve. See [Confirming writes](packages/mcp/README.md#confirming-writes).
 
 | Tool | Toolset | Description |
 |------|---------|-------------|
-| `relink_document` | `documents_write` | Have Terminal49 match a document to shipments and containers again, after a confirmed preview |
-| `update_document` | `documents_write` | Set a document's type, or have Terminal49 classify or extract it again, after a confirmed preview |
+| `stop_shipment_tracking` | `tracking_lifecycle` | Stop updates for a shipment and its containers, after a confirmed preview |
+| `resume_shipment_tracking` | `tracking_lifecycle` | Start tracking a stopped shipment again |
+| `cancel_tracking_request` | `tracking_lifecycle` | Cancel a pending tracking request, after a confirmed preview. It cannot be undone. |
 | `list_webhooks` | `developer` | List webhooks and their events, without the secret, header values, or URL query string |
 | `list_webhook_notifications` | `developer` | List webhook notifications and whether each was delivered |
 

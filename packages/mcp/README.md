@@ -17,9 +17,9 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (30 by default, 39 in all)
+### 🛠️ Tools (34 by default, 39 in all)
 
-The default toolsets, `core`, `documents`, `operations` and `trade`, serve these 30:
+The default toolsets, `core`, `documents`, `operations`, `reference_numbers`, `documents_write` and `trade`, serve these 34:
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -46,6 +46,10 @@ The default toolsets, `core`, `documents`, `operations` and `trade`, serve these
 | **`whoami`** | Identify the credential, its account, the features it can use, and the session's toolsets | Explains empty or unauthorized results |
 | **`set_party_role`** | Attach, replace, or detach a party (such as the drayage carrier) on up to 50 containers or shipments | C: asks before a record loses a party; add runs at once |
 | **`set_custom_field`** | Set or clear one of the account's custom fields on up to 50 containers or shipments | C: asks before overwriting or clearing a value; filling empty fields runs at once |
+| **`add_reference_numbers`** | Add reference numbers to a container, shipment, or tracking request. Numbers already there stay. | A: runs in one call |
+| **`remove_reference_numbers`** | Remove reference numbers from a container, shipment, or tracking request | C: needs a confirmed preview |
+| **`relink_document`** | Have Terminal49 match a document to shipments and containers again. It can remove links its earlier matching made. | C: needs a confirmed preview |
+| **`update_document`** | Set a document's type, or have Terminal49 classify or extract it again | C: needs a confirmed preview |
 | **`search_importers`** | Find US importers by name, by what they import, or both | Trade intelligence, per account |
 | **`get_importer_profile`** | One importer's totals, monthly series, ports, origins, carriers, and products | Trade intelligence, per account |
 | **`search_commodities`** | Turn a product description or HS prefix into four-digit HS codes | Trade intelligence, per account |
@@ -54,17 +58,13 @@ The default toolsets, `core`, `documents`, `operations` and `trade`, serve these
 | **`get_trade_breakdown`** | Nested totals over one to three dimensions | Trade intelligence, per account |
 | **`get_trade_data_coverage`** | Where trade data starts, the latest and last full month | Trade intelligence, per account |
 
-Four opt-in toolsets add nine more. A deployment serves `tracking_lifecycle`, `reference_numbers`, `documents_write` or `developer` only when `T49_MCP_TOOLSETS` lists it:
+Two opt-in toolsets add the other five. A deployment serves `tracking_lifecycle` or `developer` only when `T49_MCP_TOOLSETS` lists it:
 
 | Tool | Toolset | Description | Tier |
 |------|---------|-------------|------|
 | **`stop_shipment_tracking`** | `tracking_lifecycle` | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
 | **`resume_shipment_tracking`** | `tracking_lifecycle` | Start tracking a stopped shipment again | A: runs in one call |
 | **`cancel_tracking_request`** | `tracking_lifecycle` | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
-| **`add_reference_numbers`** | `reference_numbers` | Add reference numbers to a container, shipment, or tracking request. Numbers already there stay. | A: runs in one call |
-| **`remove_reference_numbers`** | `reference_numbers` | Remove reference numbers from a container, shipment, or tracking request | C: needs a confirmed preview |
-| **`relink_document`** | `documents_write` | Have Terminal49 match a document to shipments and containers again. It can remove links its earlier matching made. | C: needs a confirmed preview |
-| **`update_document`** | `documents_write` | Set a document's type, or have Terminal49 classify or extract it again | C: needs a confirmed preview |
 | **`list_webhooks`** | `developer` | List webhooks and their events. Never shows the secret, header values, or URL query string. | Read |
 | **`list_webhook_notifications`** | `developer` | List webhook notifications and whether each was delivered | Read |
 
@@ -405,7 +405,7 @@ npm run lint
 |----------|----------|---------|-------------|
 | `T49_API_TOKEN` | ✅ Yes | - | Terminal49 API token |
 | `T49_API_BASE_URL` | No | `https://api.terminal49.com/v2` | API base URL |
-| `T49_MCP_TOOLSETS` | No | `core,documents,operations,trade` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
+| `T49_MCP_TOOLSETS` | No | `core,documents,operations,reference_numbers,documents_write,trade` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
 | `T49_MCP_READ_ONLY` | No | `false` | Serve only tools whose `readOnlyHint` is true. Accepts `true`, `false`, `1` or `0`, in any case. |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` and `trade` when callers share `T49_API_TOKEN` |
 | `T49_MCP_CONFIRMATION_SECRET` | For tier C writes over HTTP | - | Signs confirmation tokens. At least 32 characters. See [Confirming writes](#confirming-writes). |
@@ -430,7 +430,7 @@ Signed URLs, such as the document download link that `get_document` returns, are
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `tracking_lifecycle`, `reference_numbers`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `set_party_role` and `set_custom_field` are in `operations`. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in `tracking_lifecycle`; `add_reference_numbers` and `remove_reference_numbers` are in `reference_numbers`; `relink_document` and `update_document` are in `documents_write`; and `list_webhooks` and `list_webhook_notifications` are in `developer`. No deployment serves any of those four until `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool today is in `core`. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `tracking_lifecycle`, `reference_numbers`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `set_party_role` and `set_custom_field` are in `operations`. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in `tracking_lifecycle`; `add_reference_numbers` and `remove_reference_numbers` are in `reference_numbers`; `relink_document` and `update_document` are in `documents_write`; and `list_webhooks` and `list_webhook_notifications` are in `developer`. The trade intelligence tools are in `trade`. Every other tool today is in `core`. The default toolsets are `core`, `documents`, `operations`, `reference_numbers`, `documents_write` and `trade`. `tracking_lifecycle` and `developer` are opt-in: no deployment serves either until `T49_MCP_TOOLSETS` lists it. To serve only reads, set `T49_MCP_READ_ONLY=true` or send `X-T49-MCP-Read-Only: true`. To serve the earlier default list, set `T49_MCP_TOOLSETS=core,documents,operations,trade` or send that list in `X-T49-MCP-Toolsets`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
@@ -465,7 +465,7 @@ On the elicitation channel the human decides, because only the client can answer
 
 **Batch tools.** `set_party_role` and `set_custom_field` change up to 50 records per call and are tier C with `confirms: "destructive_only"` in the registry. Every call reads each record first and plans one change per record. A call whose changes only add (`action: "add"`, a `replace` that detaches nobody, or filling fields that are empty) writes at once, with no preview and no token. A call in which any record would lose a party or a value asks once for the whole batch: the `preview` lists each record that changes (`id`, `current`, `proposed`), counts the `unchanged` ones, and names records that cannot be changed with their error. The approval's fingerprint covers the state of every record the call read, changing or not, so a change to any of them between the preview and the approval asks again. A batch that mixes additive and destructive records asks for all of it. After the approval the result keeps the per-record shape (`updated`, `unchanged`, `failed`, `not_attempted`, `summary`); a record that fails after approval does not release the approval, because other records in the batch may have been written, and a repeat call plans again from the current state. Reads get half of the call's remaining time budget so one slow record cannot hold every write until the deadline.
 
-Every tier C tool fingerprints the fields its write changes: `stop_shipment_tracking` the stop time, `cancel_tracking_request` the status, `relink_document` the document's links and `updated_at`, `update_document` the document's type, type source, classification notes, latest extraction ID and `updated_at`, `set_party_role` the party role assignments (by assignment id) in the role on every record, and `set_custom_field` the field's value and its `updated_at` on every record. For the two batch tools a restored record never matches again: a party attached back gets a new assignment id, and a value put back gets a new `updated_at`, so an approval confirms its change once however many instances serve the gateway. The shipment resource has no such field, so after `resume_shipment_tracking` a shipment looks as it did before the stop. The server therefore also remembers each confirmation that made a write until it expires, and refuses a second use with `invalid_confirmation` and reason `used`. A write that Terminal49 refuses with a 4xx status, such as `rate_limited`, changed nothing, so the same confirmation still works on retry. After a 5xx or a lost response the write may have happened, so the confirmation stays used and the caller previews again. That memory is per process. On a deployment with several instances, such as the HTTP gateway, another instance can still accept a `stop_shipment_tracking` confirmation once more within its five minutes, after a resume. It can also accept a `reextract`, `reclassify` or `relink_document` confirmation once more, because those calls only queue a background job and leave the fingerprinted fields unchanged.
+Every tier C tool fingerprints the fields its write changes: `stop_shipment_tracking` the stop time, `cancel_tracking_request` the status, `relink_document` the document's links and `updated_at`, `update_document` the document's type, type source, classification notes, latest extraction ID and `updated_at`, `set_party_role` the party role assignments (by assignment id) in the role on every record, and `set_custom_field` the field's value and its `updated_at` on every record. For the two batch tools a restored record never matches again: a party attached back gets a new assignment id, and a value put back gets a new `updated_at`, so an approval confirms its change once however many instances serve the gateway. The shipment resource has no such field, so after `resume_shipment_tracking` a shipment looks as it did before the stop. The server therefore also remembers each confirmation that made a write until it expires, and refuses a second use with `invalid_confirmation` and reason `used`. A write that Terminal49 refuses with a 4xx status, such as `rate_limited`, changed nothing, so the same confirmation still works on retry. After a 5xx or a lost response the write may have happened, so the confirmation stays used and the caller previews again. That memory is per process. On a deployment with several instances, such as the HTTP gateway, another instance can still accept a `stop_shipment_tracking` confirmation once more within its five minutes, after a resume. It can also accept a `reextract`, `reclassify` or `relink_document` confirmation once more, because those calls only queue a background job: the fingerprinted fields are unchanged when the call returns. The job can change the document's links, type or latest extraction ID later, and from then on the confirmation no longer matches the document.
 
 The HTTP gateway reads `T49_MCP_CONFIRMATION_SECRET` and has no fallback, because serverless instances share no memory. Without a secret of at least 32 characters, a tier C call that needs the user's approval returns `not_permitted` with a message that names the variable, and the server logs `mcp.config.error`; a call that only adds, such as `set_party_role` with `action: "add"`, still runs. Set it in Vercel before you serve `operations`, `tracking_lifecycle`, `reference_numbers` or `documents_write`. stdio uses the variable when it is at least 32 characters. Otherwise it makes a random secret per process, and warns on stderr when the variable is set but too short. Rotating the secret only means an open preview must be requested again.
 
