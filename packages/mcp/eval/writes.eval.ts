@@ -7,8 +7,10 @@
  *   MCP_EVAL_ENABLE_WRITE=1
  *   MCP_EVAL_SANDBOX_TOKEN=<API key of the sandbox account>
  * The endpoint is MCP_EVAL_ENDPOINT, as for the read suite. Each case that
- * changes data is a round trip that leaves the record as it found it. The
- * document case only previews.
+ * changes data is a round trip that leaves the record as it found it, and it
+ * changes only the one sandbox shipment whose reference numbers include
+ * MCP-EVAL-FIXTURE (see write-fixtures.ts). Without that shipment those cases
+ * skip. The document case only previews.
  *
  * cancel_tracking_request and relink_document have no live case. A cancel
  * cannot be undone, and every run would have to create a new, billable
@@ -21,6 +23,7 @@ import { beforeAll, describe, expect, it } from 'vite-plus/test';
 import { defaultTools } from '../src/tools/registry.js';
 import { EvalClient, isRecord, type ToolResult } from './client.js';
 import { fixtureItems } from './fixtures.js';
+import { EVAL_FIXTURE_REF, selectFixtureShipment } from './write-fixtures.js';
 
 const enableWrite =
   process.env.MCP_EVAL_ENABLE_WRITE === '1' ||
@@ -29,6 +32,7 @@ const sandboxToken = process.env.MCP_EVAL_SANDBOX_TOKEN?.trim();
 const allowSparse =
   process.env.MCP_EVAL_ALLOW_SPARSE === '1' ||
   process.env.MCP_EVAL_ALLOW_SPARSE === 'true';
+const NO_FIXTURE = `no sandbox shipment carries the reference number ${EVAL_FIXTURE_REF}`;
 const endpoint =
   process.env.MCP_EVAL_ENDPOINT?.trim() || 'https://mcp.terminal49.com/mcp';
 
@@ -80,23 +84,23 @@ if (!enableWrite || !sandboxToken) {
         );
       }
 
-      // Takes the first shipment. The stop cases skip if it is already stopped.
+      // Only the fixture shipment, never another record. The stop cases skip
+      // if it is already stopped.
       const shipments = await client.callTool('list_shipments', {
-        page_size: 10,
+        advanced_filters: { q: EVAL_FIXTURE_REF },
+        include_stopped_tracking: true,
+        page_size: 25,
       });
-      const first = fixtureItems('list_shipments', shipments).find(
-        (item) => isRecord(item) && typeof item.id === 'string',
+      shipmentId = selectFixtureShipment(
+        fixtureItems('list_shipments', shipments),
       );
-      shipmentId =
-        isRecord(first) && typeof first.id === 'string' ? first.id : undefined;
     });
 
     it('stops a shipment with a confirmed preview, then resumes it', async ({
       skip,
     }) => {
-      if (!served.includes('stop_shipment_tracking') || !shipmentId) {
-        return skip();
-      }
+      if (!served.includes('stop_shipment_tracking')) return skip();
+      if (!shipmentId) return skip(NO_FIXTURE);
 
       const preview = await client.callTool('stop_shipment_tracking', {
         shipment_id: shipmentId,
@@ -141,9 +145,8 @@ if (!enableWrite || !sandboxToken) {
     });
 
     it('refuses a stop with an edited confirmation token', async ({ skip }) => {
-      if (!served.includes('stop_shipment_tracking') || !shipmentId) {
-        return skip();
-      }
+      if (!served.includes('stop_shipment_tracking')) return skip();
+      if (!shipmentId) return skip(NO_FIXTURE);
 
       const preview = structured(
         await client.callTool('stop_shipment_tracking', {
@@ -170,9 +173,8 @@ if (!enableWrite || !sandboxToken) {
     it('adds a reference number, then removes it with a confirmed preview', async ({
       skip,
     }) => {
-      if (!served.includes('add_reference_numbers') || !shipmentId) {
-        return skip();
-      }
+      if (!served.includes('add_reference_numbers')) return skip();
+      if (!shipmentId) return skip(NO_FIXTURE);
       const target = { entity_type: 'shipment', entity_id: shipmentId };
       const refNumber = `MCP-EVAL-${Date.now().toString(36).toUpperCase()}`;
 
