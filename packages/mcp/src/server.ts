@@ -224,7 +224,10 @@ import {
 } from './sentry.js';
 import { logMcpEvent } from './logging.js';
 import { resolveToolSelection } from './toolsets.js';
-import { buildServerInstructions } from './instructions.js';
+import {
+  buildServerInstructions,
+  WRITE_DESCRIPTION_LEAD,
+} from './instructions.js';
 
 type TextContent = {
   type: 'text';
@@ -1379,9 +1382,11 @@ export function createTerminal49McpServer(
         {
           title: definition.title,
           description:
-            definition.tier === 'C'
-              ? `${spec.description} ${CONFIRMED_WRITE_CLAUSE[definition.confirms]}${APPROVAL_CHANNELS}`
-              : spec.description,
+            definition.tier === 'read'
+              ? spec.description
+              : definition.tier === 'A'
+                ? `${WRITE_DESCRIPTION_LEAD}${spec.description}`
+                : `${WRITE_DESCRIPTION_LEAD}${spec.description} ${CONFIRMED_WRITE_CLAUSE[definition.confirms]}${APPROVAL_CHANNELS}`,
           annotations: definition.annotations,
           inputSchema: spec.inputSchema,
           outputSchema: spec.outputSchema,
