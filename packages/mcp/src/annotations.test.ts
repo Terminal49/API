@@ -145,7 +145,7 @@ describe('MCP tool annotations', () => {
     // MCP: destructiveHint false means the tool only adds. set_party_role
     // detaches parties (remove, replace) and set_custom_field overwrites or
     // clears values, so both must say true. track_container only creates.
-    const tools = getRegisteredTools();
+    const tools = getRegisteredTools(TOOLSETS);
     const writes = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
       .map(([name]) => name);

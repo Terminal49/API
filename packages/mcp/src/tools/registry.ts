@@ -11,6 +11,7 @@ export const TOOLSETS = [
   'core',
   'documents',
   'operations',
+  'tracking_lifecycle',
   'documents_write',
   'developer',
   'trade',
@@ -131,7 +132,7 @@ export const TOOL_REGISTRY = [
   {
     name: 'stop_shipment_tracking',
     title: 'Stop Shipment Tracking',
-    toolset: 'operations',
+    toolset: 'tracking_lifecycle',
     tier: 'C',
     confirms: 'always',
     annotations: {
@@ -144,7 +145,7 @@ export const TOOL_REGISTRY = [
   {
     name: 'resume_shipment_tracking',
     title: 'Resume Shipment Tracking',
-    toolset: 'operations',
+    toolset: 'tracking_lifecycle',
     tier: 'A',
     annotations: {
       readOnlyHint: false,
@@ -156,7 +157,7 @@ export const TOOL_REGISTRY = [
   {
     name: 'cancel_tracking_request',
     title: 'Cancel Tracking Request',
-    toolset: 'operations',
+    toolset: 'tracking_lifecycle',
     tier: 'C',
     confirms: 'always',
     annotations: {

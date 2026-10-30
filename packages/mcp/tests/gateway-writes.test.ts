@@ -124,7 +124,7 @@ describe('tier C writes through the WorkOS gateway path', () => {
     vi.stubEnv('T49_CONNECTED_CLIENTS_RESOLVE_SECRET', 'resolve-secret');
     vi.stubEnv('T49_API_BASE_URL', 'https://api.test/v2');
     vi.stubEnv('WORKOS_MCP_RESOURCE', 'https://mcp.test');
-    vi.stubEnv('T49_MCP_TOOLSETS', 'core,operations');
+    vi.stubEnv('T49_MCP_TOOLSETS', 'core,operations,tracking_lifecycle');
     vi.stubEnv('T49_MCP_CONFIRMATION_SECRET', TEST_CONFIRMATION_SECRET);
   });
 

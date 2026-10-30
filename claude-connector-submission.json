@@ -22,7 +22,6 @@
     "icon": "public/store-icons/terminal49-light.png",
     "icon_dark": "public/store-icons/terminal49-dark.png",
     "tool_names": [
-      "cancel_tracking_request",
       "get_container",
       "get_container_route",
       "get_container_transport_events",
@@ -44,14 +43,12 @@
       "list_shipments",
       "list_tracking_requests",
       "rank_importers",
-      "resume_shipment_tracking",
       "search_commodities",
       "search_container",
       "search_docs",
       "search_importers",
       "set_custom_field",
       "set_party_role",
-      "stop_shipment_tracking",
       "summarize_containers",
       "track_container",
       "whoami"

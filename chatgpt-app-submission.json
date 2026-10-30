@@ -128,42 +128,6 @@
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
-    "stop_shipment_tracking": {
-      "annotations": {
-        "readOnlyHint": false,
-        "openWorldHint": false,
-        "destructiveHint": true
-      },
-      "justifications": {
-        "read_only_justification": "Stops carrier and terminal updates for one shipment in the user's Terminal49 account.",
-        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Ends updates for the shipment and its containers. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. resume_shipment_tracking starts tracking again."
-      }
-    },
-    "resume_shipment_tracking": {
-      "annotations": {
-        "readOnlyHint": false,
-        "openWorldHint": false,
-        "destructiveHint": false
-      },
-      "justifications": {
-        "read_only_justification": "Starts tracking a stopped shipment again in the user's Terminal49 account.",
-        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "Restarts updates for one shipment and does not delete or overwrite existing data."
-      }
-    },
-    "cancel_tracking_request": {
-      "annotations": {
-        "readOnlyHint": false,
-        "openWorldHint": false,
-        "destructiveHint": true
-      },
-      "justifications": {
-        "read_only_justification": "Cancels one pending tracking request in the user's Terminal49 account.",
-        "open_world_justification": "Changes only private Terminal49 account state and does not publish content or modify a third-party system.",
-        "destructive_justification": "A cancelled tracking request cannot be restored. The tool never changes anything on its first call: it builds a preview, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. It cancels only a request that is still pending."
-      }
-    },
     "search_docs": {
       "annotations": {
         "readOnlyHint": true,
