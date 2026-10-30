@@ -22,36 +22,40 @@
   if (window.top !== window || window.__t49WebMcpRegistered) return;
   window.__t49WebMcpRegistered = true;
 
-  Promise.resolve(
-    modelContext.registerTool({
-      name: 'get_terminal49_mcp_connection',
-      title: 'Get Terminal49 MCP server connection details',
-      description:
-        'Get the URL, transport, and sign-in details for the Terminal49 MCP server, plus setup guides for Claude, ChatGPT, Cursor, VS Code, and other MCP clients. Use this to connect an agent to a Terminal49 account to search, track, and monitor shipments.',
-      inputSchema: { type: 'object', properties: {} },
-      annotations: { readOnlyHint: true },
-      execute: function () {
-        var docs = window.location.origin + '/docs/mcp';
-        return Promise.resolve({
-          url: MCP_URL,
-          transport: 'streamable-http',
-          authentication:
-            'OAuth 2.1 through auth.terminal49.com, discovered from the protected resource metadata; or send a Terminal49 API key as "Authorization: Token YOUR_API_KEY".',
-          protected_resource_metadata: MCP_URL + '/.well-known/oauth-protected-resource',
-          docs: docs + '/home',
-          setup_guides: {
-            claude: docs + '/setup/claude',
-            claude_code: docs + '/setup/claude-code',
-            chatgpt: docs + '/setup/chatgpt',
-            cursor: docs + '/setup/cursor',
-            vs_code: docs + '/setup/vs-code',
-            microsoft_copilot: docs + '/setup/microsoft-copilot',
-            other_clients: docs + '/setup/other-clients',
-          },
-        });
-      },
-    })
-  ).catch(function (error) {
+  var tool = {
+    name: 'get_terminal49_mcp_connection',
+    title: 'Get Terminal49 MCP server connection details',
+    description:
+      'Get the URL, transport, and sign-in details for the Terminal49 MCP server, plus setup guides for Claude, ChatGPT, Cursor, VS Code, and other MCP clients. Use this to connect an agent to a Terminal49 account to search, track, and monitor shipments.',
+    inputSchema: { type: 'object', properties: {} },
+    annotations: { readOnlyHint: true },
+    execute: function () {
+      var docs = window.location.origin + '/docs/mcp';
+      return Promise.resolve({
+        url: MCP_URL,
+        transport: 'streamable-http',
+        authentication:
+          'OAuth 2.1 through auth.terminal49.com, discovered from the protected resource metadata; or send a Terminal49 API key as "Authorization: Token YOUR_API_KEY".',
+        protected_resource_metadata: MCP_URL + '/.well-known/oauth-protected-resource',
+        docs: docs + '/home',
+        setup_guides: {
+          claude: docs + '/setup/claude',
+          claude_code: docs + '/setup/claude-code',
+          chatgpt: docs + '/setup/chatgpt',
+          cursor: docs + '/setup/cursor',
+          vs_code: docs + '/setup/vs-code',
+          microsoft_copilot: docs + '/setup/microsoft-copilot',
+          other_clients: docs + '/setup/other-clients',
+        },
+      });
+    },
+  };
+
+  // The executor catches a synchronous throw (e.g. InvalidStateError) as well
+  // as a rejection, so a failed attempt always clears the flag for a retry.
+  new Promise(function (resolve) {
+    resolve(modelContext.registerTool(tool));
+  }).catch(function (error) {
     window.__t49WebMcpRegistered = false;
     if (window.console && console.warn) console.warn('WebMCP: could not register tool', error);
   });
