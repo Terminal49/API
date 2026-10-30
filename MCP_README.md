@@ -146,7 +146,7 @@ Search for bill of lading 123456789
 | `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
 | `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
 
-The opt-in `tracking_lifecycle` toolset adds three write tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists `tracking_lifecycle`. `stop_shipment_tracking` and `cancel_tracking_request` return a preview first and change data only when called again with the confirmation token from that preview. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+The opt-in `tracking_lifecycle` toolset adds three write tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists `tracking_lifecycle`. `stop_shipment_tracking` and `cancel_tracking_request` return a preview first and change data only after you approve it. A client that declares MCP 2026-07-28 form elicitation shows an `input_required` dialog and asks you to confirm. Any other client gets the preview and a `confirmation_token`, and sends the token back on a second call after you approve. See [Confirming writes](packages/mcp/README.md#confirming-writes).
 
 | Tool | Description |
 |------|-------------|
