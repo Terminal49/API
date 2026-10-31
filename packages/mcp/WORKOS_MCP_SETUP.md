@@ -53,7 +53,7 @@ In the WorkOS environment referenced by `WORKOS_AUTHORIZATION_SERVER_URL`:
 | `T49_MCP_AUTHKIT_ENABLED` | `true` | Otherwise a WorkOS `Bearer` token is treated as a passthrough API key and fails |
 | `T49_CONNECTED_CLIENTS_RESOLVE_SECRET` | the resolve shared secret | Required to call `/connected-clients/resolve` |
 | `T49_MCP_ALLOWED_HOSTS` | include `mcp.terminal49.com` (if set at all) | Host allowlist; missing host → 403 |
-| `T49_MCP_SCOPES_SUPPORTED` | **leave unset** | WorkOS only issues `openid/profile/email/offline_access`; advertising `mcp:tools` etc. causes `invalid_scope` |
+| `T49_MCP_SCOPES_SUPPORTED` | `openid,profile,email,offline_access` | Advertised as `scopes_supported` in the PRM document. Must match what WorkOS issues (the AS metadata's `scopes_supported`); advertising scopes it doesn't issue, such as `mcp:tools`, causes `invalid_scope` |
 | `POSTHOG_PROJECT_API_KEY` | the PostHog project API key | Enables MCP tool-usage analytics. **Leave unset and the integration is inert** — no client, no network call |
 | `POSTHOG_HOST` | optional; defaults to `https://f.terminal49.com` | First-party ingestion proxy, same host the docs site uses (`docs/docs.json`) |
 | `POSTHOG_ENABLED` | optional; defaults to `true` | Set `false` to kill-switch analytics without removing the key |
@@ -83,8 +83,9 @@ curl --fail --silent --show-error -X POST "$ISSUER/oauth2/register" \
   -d '{"client_name":"smoke","redirect_uris":["https://example.com/cb"],"grant_types":["authorization_code","refresh_token"],"response_types":["code"],"token_endpoint_auth_method":"none"}' \
   | jq --exit-status '.client_id != null' > /dev/null
 
-# PRM: resource + authorization_servers
-curl -s https://mcp.terminal49.com/.well-known/oauth-protected-resource | jq
+# PRM: resource, authorization_servers, and the WorkOS scopes
+curl -s https://mcp.terminal49.com/.well-known/oauth-protected-resource \
+  | jq --exit-status '.scopes_supported == ["openid","profile","email","offline_access"]'
 
 # 401 challenge points at the PRM (must be POST — a GET to /mcp returns 405)
 curl -si -X POST https://mcp.terminal49.com/mcp \
