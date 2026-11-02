@@ -12,6 +12,9 @@ import { z } from 'zod';
 import { logMcpEvent } from '../logging.js';
 import { executeGetContainer } from './get-container.js';
 import { executeSearchContainer } from './search-container.js';
+import { httpStatus } from './soft-results.js';
+import type { ToolContext } from './context.js';
+import { runWrite, type WriteAuditSummary } from './write-kit.js';
 
 export interface TrackContainerArgs {
   number: string;
@@ -384,7 +387,24 @@ async function findExistingTracking(
   }
 }
 
-export async function executeTrackContainer(
+export function executeTrackContainer(
+  args: TrackContainerArgs,
+  client: Terminal49Client,
+  context: ToolContext,
+): Promise<any> {
+  return runWrite(
+    context,
+    {
+      tool: 'track_container',
+      entityType: 'tracking_request',
+      entityId: undefined,
+    },
+    () => trackContainer(args, client),
+    trackContainerAudit,
+  );
+}
+
+async function trackContainer(
   args: TrackContainerArgs,
   client: Terminal49Client,
 ): Promise<any> {
@@ -551,12 +571,12 @@ export async function executeTrackContainer(
     // Step 2: Get full container details using the ID. A newly-created request
     // can expose its relationship before the container read model is available.
     // Preserve the successful write state instead of misreporting the request as
-    // uncreated when that follow-up read briefly returns 404.
+    // uncreated when that follow-up read briefly returns 404 or is rate limited.
     let containerDetails: Awaited<ReturnType<typeof executeGetContainer>>;
     try {
       containerDetails = await executeGetContainer({ id: containerId }, client);
     } catch (error) {
-      if (!isNotFound(error)) {
+      if (!isNotFound(error) && httpStatus(error) !== 429) {
         throw error;
       }
       return {
@@ -635,6 +655,29 @@ export async function executeTrackContainer(
         throw error;
     }
   }
+}
+
+const trackAuditSchema = z.object({
+  error: z.string().optional(),
+  tracking_request_created: z.boolean().optional(),
+  source: z.string().optional(),
+  tracking_request: z.object({ id: z.string().optional() }).optional(),
+});
+
+/** The audit outcome of a track_container result and the request it names. */
+export function trackContainerAudit(result: unknown): WriteAuditSummary {
+  const parsed = trackAuditSchema.safeParse(result);
+  if (!parsed.success) return { outcome: 'unknown' };
+  const { error, tracking_request_created, source, tracking_request } =
+    parsed.data;
+  const outcome =
+    error ??
+    (tracking_request_created
+      ? 'created'
+      : source === 'duplicate'
+        ? 'duplicate'
+        : 'already_tracked');
+  return { outcome, entityId: tracking_request?.id };
 }
 
 /**
