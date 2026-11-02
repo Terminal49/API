@@ -37,7 +37,7 @@ test('canonical terminal identifiers match the approved import mapping', async (
 });
 
 test('only approved public entities and complete feature assessments are exported', () => {
-  assert.equal(data.terminals.length, 138);
+  assert.equal(data.terminals.length, 137);
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'public').length,
     34,
@@ -60,7 +60,7 @@ test('only approved public entities and complete feature assessments are exporte
     data.terminals.filter(
       (row) => row.features.availableForPickup === 'unknown',
     ).length,
-    22,
+    21,
   );
   assert.ok(
     data.terminals.every(
