@@ -1,9 +1,8 @@
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import {
   HELP_CENTER_ORIGIN,
   parseArticle,
   rankArticles,
-  resetHelpCenterIndex,
   searchHelpCenter,
 } from './help-center.js';
 
@@ -44,8 +43,6 @@ function site(): ReturnType<typeof vi.fn<typeof fetch>> {
     return new Response('', { status: 404 });
   });
 }
-
-afterEach(() => resetHelpCenterIndex());
 
 describe('parseArticle', () => {
   it('keeps the title and body text and drops markup, scripts and the updated line', () => {
@@ -94,53 +91,40 @@ describe('rankArticles', () => {
 });
 
 describe('searchHelpCenter', () => {
-  it('indexes articles from the sitemap and returns the best match', async () => {
+  it('ranks the sitemap slugs and fetches only the top articles', async () => {
     const fetchImpl = site();
-    const results = await searchHelpCenter('share without login', 5, fetchImpl);
+    const results = await searchHelpCenter(
+      'how to share without signing in',
+      1,
+      fetchImpl,
+    );
+    expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
       title: 'Sharing Container Views',
       url: SHARING_URL,
     });
     expect(results[0]?.text).toContain('without requiring a login');
-    const urls = fetchImpl.mock.calls.map(([input]) => String(input));
-    expect(urls).not.toContain(
-      `${HELP_CENTER_ORIGIN}/collections/9-containers`,
-    );
-  });
-
-  it('reuses the cached index within the hour and refreshes after it', async () => {
-    const fetchImpl = site();
-    let now = 0;
-    await searchHelpCenter('share', 5, fetchImpl, () => now);
-    const calls = fetchImpl.mock.calls.length;
-    now = 30 * 60 * 1000;
-    await searchHelpCenter('alerts', 5, fetchImpl, () => now);
-    expect(fetchImpl.mock.calls.length).toBe(calls);
-    now = 61 * 60 * 1000;
-    await searchHelpCenter('alerts', 5, fetchImpl, () => now);
-    expect(fetchImpl.mock.calls.length).toBe(calls * 2);
-  });
-
-  it('shares one index build between concurrent searches', async () => {
-    const fetchImpl = site();
-    await Promise.all([
-      searchHelpCenter('share', 5, fetchImpl),
-      searchHelpCenter('alerts', 5, fetchImpl),
+    expect(fetchImpl.mock.calls.map(([input]) => String(input))).toEqual([
+      `${HELP_CENTER_ORIGIN}/sitemap.xml`,
+      SHARING_URL,
     ]);
-    const sitemapCalls = fetchImpl.mock.calls.filter(([input]) =>
-      String(input).endsWith('/sitemap.xml'),
-    );
-    expect(sitemapCalls).toHaveLength(1);
   });
 
-  it('fails when the sitemap is unavailable, and retries on the next search', async () => {
+  it('skips an article that fails to load', async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async (input) =>
+      String(input).endsWith('/sitemap.xml')
+        ? new Response(sitemap)
+        : new Response('', { status: 500 }),
+    );
+    expect(await searchHelpCenter('sharing', 5, fetchImpl)).toEqual([]);
+  });
+
+  it('fails when the sitemap is unavailable', async () => {
     const down = vi.fn<typeof fetch>(
       async () => new Response('', { status: 503 }),
     );
     await expect(searchHelpCenter('share', 5, down)).rejects.toThrow(
       'HTTP 503',
     );
-    const results = await searchHelpCenter('share', 5, site());
-    expect(results[0]?.url).toBe(SHARING_URL);
   });
 });

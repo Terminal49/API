@@ -1,15 +1,14 @@
 /**
  * Terminal49 Help Center search (help.terminal49.com).
  * The Help Center holds the dashboard how-to articles (sharing views, alerts, billing) that the
- * Mintlify docs don't cover. Pylon publishes it as public HTML with a sitemap, so this reads the
- * sitemap, fetches each listed article, and ranks them locally. No credential is needed.
+ * Mintlify docs don't cover. Pylon publishes it as public HTML with a sitemap whose article URLs
+ * carry the title as a slug. Each search reads the sitemap, ranks the slugs, and fetches only
+ * the top articles for their text. No credential and no index are needed.
  */
 
 export const HELP_CENTER_ORIGIN = 'https://help.terminal49.com';
 const SITEMAP_URL = `${HELP_CENTER_ORIGIN}/sitemap.xml`;
-const INDEX_TTL_MS = 60 * 60 * 1000;
 const TIMEOUT_MS = 10_000;
-const FETCH_CONCURRENCY = 8;
 
 export interface HelpArticle {
   title: string;
@@ -17,66 +16,31 @@ export interface HelpArticle {
   text: string;
 }
 
-interface CachedIndex {
-  articles: HelpArticle[];
-  loadedAt: number;
-}
-
-let cached: CachedIndex | undefined;
-let loading: Promise<HelpArticle[]> | undefined;
-
-/** Clears the cached index. Tests only. */
-export function resetHelpCenterIndex(): void {
-  cached = undefined;
-  loading = undefined;
-}
-
 export async function searchHelpCenter(
   query: string,
   limit: number,
   fetchImpl: typeof fetch,
-  now: () => number = Date.now,
 ): Promise<HelpArticle[]> {
-  const articles = await loadIndex(fetchImpl, now);
-  return rankArticles(articles, query).slice(0, limit);
-}
-
-async function loadIndex(
-  fetchImpl: typeof fetch,
-  now: () => number,
-): Promise<HelpArticle[]> {
-  if (cached && now() - cached.loadedAt < INDEX_TTL_MS) return cached.articles;
-  loading ??= buildIndex(fetchImpl)
-    .then((articles) => {
-      cached = { articles, loadedAt: now() };
-      return articles;
-    })
-    .finally(() => {
-      loading = undefined;
-    });
-  return loading;
-}
-
-async function buildIndex(fetchImpl: typeof fetch): Promise<HelpArticle[]> {
   const sitemap = await fetchText(SITEMAP_URL, fetchImpl);
-  const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
+  const catalog = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
     .map((match) => match[1]?.trim() ?? '')
-    .filter((url) => url.startsWith(`${HELP_CENTER_ORIGIN}/articles/`));
+    .filter((url) => url.startsWith(`${HELP_CENTER_ORIGIN}/articles/`))
+    .map((url) => ({ title: slugTitle(url), url, text: '' }));
+  const top = rankArticles(catalog, query).slice(0, limit);
+  const pages = await Promise.allSettled(
+    top.map(async ({ url }) =>
+      parseArticle(url, await fetchText(url, fetchImpl)),
+    ),
+  );
+  return pages.flatMap((page) =>
+    page.status === 'fulfilled' && page.value ? [page.value] : [],
+  );
+}
 
-  const articles: HelpArticle[] = [];
-  for (let i = 0; i < urls.length; i += FETCH_CONCURRENCY) {
-    const batch = await Promise.allSettled(
-      urls
-        .slice(i, i + FETCH_CONCURRENCY)
-        .map(async (url) => parseArticle(url, await fetchText(url, fetchImpl))),
-    );
-    for (const result of batch) {
-      if (result.status === 'fulfilled' && result.value)
-        articles.push(result.value);
-    }
-  }
-  if (!articles.length) throw new Error('Help Center returned no articles.');
-  return articles;
+// "/articles/7303567452-sharing-container-views" -> "sharing container views"
+function slugTitle(url: string): string {
+  const slug = url.slice(url.lastIndexOf('/') + 1).replace(/^\d+-?/, '');
+  return slug.replace(/[-_]+/g, ' ');
 }
 
 async function fetchText(
