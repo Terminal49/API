@@ -1845,10 +1845,10 @@ export function createTerminal49McpServer(
     search_docs: tool(
       {
         description:
-          'Search the public Terminal49 documentation (terminal49.com/docs): API guides, webhooks, ' +
-          'container statuses, holds and last free day rules, DataSync, the SDK, and this MCP server. ' +
+          'Search the public Terminal49 documentation (terminal49.com/docs) and Help Center (help.terminal49.com): API guides, webhooks, ' +
+          'container statuses, holds and last free day rules, DataSync, the SDK, this MCP server, and dashboard how-tos such as sharing views, alerts, exports, and billing. ' +
           'Returns matching sections with title, link, and an excerpt. Use it for how-to and definition ' +
-          'questions, not for account data, and cite the links in the answer. The result has query, total_results, and results, each with title, url, page, and content (the excerpt).',
+          'questions, not for account data, and cite the links in the answer. The result has query, total_results, and results, each with source (docs or help_center), title, url, page, and content (the excerpt).',
         inputSchema: z.object({
           query: z
             .string()
@@ -1871,6 +1871,7 @@ export function createTerminal49McpServer(
           total_results: z.number(),
           results: z.array(
             z.object({
+              source: z.enum(['docs', 'help_center']),
               title: z.string(),
               url: z.string(),
               page: z.string(),
