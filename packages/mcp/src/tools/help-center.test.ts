@@ -3,6 +3,7 @@ import {
   HELP_CENTER_ORIGIN,
   parseArticle,
   rankArticles,
+  termWeights,
   searchHelpCenter,
 } from './help-center.js';
 
@@ -82,6 +83,37 @@ describe('rankArticles', () => {
     expect(rankArticles(articles, 'share without signing in')[0]?.url).toBe(
       SHARING_URL,
     );
+  });
+
+  it('weights words rare in the catalog over common ones, and does not reward length alone', () => {
+    const catalog = [
+      {
+        title: 'Container Columns',
+        url: 'u1',
+        text: 'container container container view view view list of columns',
+      },
+      {
+        title: 'Container Statuses',
+        url: 'u2',
+        text: 'container statuses explained',
+      },
+      {
+        title: 'Container Holds',
+        url: 'u3',
+        text: 'container holds explained',
+      },
+      {
+        title: 'Sharing Views',
+        url: 'u4',
+        text: 'share a view without a login',
+      },
+    ];
+    const weight = termWeights(catalog);
+    expect(weight('share')).toBeGreaterThan(weight('container'));
+    expect(
+      rankArticles(catalog, 'share container view without login', weight)[0]
+        ?.url,
+    ).toBe('u4');
   });
 
   it('returns nothing for stopword-only or unmatched queries', () => {

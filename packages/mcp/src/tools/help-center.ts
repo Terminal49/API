@@ -2,13 +2,15 @@
  * Terminal49 Help Center search (help.terminal49.com).
  * The Help Center holds the dashboard how-to articles (sharing views, alerts, billing) that the
  * Mintlify docs don't cover. Pylon publishes it as public HTML with a sitemap whose article URLs
- * carry the title as a slug. Each search reads the sitemap, ranks the slugs, and fetches only
- * the top articles for their text. No credential and no index are needed.
+ * carry the title as a slug. Each search reads the sitemap, ranks the slugs to pick ten
+ * candidates, fetches those, and ranks them on their text. No credential and no index are needed.
  */
 
 export const HELP_CENTER_ORIGIN = 'https://help.terminal49.com';
 const SITEMAP_URL = `${HELP_CENTER_ORIGIN}/sitemap.xml`;
 const TIMEOUT_MS = 10_000;
+// Articles fetched per search and ranked on their text.
+const CANDIDATES = 10;
 
 export interface HelpArticle {
   title: string;
@@ -26,15 +28,22 @@ export async function searchHelpCenter(
     .map((match) => match[1]?.trim() ?? '')
     .filter((url) => url.startsWith(`${HELP_CENTER_ORIGIN}/articles/`))
     .map((url) => ({ title: slugTitle(url), url, text: '' }));
-  const top = rankArticles(catalog, query).slice(0, limit);
+  // Words rare across the catalog's titles ("share", "login") say more than common
+  // ones ("container", "view"). Titles pick candidates; their text decides the order.
+  const weight = termWeights(catalog);
+  const candidates = rankArticles(catalog, query, weight).slice(
+    0,
+    Math.max(limit, CANDIDATES),
+  );
   const pages = await Promise.allSettled(
-    top.map(async ({ url }) =>
+    candidates.map(async ({ url }) =>
       parseArticle(url, await fetchText(url, fetchImpl)),
     ),
   );
-  return pages.flatMap((page) =>
+  const articles = pages.flatMap((page) =>
     page.status === 'fulfilled' && page.value ? [page.value] : [],
   );
+  return rankArticles(articles, query, weight).slice(0, limit);
 }
 
 // "/articles/7303567452-sharing-container-views" -> "sharing container views"
@@ -115,25 +124,47 @@ function terms(text: string): string[] {
     .map(stem);
 }
 
+/** Inverse document frequency of each term over the catalog's titles. */
+export function termWeights(catalog: HelpArticle[]): (term: string) => number {
+  const counts = new Map<string, number>();
+  for (const article of catalog) {
+    for (const term of new Set(terms(article.title))) {
+      counts.set(term, (counts.get(term) ?? 0) + 1);
+    }
+  }
+  return (term) => Math.log(1 + catalog.length / (1 + (counts.get(term) ?? 0)));
+}
+
 export function rankArticles(
   articles: HelpArticle[],
   query: string,
+  weight: (term: string) => number = () => 1,
 ): HelpArticle[] {
   const queryTerms = [...new Set(terms(query))];
   if (!queryTerms.length) return [];
+  const total = queryTerms.reduce((sum, term) => sum + weight(term), 0);
+  const bodies = articles.map((article) => terms(article.text));
+  const averageLength =
+    bodies.reduce((sum, body) => sum + body.length, 0) / (bodies.length || 1) ||
+    1;
   return articles
-    .map((article) => {
+    .map((article, index) => {
       const titleTerms = new Set(terms(article.title));
-      const bodyTerms = terms(article.text);
+      const bodyTerms = bodies[index]!;
       let score = 0;
-      let matched = 0;
+      let covered = 0;
       for (const term of queryTerms) {
         const inTitle = titleTerms.has(term);
         const inBody = bodyTerms.filter((word) => word === term).length;
-        if (inTitle || inBody) matched += 1;
-        score += (inTitle ? 3 : 0) + Math.log1p(inBody);
+        if (inTitle || inBody) covered += weight(term);
+        // BM25 term frequency, so a long article does not win by repetition alone.
+        const frequency =
+          (inBody * 2.2) /
+          (inBody + 1.2 * (0.25 + (0.75 * bodyTerms.length) / averageLength));
+        score += weight(term) * ((inTitle ? 2 : 0) + frequency);
       }
-      return { article, score: score * (matched / queryTerms.length) };
+      // Favor articles that cover more of the query's informative words.
+      return { article, score: score * (covered / total) };
     })
     .filter(({ score }) => score > 0)
     .sort((a, b) => b.score - a.score)
