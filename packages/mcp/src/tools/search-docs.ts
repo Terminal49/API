@@ -20,10 +20,7 @@ const MINTLIFY_SEARCH_TOOL = 'search_terminal49';
 const TIMEOUT_MS = 10_000;
 const MAX_CONTENT_CHARS = 1_200;
 
-export type DocsSource = 'docs' | 'help_center';
-
 export interface DocsResult {
-  source: DocsSource;
   title: string;
   url: string;
   page: string;
@@ -77,7 +74,6 @@ async function searchHelp(
 ): Promise<DocsResult[]> {
   const articles = await searchHelpCenter(query, limit, fetchImpl);
   return articles.map((article) => ({
-    source: 'help_center',
     title: article.title,
     url: article.url,
     page: article.url.slice(article.url.indexOf('/articles/') + 1),
@@ -177,7 +173,6 @@ function restResult({
   if (!url) return null;
   const heading = content.match(/^#+ (.+)$/m)?.[1]?.trim();
   return {
-    source: 'docs',
     title: metadata?.title || heading || path,
     url,
     page: url.slice(DOCS_ORIGIN.length + 1),
@@ -245,7 +240,6 @@ function parseResult(text: string): DocsResult | null {
   if (!title || !url) return null;
   const content = text.split(/^Content: /m)[1]?.trim() ?? '';
   return {
-    source: 'docs',
     title,
     url,
     page: field('Page') ?? '',
