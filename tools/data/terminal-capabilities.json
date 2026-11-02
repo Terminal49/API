@@ -1,4 +1,21 @@
 {
+  "ARBUE:TERM4": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
   "AUBNE:DPBNE": {
     "features": {
       "lastFreeDay": "supported",
@@ -15,6 +32,584 @@
     "features": {
       "lastFreeDay": "supported",
       "vesselDischarged": "supported"
+    }
+  },
+  "BHAHD:POSU": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "unknown",
+      "lastFreeDay": "unknown",
+      "holds": "unknown",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "BRPEC:BRAPEC": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "CAFSD:FSD": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unsupported",
+      "holds": "supported",
+      "feeType": "unsupported",
+      "feeAmount": "unsupported",
+      "pickupAppointment": "unsupported",
+      "yardLocation": "unsupported",
+      "vesselDischarged": "supported",
+      "fullOut": "supported",
+      "chassisNumber": "unsupported",
+      "onRail": "supported",
+      "emptyReturned": "unsupported"
+    }
+  },
+  "COBUN:TCBUN": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "CRMOB:TMOIN": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "DKAAR:APMT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "EGPSD:SCCT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "unknown",
+      "lastFreeDay": "unknown",
+      "holds": "unknown",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "ESALG:APM": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "unknown",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "ESBCN:TCB": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "unknown",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "ESGIJ:TEGIJ": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "unknown",
+      "lastFreeDay": "unknown",
+      "holds": "unknown",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "ESVLC:TCV": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "GEPTI:APMT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "GTPRQ:TCQ": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "unknown",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "HRRJK:RGW": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "unknown",
+      "lastFreeDay": "unknown",
+      "holds": "unknown",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "INNSA:GTICI": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "INPPV:APMT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "unknown",
+      "lastFreeDay": "unknown",
+      "holds": "unknown",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "ITVDL:VGT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "unknown",
+      "lastFreeDay": "unknown",
+      "holds": "unknown",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "JOAQJ:ACT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "KRPUS:PNP": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "unknown",
+      "lastFreeDay": "unsupported",
+      "holds": "unknown",
+      "feeType": "unsupported",
+      "feeAmount": "unsupported",
+      "pickupAppointment": "unsupported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "supported",
+      "chassisNumber": "unsupported",
+      "onRail": "unsupported",
+      "emptyReturned": "supported"
+    }
+  },
+  "LRMLW:APMT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "MAPTM:APM2": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "MAPTM:APMT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "unknown",
+      "lastFreeDay": "unknown",
+      "holds": "unknown",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "NGAPP:APMTER": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "unknown",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "NGONN:APMT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "unknown",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "NLRTM:NLMVII": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "NZLYT:LPC": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "unsupported",
+      "lastFreeDay": "supported",
+      "holds": "unknown",
+      "feeType": "unsupported",
+      "feeAmount": "unsupported",
+      "pickupAppointment": "unsupported",
+      "yardLocation": "limited",
+      "vesselDischarged": "supported",
+      "fullOut": "supported",
+      "chassisNumber": "unsupported",
+      "onRail": "unsupported",
+      "emptyReturned": "unsupported"
+    }
+  },
+  "NZTIU:TCTL": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "unsupported",
+      "lastFreeDay": "supported",
+      "holds": "unknown",
+      "feeType": "unsupported",
+      "feeAmount": "unsupported",
+      "pickupAppointment": "unsupported",
+      "yardLocation": "limited",
+      "vesselDischarged": "supported",
+      "fullOut": "supported",
+      "chassisNumber": "unsupported",
+      "onRail": "unsupported",
+      "emptyReturned": "unsupported"
+    }
+  },
+  "PAMIT:MIT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "supported",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "supported",
+      "chassisNumber": "supported",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "PECLL:APMCLL": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "SEGOT:CT1": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unknown",
+      "holds": "limited",
+      "feeType": "unknown",
+      "feeAmount": "unknown",
+      "pickupAppointment": "supported",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "limited",
+      "chassisNumber": "unknown",
+      "onRail": "limited",
+      "emptyReturned": "unknown"
+    }
+  },
+  "USBOS:PWCMT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "supported",
+      "holds": "limited",
+      "feeType": "supported",
+      "feeAmount": "supported",
+      "pickupAppointment": "unknown",
+      "yardLocation": "unknown",
+      "vesselDischarged": "supported",
+      "fullOut": "supported",
+      "chassisNumber": "supported",
+      "onRail": "unknown",
+      "emptyReturned": "unknown"
+    }
+  },
+  "USCHS:HLT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unsupported",
+      "holds": "limited",
+      "feeType": "unsupported",
+      "feeAmount": "unsupported",
+      "pickupAppointment": "unsupported",
+      "yardLocation": "unsupported",
+      "vesselDischarged": "supported",
+      "fullOut": "limited",
+      "chassisNumber": "limited",
+      "onRail": "unsupported",
+      "emptyReturned": "supported"
+    }
+  },
+  "USCHS:NCMT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unsupported",
+      "holds": "limited",
+      "feeType": "unsupported",
+      "feeAmount": "unsupported",
+      "pickupAppointment": "unsupported",
+      "yardLocation": "unsupported",
+      "vesselDischarged": "supported",
+      "fullOut": "limited",
+      "chassisNumber": "limited",
+      "onRail": "unsupported",
+      "emptyReturned": "supported"
+    }
+  },
+  "USCHS:WWMT": {
+    "features": {
+      "importMilestones": "supported",
+      "availableForPickup": "supported",
+      "lastFreeDay": "unsupported",
+      "holds": "limited",
+      "feeType": "unsupported",
+      "feeAmount": "unsupported",
+      "pickupAppointment": "unsupported",
+      "yardLocation": "unsupported",
+      "vesselDischarged": "supported",
+      "fullOut": "limited",
+      "chassisNumber": "limited",
+      "onRail": "unsupported",
+      "emptyReturned": "supported"
     }
   }
 }
