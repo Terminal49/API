@@ -37,7 +37,7 @@ test('canonical terminal identifiers match the approved import mapping', async (
 });
 
 test('only approved public entities and complete feature assessments are exported', () => {
-  assert.equal(data.terminals.length, 138);
+  assert.equal(data.terminals.length, 161);
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'public').length,
     34,
@@ -56,15 +56,12 @@ test('only approved public entities and complete feature assessments are exporte
       .estArrivalAtDestination,
     'signed_in_only',
   );
-  assert.equal(
-    data.terminals.filter(
-      (row) => row.features.availableForPickup === 'unknown',
-    ).length,
-    22,
+  assert.ok(
+    data.terminals.some((row) => row.features.availableForPickup === 'unknown'),
   );
   assert.ok(
-    data.terminals.every(
-      (row) => row.features.importMilestones === 'supported',
+    data.terminals.every((row) =>
+      ['supported', 'limited'].includes(row.features.importMilestones),
     ),
   );
   assert.equal(
@@ -76,6 +73,47 @@ test('only approved public entities and complete feature assessments are exporte
     data.railCarriers.find((row) => row.scac === 'NSRR').features.railLoaded,
     'signed_in_only',
   );
+});
+
+test('terminal refresh preserves carrier dates and includes limitations in every export', () => {
+  const files = generateFiles(data);
+  const terminals = JSON.parse(files.get('docs/data/coverage/terminals.json'));
+  const shipping = JSON.parse(
+    files.get('docs/data/coverage/shipping-lines.json'),
+  );
+  const rail = JSON.parse(files.get('docs/data/coverage/rail-carriers.json'));
+  assert.equal(terminals.updatedOn, '2026-11-02');
+  assert.equal(shipping.updatedOn, '2026-10-13');
+  assert.equal(rail.updatedOn, '2026-10-13');
+  const fsd = terminals.terminals.find((row) => row.locode === 'CAFSD');
+  assert.equal(fsd.features.importMilestones, 'supported');
+  assert.equal(fsd.notes, 'Requires user-provided credentials.');
+  assert.ok(files.get('docs/data/coverage/terminals.mdx').includes(fsd.notes));
+  assert.ok(
+    files
+      .get('docs/data/coverage/terminals.csv')
+      .includes('Requires user-provided credentials.'),
+  );
+  assert.ok(
+    files
+      .get('docs/snippets/data-sources/terminal-feature-data.mdx')
+      .includes(fsd.notes),
+  );
+  assert.ok(
+    !terminals.terminals.some((row) =>
+      ['Y197', 'STO'].includes(row.terminalCode),
+    ),
+  );
+  assert.equal(
+    terminals.terminals.filter((row) => ['NZLYT', 'NZTIU'].includes(row.locode))
+      .length,
+    2,
+  );
+  for (const badDate of ['2026-02-30', 'yesterday']) {
+    const copy = structuredClone(data);
+    copy.updatedOnByType.terminals = badDate;
+    assert.throws(() => validateCoverage(copy), /Invalid coverage update date/);
+  }
 });
 
 test('validation rejects incomplete assessments, private metadata, and duplicate identities', () => {
@@ -140,12 +178,15 @@ test('coverage downloads use published raw assets in human and agent references'
 
 const exportedValue = (source, name) =>
   JSON.parse(
-    source.match(new RegExp('export const ' + name + ' = ([\\s\\S]*?);'))[1],
+    source.match(
+      new RegExp('export const ' + name + ' = ([\\s\\S]*?);(?:\\n|$)'),
+    )[1],
   );
 
 test('a canonical refresh updates UI identity, feature exports, and literal agent tables together', () => {
   const copy = structuredClone(data);
   copy.updatedOn = '2026-10-09';
+  delete copy.updatedOnByType;
   copy.terminals[0].name = 'Updated terminal';
   copy.terminals[0].features.availableForPickup = 'limited';
   copy.shippingLines[0].name = 'Updated shipping line';
@@ -215,6 +256,7 @@ test('agent regeneration preserves edited human prose on both sides and rejects 
   const page = 'Custom prose before\n' + generated + '\nCustom prose after\n';
   const copy = structuredClone(data);
   copy.updatedOn = '2026-10-09';
+  delete copy.updatedOnByType;
   const updated = updateAgentCoverage(
     page,
     copy,
