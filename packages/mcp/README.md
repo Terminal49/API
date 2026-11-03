@@ -170,6 +170,28 @@ Do not commit the token. The endpoint returns an empty `404` response while
 `chatgpt-app-submission.json` through the
 [OpenAI plugin submission flow](https://developers.openai.com/plugins/deploy/submission).
 
+### Verify the domain for Google Connected Apps
+
+Google Connected Console issues `google-connected-apps.json` (a
+`verification_tokens` array) under **MCP and tools setup → Verify your domain**.
+Add the file's full contents to the existing MCP Vercel project:
+
+```bash
+vercel env add GOOGLE_CONNECTED_APPS_VERIFICATION
+```
+
+After the project redeploys, confirm the endpoint returns the file with HTTP 200
+and no redirect, then select **Verify domain** in the console:
+
+```bash
+curl --fail --silent \
+  https://mcp.terminal49.com/.well-known/google-connected-apps
+```
+
+Do not commit the token. The endpoint returns an empty `404` response while
+`GOOGLE_CONNECTED_APPS_VERIFICATION` is unset or is not JSON with at least one
+verification token.
+
 ### Submit to Claude
 
 Use the [Claude Connectors Directory portal](https://claude.ai/admin-settings/directory/submissions/new)
@@ -397,6 +419,7 @@ npm run lint
 | `T49_MCP_READ_ONLY` | No | `false` | Serve only tools whose `readOnlyHint` is true. Accepts `true`, `false`, `1` or `0`, in any case. |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` and `trade` when callers share `T49_API_TOKEN` |
 | `OPENAI_APPS_CHALLENGE` | Only for ChatGPT submission | - | Exact domain-verification token issued by the OpenAI submission portal |
+| `GOOGLE_CONNECTED_APPS_VERIFICATION` | Only for Google Connected Apps | - | Contents of `google-connected-apps.json` from Google Connected Console |
 | `NODE_ENV` | No | `development` | Environment |
 | `LOG_LEVEL` | No | `info` | Logging level |
 | `REDACT_LOGS` | No | `true` | Redact tokens in logs |

@@ -15,12 +15,19 @@
     },
     "api/openai-apps-challenge.ts": {
       "maxDuration": 10
+    },
+    "api/google-connected-apps.ts": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
     {
       "source": "/.well-known/openai-apps-challenge",
       "destination": "/api/openai-apps-challenge"
+    },
+    {
+      "source": "/.well-known/google-connected-apps",
+      "destination": "/api/google-connected-apps"
     },
     {
       "source": "/.well-known/oauth-protected-resource",
