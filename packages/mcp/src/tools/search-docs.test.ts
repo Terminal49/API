@@ -5,6 +5,11 @@ import {
   MINTLIFY_DOCS_MCP_URL,
   MINTLIFY_SEARCH_API_URL,
 } from './search-docs.js';
+import { searchHelpCenter } from './help-center.js';
+
+vi.mock('./help-center.js', () => ({
+  searchHelpCenter: vi.fn(async () => []),
+}));
 
 const context: Pick<ToolContext, 'me'> = {
   me: async () => ({
@@ -286,5 +291,74 @@ describe('executeSearchDocs', () => {
         message: 'Documentation search failed (HTTP 401).',
       });
     });
+  });
+});
+
+describe('executeSearchDocs with the Help Center', () => {
+  const help = {
+    title: 'Sharing Container Views',
+    url: 'https://help.terminal49.com/articles/1-sharing-container-views',
+    text: 'Share custom views without requiring a login.',
+  };
+  const docsResponse = () =>
+    new Response(
+      sse({
+        content: [
+          textResult(
+            'Deep linking',
+            'https://terminal49.com/docs/api-docs/in-depth-guides/dashboard-deep-linking',
+            'api-docs/in-depth-guides/dashboard-deep-linking',
+            'Link to the dashboard.',
+          ),
+        ],
+      }),
+    );
+
+  it('interleaves docs and Help Center results', async () => {
+    vi.mocked(searchHelpCenter).mockResolvedValueOnce([help]);
+    const result = await executeSearchDocs(
+      { query: 'share without login' },
+      context,
+      {
+        fetchImpl: (async () => docsResponse()) as typeof fetch,
+      },
+    );
+    expect(result.results.map((r) => r.title)).toEqual([
+      'Deep linking',
+      'Sharing Container Views',
+    ]);
+    expect(result.results[1]).toEqual({
+      title: 'Sharing Container Views',
+      url: help.url,
+      page: 'articles/1-sharing-container-views',
+      content: help.text,
+    });
+  });
+
+  it('still returns docs when the Help Center fails', async () => {
+    vi.mocked(searchHelpCenter).mockRejectedValueOnce(new Error('HTTP 503'));
+    const result = await executeSearchDocs({ query: 'q' }, context, {
+      fetchImpl: (async () => docsResponse()) as typeof fetch,
+    });
+    expect(result.results.map((r) => r.title)).toEqual(['Deep linking']);
+  });
+
+  it('returns Help Center results when the docs search fails', async () => {
+    vi.mocked(searchHelpCenter).mockResolvedValueOnce([help]);
+    const result = await executeSearchDocs({ query: 'q' }, context, {
+      fetchImpl: (async () =>
+        new Response('', { status: 500 })) as typeof fetch,
+    });
+    expect(result.results.map((r) => r.title)).toEqual([
+      'Sharing Container Views',
+    ]);
+  });
+
+  it('keeps the requested limit across both sources', async () => {
+    vi.mocked(searchHelpCenter).mockResolvedValueOnce([help, help]);
+    const result = await executeSearchDocs({ query: 'q', limit: 2 }, context, {
+      fetchImpl: (async () => docsResponse()) as typeof fetch,
+    });
+    expect(result.total_results).toBe(2);
   });
 });

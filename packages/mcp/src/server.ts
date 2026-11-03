@@ -17,7 +17,11 @@ import {
   containerStatusSchema,
   executeGetContainer,
 } from './tools/get-container.js';
-import { executeTrackContainer } from './tools/track-container.js';
+import {
+  ContainerCheckDigitError,
+  executeTrackContainer,
+  TrackContainerError,
+} from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
 import {
   executeGetShipmentDetails,
@@ -995,8 +999,14 @@ function wrapTool<TArgs>(
       };
     } catch (error) {
       const err = error as Error;
-      captureMcpException(error);
-      await flushMcpEvents();
+      const isExpectedTrackingError =
+        toolName === 'track_container' &&
+        (error instanceof ContainerCheckDigitError ||
+          error instanceof TrackContainerError);
+      if (!isExpectedTrackingError) {
+        captureMcpException(error);
+        await flushMcpEvents();
+      }
       // Log the real error for operators; never echo internal messages (which
       // can contain upstream URLs, tokens, or stack detail) back to the client.
       logMcpEvent({
@@ -1360,6 +1370,7 @@ export function createTerminal49McpServer(
       {
         description:
           'Track a container, bill of lading, or booking number. ' +
+          'Adds a tracking request to the account, so call this only when the user asks to track or add a number; to look a number up, use search_container, which only reads the account. ' +
           "If the number matches a container that is still being tracked, returns that container's details; " +
           'if it matches an in-progress tracking request, returns that request. ' +
           'Otherwise uses inference to choose the carrier/type when possible and creates a tracking request. ' +
@@ -1845,10 +1856,10 @@ export function createTerminal49McpServer(
     search_docs: tool(
       {
         description:
-          'Search the public Terminal49 documentation (terminal49.com/docs): API guides, webhooks, ' +
-          'container statuses, holds and last free day rules, DataSync, the SDK, and this MCP server. ' +
+          'Search the public Terminal49 documentation (terminal49.com/docs) and Help Center (help.terminal49.com): API guides, webhooks, ' +
+          'container statuses, holds and last free day rules, DataSync, the SDK, this MCP server, and dashboard how-tos such as sharing views, alerts, exports, and billing. ' +
           'Returns matching sections with title, link, and an excerpt. Use it for how-to and definition ' +
-          'questions, not for account data, and cite the links in the answer. The result has query, total_results, and results, each with title, url, page, and content (the excerpt).',
+          'questions, not for account data, and cite the links in the answer. The result has query, total_results, and results, each with title, url, page, and content (the excerpt). Help Center results link to help.terminal49.com.',
         inputSchema: z.object({
           query: z
             .string()

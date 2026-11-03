@@ -165,6 +165,38 @@ describe('MCP protocol compatibility', () => {
     );
   });
 
+  it('documents when to call track_container using the advertised annotations', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const annotations = new Map(
+      tools.map((tool) => [tool.name, tool.annotations]),
+    );
+    const trackSection = documentedToolSection('track_container');
+
+    expect(annotations.get('track_container')?.readOnlyHint).toBe(false);
+    expect(annotations.get('search_container')?.readOnlyHint).toBe(true);
+    expect(trackSection).toMatch(
+      /call `track_container` only when the user asks to track/,
+    );
+    expect(trackSection).toContain('`readOnlyHint: false`');
+    expect(trackSection).toMatch(/confirm with the user first/);
+    expect(trackSection).toMatch(/To look a number up, use `search_container`/);
+  });
+
+  it('advertises the explicit-request rule for track_container in instructions and tools/list', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const description = tools.find(
+      (tool) => tool.name === 'track_container',
+    )?.description;
+    const rule = /track_container only when the user asks to track/;
+
+    expect(client.getInstructions()).toMatch(rule);
+    expect(description).toMatch(
+      /call this only when the user asks to track or add a number/,
+    );
+  });
+
   it('warns that estimated_value is not available by lane, in tools/list and the docs', async () => {
     // The API answers estimated_value with a lane dimension or lane filter
     // (pol, pol_country, container_type) with a 400: the trade-intel service
