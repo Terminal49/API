@@ -3,10 +3,13 @@
  * Searches the public Terminal49 documentation (terminal49.com/docs) through Mintlify, so
  * results always match what is live. With a Mintlify assistant API key it uses the documented
  * REST search API; without one it forwards to the MCP server Mintlify hosts for the docs.
+ * It also searches the Help Center (help.terminal49.com), which covers dashboard how-tos the
+ * docs don't, and interleaves the two. Either source may fail without failing the search.
  */
 
 import { z } from 'zod';
 import type { ToolContext } from './context.js';
+import { searchHelpCenter } from './help-center.js';
 
 export const MINTLIFY_DOCS_MCP_URL = 'https://terminal49.mintlify.app/mcp';
 // `terminal49` is the domain identifier from terminal49.mintlify.app.
@@ -44,10 +47,48 @@ export async function executeSearchDocs(
   const limit = args.limit ?? 5;
   const apiKey = assistantApiKey?.trim();
   if (apiKey) await context.me();
-  const results = apiKey
-    ? await searchViaRest(args.query, limit, apiKey, fetchImpl)
-    : await searchViaMcp(args.query, limit, fetchImpl);
+  const [docs, help] = await Promise.allSettled([
+    apiKey
+      ? searchViaRest(args.query, limit, apiKey, fetchImpl)
+      : searchViaMcp(args.query, limit, fetchImpl),
+    searchHelp(args.query, limit, fetchImpl),
+  ]);
+  // A Mintlify failure only surfaces when the Help Center has nothing to offer instead.
+  if (
+    docs.status === 'rejected' &&
+    (help.status === 'rejected' || help.value.length === 0)
+  ) {
+    throw docs.reason;
+  }
+  const results = interleave(
+    docs.status === 'fulfilled' ? docs.value : [],
+    help.status === 'fulfilled' ? help.value : [],
+  ).slice(0, limit);
   return { query: args.query, total_results: results.length, results };
+}
+
+async function searchHelp(
+  query: string,
+  limit: number,
+  fetchImpl: typeof fetch,
+): Promise<DocsResult[]> {
+  const articles = await searchHelpCenter(query, limit, fetchImpl);
+  return articles.map((article) => ({
+    title: article.title,
+    url: article.url,
+    page: article.url.slice(article.url.indexOf('/articles/') + 1),
+    content: truncate(article.text),
+  }));
+}
+
+// Alternate the sources so the best match from each lands in the first results.
+function interleave(docs: DocsResult[], help: DocsResult[]): DocsResult[] {
+  const merged: DocsResult[] = [];
+  for (let i = 0; i < Math.max(docs.length, help.length); i += 1) {
+    if (docs[i]) merged.push(docs[i]!);
+    if (help[i]) merged.push(help[i]!);
+  }
+  return merged;
 }
 
 async function searchViaRest(

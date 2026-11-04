@@ -6,6 +6,11 @@
  * takes party IDs, so a question like "containers for customer Acme" needs the
  * ID first. The API has no name search (unknown params are ignored), so this
  * loads a bounded set of the account's parties and matches names here.
+ *
+ * GET /parties keeps its legacy contract: a customer created before party
+ * roles is listed under its customer account id, not the party id that party
+ * roles and advanced_filters.parties use. customer_id filters accept both, so
+ * customers are routed there.
  */
 
 import { z } from 'zod';
@@ -123,7 +128,10 @@ export async function executeListParties(
 }
 
 function usage(): string {
-  return `Filter containers by a party with list_containers or summarize_containers advanced_filters.parties, keyed by role: { "<role>": "<party id>" }. Roles: ${PARTY_ROLES.join(', ')}. Use @exists for "has any".`;
+  return (
+    'Filter by a customer with advanced_filters.customer_id: "<id>" on list_containers, summarize_containers, or list_shipments. ' +
+    `For other roles use advanced_filters.parties on list_containers or summarize_containers, keyed by role: { "<role>": "<party id>" }. Roles: ${PARTY_ROLES.filter((role) => role !== 'customer').join(', ')}. Use @exists for "has any".`
+  );
 }
 
 // An unreadable page fails the load instead of reading as the last one.
@@ -154,6 +162,7 @@ async function getParty(
     if (httpStatus(error) === 404) return null;
     throw error;
   }
+  // The response id can be the customer account id; the caller's id stays valid.
   const { data } = rawPartySchema.parse(raw);
-  return { id: data.id, name: partyName(data.attributes) ?? data.id };
+  return { id, name: partyName(data.attributes) ?? id };
 }

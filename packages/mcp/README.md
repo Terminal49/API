@@ -34,7 +34,7 @@
 | **`list_shipments`** | List shipments with filters and pagination | Fleet-level visibility |
 | **`list_containers`** | List containers with filters and pagination | Returns ResourceLinks ✨ |
 | **`summarize_containers`** | Count containers grouped by terminal, status, carrier, port, hold, or date | Same filters as `list_containers` |
-| **`list_parties`** | Find parties by company name, or read one by ID | Feeds `advanced_filters.parties` |
+| **`list_parties`** | Find parties by company name, or read one by ID | Feeds `advanced_filters.customer_id` and `advanced_filters.parties` |
 | **`list_custom_field_definitions`** | List the account's custom fields, their types, and enum options | Needs a signed-in user |
 | **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |
 | **`get_tracking_request`** | Get one tracking request's status, failure reason, and shipment | Follow-up after tracking |
