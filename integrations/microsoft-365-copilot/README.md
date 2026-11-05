@@ -73,20 +73,18 @@ Run `atk provision --env dev` again to update the test installation.
 
 Microsoft requires `applicableToApps: AnyApp` for remote MCP OAuth. Binding the
 registration to a Teams or Microsoft 365 app ID caused `TokenFetchFailed` app-ID
-mismatches during testing. `targetAudience: HomeTenant` restricts the
-development registration to your Microsoft tenant. PKCE remains enabled.
-
-For cross-tenant distribution, create a separate release environment and OAuth
-client, set `TEAMSFX_ENV` to that environment's name and
-both `targetAudience` entries in `m365agents.yml` to `AnyTenant`, and provision
-with the matching `--env`.
+mismatches during testing. Both registration and update steps use
+`targetAudience: AnyTenant` so customers in other Microsoft organizations can
+connect their own Terminal49 accounts. User OAuth consent, account authorization,
+and PKCE remain required. Preserve app and OAuth registration IDs for updates;
+`atk provision --env dev` updates existing registrations as well as new ones.
 The app's display name remains **AskT49**. Store submission is a separate Partner
 Center operation; provisioning does not publish a public listing.
 
 Initial OAuth and a carrier lookup passed in Copilot. Version 1.0.3 also passed
 dynamic discovery in a fresh chat using an existing connection: the carrier tool
 returned `200 OK` for Hapag-Lloyd / HLCU. Version 1.0.4 names the app AskT49.
-Before public submission, verify fresh-user dynamic sign-in, container and fleet
+Before public submission, verify fresh-user cross-tenant dynamic sign-in, container and fleet
 queries, account isolation, expired-session reconnect, and declined write
 confirmation. Use demo records for writes. Agent instructions are guidance;
 Terminal49 must enforce authorization and write permissions on the server.
