@@ -13,7 +13,7 @@ provision:
       appId: ${{TEAMS_APP_ID}}
       # Copilot MCP cannot resolve a Teams-specific app restriction.
       applicableToApps: AnyApp
-      targetAudience: HomeTenant
+      targetAudience: AnyTenant
       clientId: ${{TERMINAL49_MCP_CLIENT_ID}}
       clientSecret: ${{SECRET_TERMINAL49_MCP_CLIENT_SECRET}}
       authorizationUrl: https://auth.terminal49.com/oauth2/authorize
@@ -51,7 +51,7 @@ provision:
       appId: ${{TEAMS_APP_ID}}
       configurationId: ${{TERMINAL49_MCP_AUTH_ID}}
       applicableToApps: AnyApp
-      targetAudience: HomeTenant
+      targetAudience: AnyTenant
       clientId: ${{TERMINAL49_MCP_CLIENT_ID}}
       clientSecret: ${{SECRET_TERMINAL49_MCP_CLIENT_SECRET}}
       authorizationUrl: https://auth.terminal49.com/oauth2/authorize
