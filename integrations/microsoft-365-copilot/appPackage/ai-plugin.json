@@ -1,0 +1,27 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v2.4/schema.json",
+  "schema_version": "v2.4",
+  "name_for_human": "Terminal49",
+  "namespace": "terminal49",
+  "description_for_human": "Track containers, investigate shipment exceptions, and plan pickups with Terminal49.",
+  "description_for_model": "Use Terminal49 tools for live container and shipment data. Discover the tools available to the signed-in user at runtime. Follow tool descriptions, resolve records before changing them, and do not infer missing status or dates.",
+  "contact_email": "support@terminal49.com",
+  "legal_info_url": "https://terminal49.com/terms",
+  "privacy_policy_url": "https://terminal49.com/privacy",
+  "functions": [],
+  "runtimes": [
+    {
+      "type": "RemoteMCPServer",
+      "auth": {
+        "type": "OAuthPluginVault",
+        "reference_id": "${{TERMINAL49_MCP_AUTH_ID}}"
+      },
+      "spec": {
+        "url": "https://mcp.terminal49.com"
+      },
+      "run_for_functions": [
+        "*"
+      ]
+    }
+  ]
+}
