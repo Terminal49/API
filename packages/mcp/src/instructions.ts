@@ -141,7 +141,7 @@ function writeRules(tools: readonly RegisteredTool[]): string {
   if (writes.length === 0) return `These tools only fetch data. ${UNTRUSTED}`;
   const [tool, them] = writes.length === 1 ? ['tool', 'it'] : ['tools', 'them'];
   const trackingRule = writes.some((entry) => entry.name === 'track_container')
-    ? ' Call track_container only when the user asks to track or add a number.'
+    ? ' Call track_container only when the user asks to track or add a number; tracking uses quota and may incur charges.'
     : '';
   return `Write ${tool}: ${nameList(writes)}. Call ${them} only when the user asks. ${trackingRule} The other tools only fetch data.${approvalRule(writes)} ${UNTRUSTED}`;
 }

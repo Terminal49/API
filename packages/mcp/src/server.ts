@@ -1327,7 +1327,7 @@ export function createTerminal49McpServer(
           outputSchema: spec.outputSchema,
           // Claude Code shows the permission prompt on every call of a tool
           // with this key, whatever the permission mode.
-          ...(confirmed && {
+          ...((confirmed || definition.requiresUserInteraction) && {
             _meta: { 'anthropic/requiresUserInteraction': true },
           }),
         },
@@ -1423,6 +1423,7 @@ export function createTerminal49McpServer(
       {
         description:
           'Track a container, bill of lading, or booking number. ' +
+          'Starting tracking consumes tracking quota and may incur pay-as-you-go charges. Explain this consequence before acting; never start tracking merely to answer a lookup question. ' +
           'Adds a tracking request to the account, so call this only when the user asks to track or add a number; to look a number up, use search_container, which only reads the account. ' +
           "If the number matches a container that is still being tracked, returns that container's details; " +
           'if it matches an in-progress tracking request, returns that request. ' +
