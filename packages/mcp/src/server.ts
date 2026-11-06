@@ -2,13 +2,16 @@
  * Terminal49 MCP Server
  * Implementation using the MCP TypeScript SDK v2 McpServer API
  */
-import { credentialHash } from './tools/write-kit.js';
+import { randomBytes } from 'node:crypto';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import {
   completable,
+  type InputRequiredResult,
+  isInputRequiredResult,
   type Implementation,
   McpServer,
   ResourceTemplate,
+  type ServerContext,
   type StandardSchemaWithJSON,
   type ToolCallback,
 } from '@modelcontextprotocol/server';
@@ -65,11 +68,10 @@ import {
 import {
   executeSetCustomField,
   executeSetPartyRole,
-  recordWriteOutputSchema,
   setCustomFieldInputSchema,
+  setCustomFieldOutputSchema,
   setPartyRoleInputSchema,
-  type SetCustomFieldArgs,
-  type SetPartyRoleArgs,
+  setPartyRoleOutputSchema,
 } from './tools/record-writes.js';
 import {
   executeGetTrackingRequest,
@@ -110,7 +112,9 @@ import {
 } from './tools/get-document.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
+import { credentialHash, usableConfirmationSecret } from './tools/write-kit.js';
 import {
+  confirmationChannel,
   createToolContext,
   MCP_CREDENTIAL_TYPES,
   type McpCredentialType,
@@ -118,6 +122,7 @@ import {
   type ToolSession,
 } from './tools/context.js';
 import {
+  type ConfirmationScope,
   DEFAULT_TOOLSETS,
   defaultTools,
   selectTools,
@@ -966,18 +971,40 @@ function buildListResourceLinks(
   return links;
 }
 
+/**
+ * How every tier C tool's description ends, so a model knows when a call
+ * asks the user and both ways the user approves a change.
+ */
+const CONFIRMED_WRITE_CLAUSE: Record<ConfirmationScope, string> = {
+  always:
+    'This change needs the user to approve a preview. The first call changes nothing. ',
+  destructive_only:
+    'A call in which any record would lose a party or a value needs the user to approve a preview of every change in the call, and its first call changes nothing; a call that only adds runs at once. ',
+};
+const APPROVAL_CHANNELS =
+  'On a client that can ask the user (form elicitation), the client shows the user the preview and asks them to confirm, and the tool writes only on their yes; never pass confirmation_token there. On any other client, the first call returns the preview with a confirmation_token: show the preview to the user, and call again with the same arguments and the token only after the user approves it in this turn.';
+
 function wrapTool<TArgs>(
   toolName: string,
-  handler: (args: TArgs) => Promise<unknown>,
+  handler: (args: TArgs, ctx: ServerContext) => Promise<unknown>,
   buildResourceLinks?: (result: unknown, args: TArgs) => ResourceLinkContent[],
-): (args: TArgs) => Promise<{
-  content: ToolContent[];
-  structuredContent?: any;
-  isError?: boolean;
-}> {
-  return async (args: TArgs) => {
+): (
+  args: TArgs,
+  ctx: ServerContext,
+) => Promise<
+  | {
+      content: ToolContent[];
+      structuredContent?: any;
+      isError?: boolean;
+    }
+  | InputRequiredResult
+> {
+  return async (args: TArgs, ctx: ServerContext) => {
     try {
-      const result = await handler(args);
+      const result = await handler(args, ctx);
+      // The client fulfils the embedded request and calls the tool again, so
+      // there is no content to build yet.
+      if (isInputRequiredResult(result)) return result;
       const structuredContent = stripResponseSteering(
         result,
         false,
@@ -1193,6 +1220,11 @@ export interface Terminal49McpServerOptions {
   /** How the caller authenticated. Defaults to api_key. */
   credentialType?: McpCredentialType;
   /**
+   * Signs tier C confirmation tokens. Without one of at least 32 characters,
+   * tier C tools refuse to write.
+   */
+  confirmationSecret?: string;
+  /**
    * Epoch ms by which set_party_role and set_custom_field stop waiting on
    * records. The HTTP gateway sets it from the request start so auth time
    * counts against the function limit; without it each call gets
@@ -1220,12 +1252,15 @@ export function createTerminal49McpServer(
     readOnly: options.readOnly ?? false,
   });
   const session: ToolSession = {
-    credentialHash: credentialHash(apiToken),
     credentialType: options.credentialType ?? 'api_key',
     toolsets,
     writeToolsAvailable: selectedTools.some(
       (tool) => !tool.annotations.readOnlyHint,
     ),
+    credentialHash: credentialHash(apiToken),
+    confirmationSecret: usableConfirmationSecret(options.confirmationSecret),
+    gatewayAccountId: accountId,
+    writeDeadlineAt: options.writeDeadlineAt,
   };
   const completeCarrierScac = createCarrierScacCompleter(client);
 
@@ -1278,22 +1313,38 @@ export function createTerminal49McpServer(
       buildResourceLinks?: (result: unknown) => ResourceLinkContent[],
     ): ToolRegistrar =>
     (definition) => {
+      const confirmed = definition.tier === 'C';
       server.registerTool(
         definition.name,
         {
           title: definition.title,
-          description: spec.description,
+          description:
+            definition.tier === 'C'
+              ? `${spec.description} ${CONFIRMED_WRITE_CLAUSE[definition.confirms]}${APPROVAL_CHANNELS}`
+              : spec.description,
           annotations: definition.annotations,
           inputSchema: spec.inputSchema,
           outputSchema: spec.outputSchema,
+          // Claude Code shows the permission prompt on every call of a tool
+          // with this key, whatever the permission mode.
+          ...((confirmed || definition.requiresUserInteraction) && {
+            _meta: { 'anthropic/requiresUserInteraction': true },
+          }),
         },
         // SAFETY: the callback takes the parsed output of `spec.inputSchema`,
         // which is what ToolCallback<InputArgs> resolves to. TypeScript cannot
         // resolve that conditional type while InputArgs is still generic.
         wrapTool(
           definition.name,
-          (args: StandardSchemaWithJSON.InferOutput<InputArgs>) =>
-            handler(args, createToolContext(client, session)),
+          (args: StandardSchemaWithJSON.InferOutput<InputArgs>, ctx) =>
+            handler(
+              args,
+              createToolContext(
+                client,
+                session,
+                confirmationChannel(ctx?.mcpReq),
+              ),
+            ),
           buildResourceLinks,
         ) as ToolCallback<InputArgs>,
       );
@@ -1372,6 +1423,7 @@ export function createTerminal49McpServer(
       {
         description:
           'Track a container, bill of lading, or booking number. ' +
+          'Starting tracking consumes tracking quota and may incur pay-as-you-go charges. Explain this consequence before acting; never start tracking merely to answer a lookup question. ' +
           'Adds a tracking request to the account, so call this only when the user asks to track or add a number; to look a number up, use search_container, which only reads the account. ' +
           "If the number matches a container that is still being tracked, returns that container's details; " +
           'if it matches an in-progress tracking request, returns that request. ' +
@@ -1442,14 +1494,17 @@ export function createTerminal49McpServer(
           })
           .passthrough(),
       },
-      async ({
-        number,
-        numberType,
-        containerNumber,
-        scac,
-        bookingNumber,
-        refNumbers,
-      }) =>
+      async (
+        {
+          number,
+          numberType,
+          containerNumber,
+          scac,
+          bookingNumber,
+          refNumbers,
+        },
+        context,
+      ) =>
         executeTrackContainer(
           {
             number,
@@ -1460,6 +1515,7 @@ export function createTerminal49McpServer(
             refNumbers,
           },
           client,
+          context,
         ),
     ),
     identify_tracking_number: tool(
@@ -1735,27 +1791,25 @@ export function createTerminal49McpServer(
       {
         description:
           'Attach a party to containers or shipments in a role, replace the party in that role, or detach it, for example "set the drayage carrier to Ray Drayage on these containers" (action replace). ' +
-          'Resolve the company to a party ID and the records to container or shipment IDs first. Up to 50 records per call. ' +
-          'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
-          'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those), with a one-line summary.',
-        inputSchema: z.preprocess(stripLegacyIntent, setPartyRoleInputSchema),
-        outputSchema: recordWriteOutputSchema,
+          "Resolve the records to container or shipment IDs first. For a party already on a record, pass the party_id shown in that record's party roles; the account's party list can show a customer under an account id that party roles do not accept, so use it only for a party on no record. Up to 50 records per call. " +
+          'Only call it when the user asks to change these records. add, and a replace that detaches nobody, run at once; remove, and a replace that detaches another party, show the user a preview of every record that changes. ' +
+          'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
+        inputSchema: setPartyRoleInputSchema,
+        outputSchema: setPartyRoleOutputSchema,
       },
-      async (args: SetPartyRoleArgs) =>
-        executeSetPartyRole(args, client, options.writeDeadlineAt),
+      async (args, context) => executeSetPartyRole(args, client, context),
     ),
     set_custom_field: tool(
       {
         description:
           "Set or clear one of the account's custom fields (for example a sales rep or PO number) on containers or shipments. " +
-          "Read the field's api_slug and expected values from the record's custom fields first; never guess the slug. Up to 50 records per call; a multi-select field takes an array of option values, and value null clears the field. " +
-          'Only call it when the user asks to change these records; in Ask T49 each call waits for the user to approve it. ' +
-          'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those), with a one-line summary.',
-        inputSchema: z.preprocess(stripLegacyIntent, setCustomFieldInputSchema),
-        outputSchema: recordWriteOutputSchema,
+          "Read the field's api_slug and expected values from the account's custom field definitions or the record's custom fields first; never guess the slug. Up to 50 records per call; a multi-select field takes an array of option values, and value null clears the field. " +
+          'Only call it when the user asks to change these records. Filling empty fields runs at once; overwriting or clearing a value on any record in the call shows the user a preview of every record that changes. ' +
+          'Returns which records were updated, which already matched, which failed, and which the call ran out of time to reach (not_attempted; call again with those).',
+        inputSchema: setCustomFieldInputSchema,
+        outputSchema: setCustomFieldOutputSchema,
       },
-      async (args: SetCustomFieldArgs) =>
-        executeSetCustomField(args, client, options.writeDeadlineAt),
+      async (args, context) => executeSetCustomField(args, client, context),
     ),
     list_custom_field_definitions: tool(
       {
@@ -2305,6 +2359,17 @@ export async function runStdioServer(
     process.exit(1);
   }
 
+  // One stdio process serves one user, so a secret made at startup is enough.
+  // Tokens from an earlier process stop working, which costs one re-preview.
+  const envSecret = process.env.T49_MCP_CONFIRMATION_SECRET?.trim();
+  const usableSecret = usableConfirmationSecret(envSecret);
+  if (envSecret && !usableSecret) {
+    console.error(
+      'WARNING: T49_MCP_CONFIRMATION_SECRET is shorter than 32 characters, so this process uses a random secret instead.',
+    );
+  }
+  const confirmationSecret = usableSecret ?? randomBytes(32).toString('hex');
+
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
     console.error(`Terminal49 MCP Server v${SERVER_VERSION} running on stdio`);
     console.error(
@@ -2317,6 +2382,7 @@ export async function runStdioServer(
     createTerminal49McpServer(apiToken, apiBaseUrl, undefined, {
       transport: 'stdio',
       credentialType: 'api_key',
+      confirmationSecret,
       ...toolSelection,
     }),
   );
