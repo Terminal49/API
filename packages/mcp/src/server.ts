@@ -1946,7 +1946,7 @@ export function createTerminal49McpServer(
         description:
           'Start tracking a shipment again after its tracking was stopped, so its containers get carrier and terminal updates again. ' +
           'Returns resumed with the shipment, or already_tracking when it was never stopped. ' +
-          'Updates the carrier published while tracking was stopped may be missing, and a resumed shipment can count against tracking limits.',
+          'Updates the carrier published while tracking was stopped may be missing, and resuming consumes tracking quota and may incur pay-as-you-go charges. Explain this consequence before acting.',
         inputSchema: resumeShipmentTrackingInputSchema,
         outputSchema: resumeShipmentTrackingOutputSchema,
       },

@@ -147,6 +147,7 @@ export const TOOL_REGISTRY = [
   },
   {
     name: 'resume_shipment_tracking',
+    requiresUserInteraction: true,
     title: 'Resume Shipment Tracking',
     toolset: 'tracking_lifecycle',
     tier: 'A',
