@@ -114,7 +114,7 @@ describe('server instructions', () => {
       }
     }
     expect(asks).toMatch(
-      /stop_shipment_tracking and cancel_tracking_request ask the user to approve a preview on every call; set_party_role and set_custom_field only when a record would lose a party or a value\./,
+      /stop_shipment_tracking, cancel_tracking_request and remove_reference_numbers ask the user to approve a preview on every call; set_party_role and set_custom_field only when a record would lose a party or a value\./,
     );
   });
 

@@ -145,6 +145,7 @@ The toolset names are:
 - `documents`: `list_documents` and `get_document`.
 - `operations`: `set_party_role` and `set_custom_field`. It is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
 - `tracking_lifecycle`: `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
+- `reference_numbers`: `add_reference_numbers` and `remove_reference_numbers`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
 - `documents_write`: no tools yet.
 - `developer`: no tools yet.
 - `trade`: the [trade intelligence tools](#trade-intelligence-tools).

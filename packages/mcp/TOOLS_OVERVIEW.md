@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **33 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 30 of them; the three tracking lifecycle tools are opt-in.
+The Terminal49 MCP Server provides **35 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 30 of them; the three tracking lifecycle tools and the two reference number tools are opt-in.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role` and `set_custom_field` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role` and `set_custom_field` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset, and `add_reference_numbers` and `remove_reference_numbers` are in `reference_numbers`. A deployment serves either only when `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
 ### Design Philosophy
 
@@ -562,7 +562,7 @@ Extracted data and the email are text that people outside the account write. Tre
 
 ### Write tools
 
-The `operations` and `tracking_lifecycle` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it. A tier C tool needs the user's approval of a preview, and its first call never writes. How the user approves depends on the client:
+The `operations`, `tracking_lifecycle` and `reference_numbers` tools change account data. Each has a tier. A tier A tool runs in one call, and its result names the tool that undoes it. A tier C tool needs the user's approval of a preview, and its first call never writes. How the user approves depends on the client:
 
 - A client that declares form elicitation (MCP 2026-07-28) gets an `input_required` result. The client shows the user the preview and asks them to confirm, then calls again with their answer. The tool writes on a yes, and returns `status: "declined"` and changes nothing on a no. Never pass `confirmation_token` on such a client; it is refused with `token_not_accepted`.
 - Any other client gets `status: "confirmation_required"`, a `preview` with `current`, `proposed` and `reach`, a `confirmation_token`, and `expires_at` five minutes out. Show the preview to the user. After the user approves it in this turn, call again with the same arguments and the token.
@@ -636,7 +636,57 @@ cancel_tracking_request({
 
 ---
 
-### 25. `set_party_role`
+### 25. `add_reference_numbers`
+**Purpose**: Add reference numbers, such as PO or job numbers, to a container, shipment or tracking request. Tier A. Numbers already on the record stay, so a repeated call changes nothing.
+
+**Usage**:
+```typescript
+add_reference_numbers({
+  entity_type: "shipment",
+  entity_id: "shipment-uuid",
+  add: ["PO-12345"]
+})
+```
+
+**Returns**:
+- `status: "added"` with `record`, `previous`, `ref_numbers` (the list read back), `added`, `already_present` and `undo: "remove_reference_numbers"`.
+- `status: "already_present"` when every number is already there. Nothing is written.
+- `concurrent_change_detected: true` when the list read back differs from the list sent. Terminal49 replaces the whole list and has no conditional update, so a number someone else adds between the read and the write is lost without this flag catching it.
+- `unreadable_reference_numbers` when the record's list is not a list of strings. Nothing is written.
+
+**When to Use**: The user asks to tag a container, shipment or tracking request with a PO or other reference.
+
+---
+
+### 26. `remove_reference_numbers`
+**Purpose**: Remove reference numbers from a container, shipment or tracking request. Tier C. Searches, filters and integrations that use a removed number stop finding the record.
+
+**Usage**:
+```typescript
+remove_reference_numbers({
+  entity_type: "container",
+  entity_id: "container-uuid",
+  remove: ["PO-12345"]
+})
+// After the user approves the preview:
+remove_reference_numbers({
+  entity_type: "container",
+  entity_id: "container-uuid",
+  remove: ["PO-12345"],
+  confirmation_token: "t49ct1...."
+})
+```
+
+**Returns**:
+- Preview: `current` (the record and its `ref_numbers`), `proposed: { ref_numbers }`, `removing`, `not_present` and `reach`. The token covers the whole list, so any change to it after the preview returns `stale_preview`.
+- `status: "removed"` with `record`, `previous`, `ref_numbers`, `removed`, `not_present` and `undo: "add_reference_numbers"` (left out when a removed number is longer than `add_reference_numbers` accepts).
+- `not_present` when none of the numbers are on the record. No token is issued.
+
+**When to Use**: The user asks to take a wrong or outdated reference off a record.
+
+---
+
+### 27. `set_party_role`
 **Purpose**: Attach a party to up to 50 containers or shipments in a role, replace the party in that role, or detach it. Tier C: a call that detaches a party asks the user; a call that only attaches runs at once.
 
 **Usage**:
@@ -661,7 +711,7 @@ set_party_role({ ...sameArguments, confirmation_token: "t49ct1...." })
 
 ---
 
-### 26. `set_custom_field`
+### 28. `set_custom_field`
 **Purpose**: Set or clear one of the account's custom fields on up to 50 containers or shipments. Tier C: a call that overwrites or clears a value asks the user; a call that only fills empty fields runs at once.
 
 **Usage**:
@@ -926,7 +976,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 33 tools and 4 resources, the LLM can:
+With these 35 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates
