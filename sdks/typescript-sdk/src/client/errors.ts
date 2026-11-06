@@ -53,9 +53,18 @@ export class ValidationError extends Terminal49Error {
 
 /** Thrown when the API rate limit has been exceeded (HTTP 429). The SDK retries automatically. */
 export class RateLimitError extends Terminal49Error {
-  constructor(message: string, status = 429, details?: unknown) {
+  /** How long the API asked the caller to wait, from its `Retry-After` header. Undefined when it sent none. */
+  retryAfterMs?: number;
+
+  constructor(
+    message: string,
+    status = 429,
+    details?: unknown,
+    retryAfterMs?: number,
+  ) {
     super(message, status, details);
     this.name = 'RateLimitError';
+    this.retryAfterMs = retryAfterMs;
   }
 }
 
@@ -156,6 +165,7 @@ export function toTerminal49Error(
   status: number,
   message: string,
   details?: unknown,
+  retryAfterMs?: number,
 ): Terminal49Error {
   switch (status) {
     case 400:
@@ -189,6 +199,7 @@ export function toTerminal49Error(
         message || 'Rate limit exceeded',
         status,
         details,
+        retryAfterMs,
       );
     case 500:
     case 502:

@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import {
-  REDACTED_URL,
-  redactSignedUrls,
-  redactSignedUrlsDeep,
-} from './signed-urls.js';
+import { REDACTED_URL, redactSignedUrls } from './signed-urls.js';
 
 const S3_URL =
   'https://t49-documents-prod.s3.amazonaws.com/abc/invoice.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA%2F20261017&X-Amz-Date=20261017T120000Z&X-Amz-Expires=3600&X-Amz-Signature=deadbeef';
@@ -37,24 +33,5 @@ describe('redactSignedUrls', () => {
     expect(redactSignedUrls(JSON.stringify({ uri: S3_URL }))).toBe(
       `{"uri":"${REDACTED_URL}"}`,
     );
-  });
-});
-
-describe('redactSignedUrlsDeep', () => {
-  it('redacts strings at any depth and keeps everything else', () => {
-    const input = {
-      count: 2,
-      ok: true,
-      empty: null,
-      nested: [{ uri: S3_URL, name: 'invoice.pdf' }, S3_URL],
-    };
-
-    expect(redactSignedUrlsDeep(input)).toEqual({
-      count: 2,
-      ok: true,
-      empty: null,
-      nested: [{ uri: REDACTED_URL, name: 'invoice.pdf' }, REDACTED_URL],
-    });
-    expect(input.nested[1]).toBe(S3_URL);
   });
 });

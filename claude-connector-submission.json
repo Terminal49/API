@@ -10,7 +10,7 @@
   "listing": {
     "name": "Terminal49",
     "tagline": "Track ocean shipments",
-    "description": "Terminal49 helps users get live visibility into every ocean shipment and container. Track by container, bill of lading, or booking across all major carriers; find what needs attention, from ETA delays to holds, fees, and last free days; filter and count container worklists; create new tracking requests; and update shipment records. Direct connections to North American ports, terminals, and rail make it the most complete import data available. Where trade intelligence is enabled, it also researches US ocean import markets: importers, products, origins, ports, and carriers.",
+    "description": "Terminal49 helps users get live visibility into every ocean shipment and container. Track by container, bill of lading, or booking across all major carriers; find what needs attention, from ETA delays to holds, fees, and last free days; filter and count container worklists; create new tracking requests; and update shipment records. Changes that remove or replace data show a preview first and run only after the user confirms. Direct connections to North American ports, terminals, and rail make it the most complete import data available. Where trade intelligence is enabled, it also researches US ocean import markets: importers, products, origins, ports, and carriers.",
     "categories": [
       "Business"
     ],
@@ -67,6 +67,7 @@
       "Inspect routes and transport events",
       "Check supported shipping lines",
       "Create new tracking requests",
+      "Set parties and custom field values on containers and shipments",
       "Research US ocean import markets: importers, products, origin countries, ports, and carriers"
     ]
   }
