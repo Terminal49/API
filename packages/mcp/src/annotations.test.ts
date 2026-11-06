@@ -154,13 +154,18 @@ describe('MCP tool annotations', () => {
       .map(([name]) => name);
 
     expect(writes.sort()).toEqual([
+      'cancel_tracking_request',
+      'resume_shipment_tracking',
       'set_custom_field',
       'set_party_role',
+      'stop_shipment_tracking',
       'track_container',
     ]);
     expect(destructiveTools.sort()).toEqual([
+      'cancel_tracking_request',
       'set_custom_field',
       'set_party_role',
+      'stop_shipment_tracking',
     ]);
   });
 

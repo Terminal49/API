@@ -551,6 +551,9 @@ describe('batch record writes', () => {
         'confirmation_token',
       );
     }
+    expect(byName.get('stop_shipment_tracking')?.description).toMatch(
+      /This change needs the user to approve a preview\. The first call changes nothing\./,
+    );
   });
 
   it('is left out of a read-only server', async () => {
