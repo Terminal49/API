@@ -474,12 +474,14 @@ describe('MCP protocol compatibility', () => {
             'stop_shipment_tracking',
             'resume_shipment_tracking',
             'cancel_tracking_request',
+            'update_record',
           ].includes(tool.name),
           destructiveHint: [
             'set_party_role',
             'set_custom_field',
             'stop_shipment_tracking',
             'cancel_tracking_request',
+            'update_record',
           ].includes(tool.name),
           openWorldHint: tool.name === 'search_docs',
         });

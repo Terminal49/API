@@ -118,15 +118,10 @@ import {
   executeCancelTrackingRequest,
 } from './tools/cancel-tracking-request.js';
 import {
-  addReferenceNumbersInputSchema,
-  addReferenceNumbersOutputSchema,
-  executeAddReferenceNumbers,
-} from './tools/add-reference-numbers.js';
-import {
-  executeRemoveReferenceNumbers,
-  removeReferenceNumbersInputSchema,
-  removeReferenceNumbersOutputSchema,
-} from './tools/remove-reference-numbers.js';
+  executeUpdateRecord,
+  updateRecordInputSchema,
+  updateRecordOutputSchema,
+} from './tools/update-record.js';
 import {
   executeStopShipmentTracking,
   stopShipmentTrackingInputSchema,
@@ -1177,8 +1172,7 @@ function formatToolError(
         return `No shipment found with id ${typeof input.shipment_id === 'string' ? input.shipment_id : '(missing)'}.`;
       case 'cancel_tracking_request':
         return `No tracking request found with id ${typeof input.tracking_request_id === 'string' ? input.tracking_request_id : '(missing)'}.`;
-      case 'add_reference_numbers':
-      case 'remove_reference_numbers':
+      case 'update_record':
         return `No ${entityLabel(input.entity_type)} found with id ${typeof input.entity_id === 'string' ? input.entity_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
@@ -1989,32 +1983,17 @@ export function createTerminal49McpServer(
       async (args, context) =>
         executeCancelTrackingRequest(args, client, context),
     ),
-    add_reference_numbers: tool(
+    update_record: tool(
       {
         description:
-          'Add reference numbers, such as PO or job numbers, to a container, shipment, or tracking request. ' +
-          'It keeps every reference number already on the record and adds only the new ones, so calling it again with the same numbers changes nothing. ' +
-          'Returns added with the list before (previous) and after (ref_numbers), or already_present when every number was already there. ' +
-          'concurrent_change_detected is true when the list read back after the change differs from the list sent, which means someone else changed it at the same time. ' +
-          'Terminal49 replaces the whole list and has no conditional update, so a number someone else adds between this tool reading the list and writing it is lost, and concurrent_change_detected does not report it.',
-        inputSchema: addReferenceNumbersInputSchema,
-        outputSchema: addReferenceNumbersOutputSchema,
+          'Add or remove reference numbers, such as PO or job numbers, on a container, shipment, or tracking request, and tags on a shipment. ' +
+          'Values already on the record stay unless listed in remove, so calling it again with the same values changes nothing. Searches, filters, and integrations that use a removed value stop finding the record. ' +
+          'Returns updated with previous and current lists and, per field, adding, removing, already_present, and not_present; or unchanged when there is nothing to do. ' +
+          'concurrent_change_detected is true when the lists read back differ from the lists sent. Terminal49 replaces whole lists and has no conditional update, so a value someone else adds between this tool reading and writing the record is lost, and concurrent_change_detected does not report it.',
+        inputSchema: updateRecordInputSchema,
+        outputSchema: updateRecordOutputSchema,
       },
-      async (args, context) =>
-        executeAddReferenceNumbers(args, client, context),
-    ),
-    remove_reference_numbers: tool(
-      {
-        description:
-          'Remove reference numbers from a container, shipment, or tracking request. Searches, filters, and integrations that use a removed number stop finding the record. ' +
-          'The preview shows the list now, the list after, and which numbers are not on the record. If the list changes between the preview and the approval, you get a new preview. ' +
-          'Terminal49 replaces the whole list and has no conditional update, so a number someone else adds while the confirmed write is running is lost, and concurrent_change_detected does not report it. ' +
-          'Returns removed with the list before (previous) and after (ref_numbers), or not_present when none of the numbers are on the record. concurrent_change_detected works as in add_reference_numbers.',
-        inputSchema: removeReferenceNumbersInputSchema,
-        outputSchema: removeReferenceNumbersOutputSchema,
-      },
-      async (args, context) =>
-        executeRemoveReferenceNumbers(args, client, context),
+      async (args, context) => executeUpdateRecord(args, client, context),
     ),
     search_docs: tool(
       {

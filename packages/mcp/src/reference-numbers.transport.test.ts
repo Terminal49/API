@@ -1,5 +1,5 @@
 /**
- * Calls the reference number tools through the MCP client and the
+ * Calls update_record through the MCP client and the
  * HTTP handler. Each call builds a new server, as the stateless gateway does,
  * so a confirmed write proves the token survives between requests.
  */
@@ -19,8 +19,7 @@ import {
   TEST_CONFIRMATION_SECRET,
   tokenOf,
 } from './test/write-context.js';
-import { addReferenceNumbersOutputSchema } from './tools/add-reference-numbers.js';
-import { removeReferenceNumbersOutputSchema } from './tools/remove-reference-numbers.js';
+import { updateRecordOutputSchema } from './tools/update-record.js';
 
 vi.mock('@sentry/node', () => ({
   addBreadcrumb: vi.fn(),
@@ -31,10 +30,10 @@ vi.mock('@sentry/node', () => ({
 }));
 
 const CONFIRMING = {
-  toolsets: ['reference_numbers'] as const,
+  toolsets: ['operations'] as const,
   confirmationSecret: TEST_CONFIRMATION_SECRET,
 };
-describe('reference number tools over the MCP client transport', () => {
+describe('update_record over the MCP client transport', () => {
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
   });
@@ -54,24 +53,23 @@ describe('reference number tools over the MCP client transport', () => {
     const target = { entity_type: 'container', entity_id: REF_CONTAINER_ID };
 
     const added = await callTool(
-      'add_reference_numbers',
-      { ...target, add: ['PO-2'] },
+      'update_record',
+      { ...target, ref_numbers: { add: ['PO-2'] } },
       routes,
       CONFIRMING,
     );
     expect(added.isError).not.toBe(true);
     expect(added.structuredContent).toMatchObject({
-      status: 'added',
-      ref_numbers: ['PO-1', 'PO-2'],
+      status: 'updated',
+      current: { ref_numbers: ['PO-1', 'PO-2'] },
     });
     expect(
-      addReferenceNumbersOutputSchema.safeParse(added.structuredContent)
-        .success,
+      updateRecordOutputSchema.safeParse(added.structuredContent).success,
     ).toBe(true);
 
     const preview = await callTool(
-      'remove_reference_numbers',
-      { ...target, remove: ['PO-2'] },
+      'update_record',
+      { ...target, ref_numbers: { remove: ['PO-2'] } },
       routes,
       CONFIRMING,
     );
@@ -79,10 +77,10 @@ describe('reference number tools over the MCP client transport', () => {
       status: 'confirmation_required',
     });
     const removed = await callTool(
-      'remove_reference_numbers',
+      'update_record',
       {
         ...target,
-        remove: ['PO-2'],
+        ref_numbers: { remove: ['PO-2'] },
         confirmation_token: tokenOf(preview.structuredContent),
       },
       routes,
@@ -91,44 +89,29 @@ describe('reference number tools over the MCP client transport', () => {
 
     expect(removed.isError).not.toBe(true);
     expect(removed.structuredContent).toMatchObject({
-      status: 'removed',
-      ref_numbers: ['PO-1'],
+      status: 'updated',
+      current: { ref_numbers: ['PO-1'] },
     });
     expect(
-      removeReferenceNumbersOutputSchema.safeParse(removed.structuredContent)
-        .success,
+      updateRecordOutputSchema.safeParse(removed.structuredContent).success,
     ).toBe(true);
     expect(stored.current()).toEqual(['PO-1']);
   });
 
   it.each([
-    ['add_reference_numbers', 'container', 'container', { add: ['PO-1'] }],
-    ['add_reference_numbers', 'shipment', 'shipment', { add: ['PO-1'] }],
-    [
-      'add_reference_numbers',
-      'tracking_request',
-      'tracking request',
-      { add: ['PO-1'] },
-    ],
-    [
-      'remove_reference_numbers',
-      'container',
-      'container',
-      { remove: ['PO-1'] },
-    ],
-    ['remove_reference_numbers', 'shipment', 'shipment', { remove: ['PO-1'] }],
-    [
-      'remove_reference_numbers',
-      'tracking_request',
-      'tracking request',
-      { remove: ['PO-1'] },
-    ],
+    ['container', 'container'],
+    ['shipment', 'shipment'],
+    ['tracking_request', 'tracking request'],
   ])(
-    'names the missing record when %s reads a 404 for a %s',
-    async (name, entityType, label, change) => {
+    'names the missing record when update_record reads a 404 for a %s',
+    async (entityType, label) => {
       const result = await callTool(
-        name,
-        { entity_type: entityType, entity_id: REF_CONTAINER_ID, ...change },
+        'update_record',
+        {
+          entity_type: entityType,
+          entity_id: REF_CONTAINER_ID,
+          ref_numbers: { add: ['PO-1'] },
+        },
         { 'GET /me': { body: meBody() } },
         CONFIRMING,
       );
