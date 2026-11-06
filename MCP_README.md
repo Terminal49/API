@@ -10,6 +10,12 @@
 
 `@terminal49/mcp` is a private workspace in this repository. Connect to the hosted server, or build the stdio server from a clone.
 
+### Microsoft 365 Copilot
+
+The [AskT49 app package](integrations/microsoft-365-copilot/README.md) connects
+Microsoft 365 Copilot to the hosted MCP server using user OAuth. Its manifests
+and provisioning configuration ship independently of the MCP server.
+
 ### Use the hosted server
 
 The connector URL is `https://mcp.terminal49.com` (Streamable HTTP). Use that root origin, with no extra path. It is the canonical OAuth resource identifier.
