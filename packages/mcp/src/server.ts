@@ -112,6 +112,21 @@ import {
 } from './tools/get-document.js';
 import { executeSearchDocs } from './tools/search-docs.js';
 import { executeWhoami } from './tools/whoami.js';
+import {
+  cancelTrackingRequestInputSchema,
+  cancelTrackingRequestOutputSchema,
+  executeCancelTrackingRequest,
+} from './tools/cancel-tracking-request.js';
+import {
+  executeStopShipmentTracking,
+  stopShipmentTrackingInputSchema,
+  stopShipmentTrackingOutputSchema,
+} from './tools/stop-shipment-tracking.js';
+import {
+  executeResumeShipmentTracking,
+  resumeShipmentTrackingInputSchema,
+  resumeShipmentTrackingOutputSchema,
+} from './tools/resume-shipment-tracking.js';
 import { credentialHash, usableConfirmationSecret } from './tools/write-kit.js';
 import {
   confirmationChannel,
@@ -1136,6 +1151,11 @@ function formatToolError(
         return `No document found with id ${id ?? '(missing)'}.`;
       case 'get_vessel':
         return `No vessel found with id ${id ?? '(missing)'}.`;
+      case 'stop_shipment_tracking':
+      case 'resume_shipment_tracking':
+        return `No shipment found with id ${typeof input.shipment_id === 'string' ? input.shipment_id : '(missing)'}.`;
+      case 'cancel_tracking_request':
+        return `No tracking request found with id ${typeof input.tracking_request_id === 'string' ? input.tracking_request_id : '(missing)'}.`;
       case 'get_location':
         return `No ${input.kind === 'metro_area' ? 'metro area' : input.kind === 'terminal' ? 'terminal' : 'port'} found with id ${id ?? '(missing)'}.`;
       default:
@@ -1908,6 +1928,42 @@ export function createTerminal49McpServer(
         outputSchema: getDocumentOutputSchema,
       },
       async (args) => executeGetDocument(args, client),
+    ),
+    stop_shipment_tracking: tool(
+      {
+        description:
+          'Stop carrier and terminal updates for a shipment and all its containers, for example when it is delivered or was tracked by mistake. ' +
+          'The preview shows the Bill of Lading, the number of containers, and whether tracking is on. ' +
+          'Returns stopped, or already_stopped when tracking was already off. Needs the stop_tracking feature; without it the result is FeatureNotEnabled.',
+        inputSchema: stopShipmentTrackingInputSchema,
+        outputSchema: stopShipmentTrackingOutputSchema,
+      },
+      async (args, context) =>
+        executeStopShipmentTracking(args, client, context),
+    ),
+    resume_shipment_tracking: tool(
+      {
+        description:
+          'Start tracking a shipment again after its tracking was stopped, so its containers get carrier and terminal updates again. ' +
+          'Returns resumed with the shipment, or already_tracking when it was never stopped. ' +
+          'Updates the carrier published while tracking was stopped may be missing, and a resumed shipment can count against tracking limits.',
+        inputSchema: resumeShipmentTrackingInputSchema,
+        outputSchema: resumeShipmentTrackingOutputSchema,
+      },
+      async (args, context) =>
+        executeResumeShipmentTracking(args, client, context),
+    ),
+    cancel_tracking_request: tool(
+      {
+        description:
+          'Cancel a tracking request that Terminal49 is still working on (status pending or awaiting_manifest), for example one with a typo or the wrong carrier, before it creates a shipment. It cannot be undone. ' +
+          'The preview shows the number, carrier SCAC, and status. ' +
+          'Returns cancelled with the request, or not_cancellable with its current status when it is in any other status.',
+        inputSchema: cancelTrackingRequestInputSchema,
+        outputSchema: cancelTrackingRequestOutputSchema,
+      },
+      async (args, context) =>
+        executeCancelTrackingRequest(args, client, context),
     ),
     search_docs: tool(
       {
