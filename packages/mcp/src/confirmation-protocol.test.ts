@@ -242,7 +242,7 @@ describe('confirming a tier C write', () => {
     expect(stops()).toHaveLength(1);
   });
 
-  it('marks only tier C tools as needing the user, and tells the model both ways', async () => {
+  it('marks consequential writes as needing the user, and explains confirmation', async () => {
     vi.stubGlobal('fetch', trackedShipment().api.fetch);
     session = await connect(modern);
 
@@ -255,7 +255,9 @@ describe('confirming a tier C write', () => {
     expect(byName.get('cancel_tracking_request')?._meta).toEqual({
       'anthropic/requiresUserInteraction': true,
     });
-    expect(byName.get('resume_shipment_tracking')?._meta).toBeUndefined();
+    expect(byName.get('resume_shipment_tracking')?._meta).toEqual({
+      'anthropic/requiresUserInteraction': true,
+    });
     expect(byName.get('search_container')?._meta).toBeUndefined();
     expect(byName.get('stop_shipment_tracking')?.description).toMatch(
       /On a client that can ask the user \(form elicitation\).*never pass confirmation_token there\. On any other client, the first call returns the preview with a confirmation_token/,
