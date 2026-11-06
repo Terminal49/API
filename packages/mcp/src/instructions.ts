@@ -55,9 +55,6 @@ const PARAGRAPHS: readonly Paragraph[] = [
         text: ' Resolve a company to an ID with list_parties; filter customers by advanced_filters.customer_id and other roles by advanced_filters.parties.',
       },
       {
-        text: ' For set_party_role, use party_id from record party roles, or list_parties for unattached parties.',
-      },
-      {
         text: ' Use search_docs for how-to and API questions and cite the returned links.',
       },
       {
