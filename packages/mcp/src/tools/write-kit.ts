@@ -78,9 +78,11 @@ function sha256(text: string): string {
   return createHash('sha256').update(text).digest('hex');
 }
 
-/** A hash of the API credential, so a token works only for the one that asked. */
+/** A keyed tag of the high-entropy API credential; never a stored password hash. */
 export function credentialHash(apiToken: string): string {
-  return sha256(apiToken);
+  return createHmac('sha256', apiToken)
+    .update('terminal49-mcp-confirmation-credential-v1')
+    .digest('hex');
 }
 
 /** A hash of the record fields a write reads or changes. */
