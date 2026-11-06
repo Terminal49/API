@@ -25,3 +25,28 @@ You can even traverse the relationships up or down. For example if you wanted to
 containers/{id}?include=shipment,shipment.port_of_lading
 ```
 
+## Relationship names by endpoint
+
+The value you pass to `include` is the relationship name, not the resource type. For example, a container's transport events use the relationship name `transport_events`, while each included object has the type `transport_event`.
+
+To find the names for any resource, look at the keys under `data.relationships` in its response. The table below lists the relationships documented for common endpoints.
+
+| Endpoint | Relationship names |
+| --- | --- |
+| [Get a shipment](/api-docs/api-reference/shipments/get-a-shipment), [List shipments](/api-docs/api-reference/shipments/list-shipments) | `containers`, `port_of_lading`, `port_of_discharge`, `pod_terminal`, `destination`, `destination_terminal`, `line_tracking_stopped_by_user` |
+| [Get a container](/api-docs/api-reference/containers/get-a-container), [List containers](/api-docs/api-reference/containers/list-containers) | `shipment`, `pod_terminal`, `transport_events`, `raw_events`, `pickup_facility` |
+| [Get a tracking request](/api-docs/api-reference/tracking-requests/get-a-single-tracking-request), [List tracking requests](/api-docs/api-reference/tracking-requests/list-tracking-requests) | `tracked_object` (included by default), `customer`, `user` |
+| [Get a document](/api-docs/api-reference/documents/get-a-document) | `shipments`, `cargos`, `account`, `user`, `last_document_representation`, `email_submission`, `current_extraction` (alias for `last_document_representation`) |
+| Custom field endpoints | `definition`, `entity`, `updated_by` |
+
+Shipment party roles are only returned when you also pass `flag[parties]=true`. See [Assign shipper, consignee, and other parties](/api-docs/in-depth-guides/assigning-parties) for the `include=party_roles.party` example.
+
+Separate multiple values with commas and no spaces:
+
+```
+shipments/{id}?include=containers,port_of_lading,port_of_discharge,pod_terminal
+```
+
+```
+containers/{id}?include=shipment,pod_terminal,transport_events
+```
