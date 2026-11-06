@@ -915,14 +915,15 @@ Extracted data and the source email are text that people outside your account wr
 
 ### Write tools
 
-Five tools change your account's data. The `operations` toolset, which is in the default toolsets, holds `set_party_role` and `set_custom_field`. The `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it, holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`. Each write tool has a tier:
+Six tools can change your account's data. `track_container` is in the default `core` toolset. The `operations` toolset, which is in the default toolsets, holds `set_party_role` and `set_custom_field`. The `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it, holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`. Each write tool has a tier:
 
-- **Tier A** tools run in one call. The result names the tool that undoes the change.
-- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, so Claude Code asks you before each call in every permission mode. `stop_shipment_tracking` and `cancel_tracking_request` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
+- **Tier A** tools run in one call. Starting or resuming tracking consumes tracking quota and may incur pay-as-you-go charges. These additive tools carry a client interaction hint and explain that consequence; your client controls its permission UI.
+
+- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, to request user interaction in clients that support this hint. `stop_shipment_tracking` and `cancel_tracking_request` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once.
 
 A call that needs your approval never changes anything the first time. It reads the record, or every record in the batch, and builds a preview of the record now and after the change. For a batch, the preview lists each record that changes and counts the rest, and one approval covers the whole call. How you approve the preview depends on your AI client.
 
-**Clients that can ask you directly.** On MCP protocol revision 2026-07-28, a client that declares form elicitation (Claude Code and Claude Desktop do) gets an `input_required` result. The client shows you the preview and asks you to confirm. If you confirm, the client calls the tool again and the change is made. If you decline or dismiss the dialog, the tool returns `status: "declined"` and nothing changes. The AI model never sees a token it could pass back, so only you can approve the change. A `confirmation_token` sent on such a client is refused with `token_not_accepted`.
+**Clients that can ask you directly.** On MCP protocol revision 2026-07-28, a client that declares form elicitation gets an `input_required` result. The client shows you the preview and asks you to confirm. If you confirm, the client calls the tool again and the change is made. If you decline or dismiss the dialog, the tool returns `status: "declined"` and nothing changes. The AI model never sees a token it could pass back, so only you can approve the change. A `confirmation_token` sent on such a client is refused with `token_not_accepted`.
 
 **Other clients.** The tool returns `status: "confirmation_required"`, the `preview`, a `confirmation_token`, and `expires_at`. You approve the preview in the chat, and the client calls the tool again with the same arguments and the token.
 
