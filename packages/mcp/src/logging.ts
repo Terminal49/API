@@ -1,4 +1,4 @@
-import { redactSignedUrls } from './signed-urls.js';
+import { redactSecrets } from './redaction.js';
 
 const REDACTED_VALUE = '[REDACTED]';
 
@@ -68,7 +68,7 @@ function sanitizeValue(value: unknown): unknown {
   }
 
   if (typeof value === 'string') {
-    return redactSignedUrls(value);
+    return redactSecrets(value);
   }
 
   return value;
@@ -76,7 +76,7 @@ function sanitizeValue(value: unknown): unknown {
 
 /**
  * Removes customer identifiers, request inputs, credentials, signed URLs,
- * and upstream messages before an operational MCP event is serialized to stderr.
+ * confirmation tokens and upstream messages before an operational MCP event is serialized to stderr.
  */
 export function sanitizeMcpLogEvent(
   event: Record<string, unknown>,
