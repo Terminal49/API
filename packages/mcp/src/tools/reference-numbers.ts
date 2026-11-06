@@ -1,12 +1,12 @@
 /**
- * Reads and writes the reference numbers (ref_numbers) on a container,
- * shipment or tracking request, for the tools that add and remove them.
+ * Reads and writes the list fields update_record changes: ref_numbers on a
+ * container, shipment or tracking request, and tags on a shipment.
  *
- * The API replaces the whole list on every PATCH and has no ETag, so a write
- * reads the list, sends the merged list and reads it back. A read-back that
- * differs from the list sent means someone changed the list after the PATCH.
- * A change that lands between the read and the PATCH is overwritten, and
- * nothing here can see it.
+ * The API replaces a whole list on every PATCH and has no ETag, so a write
+ * reads the lists, sends the merged lists and reads them back. A read-back
+ * that differs from the lists sent means someone changed them after the
+ * PATCH. A change that lands between the read and the PATCH is overwritten,
+ * and nothing here can see it.
  */
 
 import type { Terminal49Client } from '@terminal49/sdk';
@@ -22,10 +22,25 @@ export const REFERENCE_ENTITY_TYPES = [
 
 export type ReferenceEntityType = (typeof REFERENCE_ENTITY_TYPES)[number];
 
+export const LIST_FIELDS = ['ref_numbers', 'tags'] as const;
+
+export type ListField = (typeof LIST_FIELDS)[number];
+
+export type Lists = Partial<Record<ListField, string[]>>;
+
+/** Which record types carry each list field. */
+export const LIST_FIELD_ENTITIES: Record<
+  ListField,
+  readonly ReferenceEntityType[]
+> = {
+  ref_numbers: REFERENCE_ENTITY_TYPES,
+  tags: ['shipment'],
+};
+
 export const referenceEntityInput = {
   entity_type: z
     .enum(REFERENCE_ENTITY_TYPES)
-    .describe('The kind of record that carries the reference numbers.'),
+    .describe('The kind of record to update.'),
   entity_id: z
     .string()
     .uuid()
@@ -34,27 +49,8 @@ export const referenceEntityInput = {
     ),
 };
 
-export const MAX_REFERENCE_NUMBERS_PER_CALL = 20;
-
-/**
- * The longest number add accepts. Remove accepts longer ones, because a
- * record can already hold a number added another way.
- */
-export const MAX_LENGTH = { add: 64, remove: 1000 } as const;
-
-export function referenceNumbersInput(verb: 'add' | 'remove') {
-  const maxLength = MAX_LENGTH[verb];
-  return z
-    .array(z.string().trim().min(1).max(maxLength))
-    .min(1)
-    .max(MAX_REFERENCE_NUMBERS_PER_CALL)
-    .describe(
-      `Reference numbers to ${verb}, such as PO numbers, 1 to ${MAX_REFERENCE_NUMBERS_PER_CALL} per call, each up to ${maxLength} characters. Matching is exact after trimming spaces, on both the numbers passed and the numbers on the record.`,
-    );
-}
-
-/** Whether a stored number matches a requested one, which is already trimmed. */
-export function sameNumber(stored: string, requested: string): boolean {
+/** Whether a stored value matches a requested one, which is already trimmed. */
+export function sameValue(stored: string, requested: string): boolean {
   return stored.trim() === requested;
 }
 
@@ -69,8 +65,8 @@ export type ReferenceTarget = z.infer<typeof referenceTargetSchema>;
 
 export interface ReferenceRecord {
   target: ReferenceTarget;
-  /** Null when the record's list could not be read. */
-  ref_numbers: string[] | null;
+  /** Null for a field the record's raw value could not be read as. */
+  lists: Record<ListField, string[] | null>;
 }
 
 const rawRecordSchema = z.object({
@@ -79,12 +75,15 @@ const rawRecordSchema = z.object({
     attributes: z
       .object({
         ref_numbers: z.unknown(),
+        // Only shipments carry tags.
+        tags: z.unknown().optional(),
         number: nullableString,
         bill_of_lading_number: nullableString,
         request_number: nullableString,
       })
       .catch({
         ref_numbers: undefined,
+        tags: undefined,
         number: null,
         bill_of_lading_number: null,
         request_number: null,
@@ -92,16 +91,16 @@ const rawRecordSchema = z.object({
   }),
 });
 
-const rawRefNumbersSchema = z.array(z.string().nullable()).nullable();
+const rawListSchema = z.array(z.string().nullable()).nullable();
 
 /**
- * The reference numbers in a raw ref_numbers value. A write sends a whole new
- * list built on this one, so a value that is not a list of strings reads as
- * null and stops the write, instead of reading as empty and wiping the list.
- * Null entries hold no number and are dropped.
+ * The values in a raw list. A write sends a whole new list built on this one,
+ * so a value that is not a list of strings reads as null and stops the write,
+ * instead of reading as empty and wiping the list. Null entries hold no value
+ * and are dropped.
  */
-function readRefNumbers(value: unknown): string[] | null {
-  const parsed = rawRefNumbersSchema.safeParse(value);
+function readList(value: unknown): string[] | null {
+  const parsed = rawListSchema.safeParse(value);
   if (!parsed.success) return null;
   return (parsed.data ?? []).filter((entry) => entry !== null);
 }
@@ -119,23 +118,28 @@ function parseRecord(
   }[entityType];
   return {
     target: { entity_type: entityType, entity_id: data.id, label },
-    ref_numbers: readRefNumbers(attributes.ref_numbers),
+    lists: {
+      ref_numbers: readList(attributes.ref_numbers),
+      tags: readList(attributes.tags),
+    },
   };
 }
 
-export interface UnreadableReferenceNumbers extends SoftResult<'unreadable_reference_numbers'> {
+export interface UnreadableList extends SoftResult<'unreadable_list'> {
   record: ReferenceTarget;
+  field: ListField;
 }
 
-export function unreadableReferenceNumbers(
+export function unreadableList(
   record: ReferenceTarget,
-): UnreadableReferenceNumbers {
+  field: ListField,
+): UnreadableList {
   return {
-    error: 'unreadable_reference_numbers',
-    message:
-      'Terminal49 returned the reference numbers on this record in a form this tool cannot read. Nothing was changed.',
-    alternative: 'Change the reference numbers in the Terminal49 dashboard.',
+    error: 'unreadable_list',
+    message: `Terminal49 returned ${field} on this record in a form this tool cannot read. Nothing was changed.`,
+    alternative: `Change ${field} in the Terminal49 dashboard.`,
     record,
+    field,
   };
 }
 
@@ -153,20 +157,18 @@ export async function readReferenceRecord(
   return parseRecord(entityType, raw);
 }
 
-/** Sends the full list. Terminal49 replaces the record's list with it. */
-export async function writeReferenceNumbers(
+/** Sends whole lists. Terminal49 replaces each list sent with it. */
+export async function writeLists(
   client: Terminal49Client,
   entityType: ReferenceEntityType,
   id: string,
-  refNumbers: string[],
+  lists: Lists,
 ): Promise<void> {
-  const attributes = { ref_numbers: refNumbers };
   await {
-    container: () =>
-      client.containers.update(id, attributes, { format: 'raw' }),
-    shipment: () => client.shipments.update(id, attributes, { format: 'raw' }),
+    container: () => client.containers.update(id, lists, { format: 'raw' }),
+    shipment: () => client.shipments.update(id, lists, { format: 'raw' }),
     tracking_request: () =>
-      client.trackingRequests.update(id, attributes, { format: 'raw' }),
+      client.trackingRequests.update(id, lists, { format: 'raw' }),
   }[entityType]();
 }
 
@@ -183,50 +185,46 @@ function sameValues(a: readonly string[], b: readonly string[]): boolean {
 }
 
 export interface ReadBack {
-  /** The list Terminal49 holds now, or the list sent when the read failed. */
-  ref_numbers: string[];
+  /** The lists Terminal49 holds now, or the lists sent when the read failed. */
+  lists: Lists;
   /** Null when the record could not be read after the write. */
   concurrent_change_detected: boolean | null;
   read_back_note?: string;
 }
 
 export const READ_BACK_NOTE =
-  'The change was saved, but the record could not be read again to confirm it. ref_numbers shows the list that was sent.';
+  'The change was saved, but the record could not be read again to confirm it. The lists shown are the ones that were sent.';
 
 /**
- * Reads the list after a write. The write already happened, so a failed read
- * (a 429 included) is reported in the result instead of failing the call.
+ * Reads the lists after a write. The write already happened, so a failed
+ * read (a 429 included) is reported in the result instead of failing the call.
  */
-export async function readBackReferenceNumbers(
+export async function readBackLists(
   client: Terminal49Client,
   entityType: ReferenceEntityType,
   id: string,
-  sent: string[],
+  sent: Lists,
 ): Promise<ReadBack> {
   try {
-    const { ref_numbers } = await readReferenceRecord(client, entityType, id);
-    if (ref_numbers) {
+    const { lists } = await readReferenceRecord(client, entityType, id);
+    const fields = Object.keys(sent) as ListField[];
+    if (fields.every((field) => lists[field])) {
+      const after: Lists = {};
+      for (const field of fields) after[field] = lists[field] ?? [];
       return {
-        ref_numbers,
-        concurrent_change_detected: !sameValues(ref_numbers, sent),
+        lists: after,
+        concurrent_change_detected: fields.some(
+          (field) => !sameValues(after[field] ?? [], sent[field] ?? []),
+        ),
       };
     }
   } catch {}
   return {
-    ref_numbers: sent,
+    lists: sent,
     concurrent_change_detected: null,
     read_back_note: READ_BACK_NOTE,
   };
 }
 
 export const CONCURRENT_CHANGE_NOTE =
-  'The list read back differs from the list sent, so someone else changed these reference numbers at the same time. Show the user the list as it is now.';
-
-export const referenceResultFields = {
-  record: referenceTargetSchema.optional(),
-  previous: z.array(z.string()).optional(),
-  ref_numbers: z.array(z.string()).optional(),
-  concurrent_change_detected: z.boolean().nullable().optional(),
-  read_back_note: z.string().optional(),
-  undo: z.string().optional(),
-};
+  'The lists read back differ from the lists sent, so someone else changed this record at the same time. Show the user the lists as they are now.';
