@@ -2,6 +2,7 @@
  * Terminal49 MCP Server
  * Implementation using the MCP TypeScript SDK v2 McpServer API
  */
+import { credentialHash } from './tools/write-kit.js';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import {
   completable,
@@ -1219,6 +1220,7 @@ export function createTerminal49McpServer(
     readOnly: options.readOnly ?? false,
   });
   const session: ToolSession = {
+    credentialHash: credentialHash(apiToken),
     credentialType: options.credentialType ?? 'api_key',
     toolsets,
     writeToolsAvailable: selectedTools.some(
