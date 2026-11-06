@@ -449,6 +449,11 @@ describe('MCP server wiring', () => {
       stop_shipment_tracking: { shipment_id: id },
       resume_shipment_tracking: { shipment_id: id },
       cancel_tracking_request: { tracking_request_id: id },
+      update_record: {
+        entity_type: 'container',
+        entity_id: id,
+        ref_numbers: { add: ['PO-1'] },
+      },
       set_party_role: {
         container_ids: [id],
         role: 'pickup_dray_carrier',
