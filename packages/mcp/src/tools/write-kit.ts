@@ -641,6 +641,8 @@ export interface ConfirmedWrite<Preview, Stop, Done> extends WriteTarget {
    * call.
    */
   refused?(error: unknown, preview: Preview): Promise<Done | undefined>;
+  /** A batch may have applied other writes before one request was refused. */
+  releaseOnRefusal?(error: unknown): boolean;
   /**
    * The preview as text for the confirmation dialog. Defaults to one line
    * per preview field; a batch tool lists its records instead.
@@ -791,7 +793,9 @@ export async function runConfirmedWrite<Preview, Stop, Done>(
     } catch (error) {
       const status = httpStatus(error);
       if (status === undefined || status < 400 || status >= 500) throw error;
-      if (confirmation) spentTokens.delete(spentKey(confirmation));
+      if (confirmation && plan.releaseOnRefusal?.(error) !== false) {
+        spentTokens.delete(spentKey(confirmation));
+      }
       const answer = await plan.refused?.(error, preview);
       if (answer === undefined) throw error;
       return answer;
