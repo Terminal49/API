@@ -42,9 +42,7 @@ export const listDocumentsInputSchema = z.object({
     .min(1)
     .max(128)
     .optional()
-    .describe(
-      'Text to match in the file name (maximum 128 characters). Never pass conversation text.',
-    ),
+    .describe('Text to match in the file name. Never pass conversation text.'),
   reference: z
     .string()
     .trim()
@@ -52,7 +50,7 @@ export const listDocumentsInputSchema = z.object({
     .max(64)
     .optional()
     .describe(
-      'One reference to match, such as a Bill of Lading, booking, container, or PO number (maximum 64 characters). Identifier only; never pass conversation text.',
+      'One reference to match, such as a Bill of Lading, booking, container, or PO number. Identifier only; never pass conversation text.',
     ),
   document_types: z
     .array(documentTypeCodeSchema)
@@ -67,14 +65,16 @@ export const listDocumentsInputSchema = z.object({
     .optional()
     .default('-created_at')
     .describe(
-      'Sort by created_at, document_type, or added_by; a leading - sorts descending. Default: -created_at (newest first).',
+      'Sort order. A leading - sorts descending, so -created_at lists the newest documents first.',
     ),
   page: z
     .number()
     .int()
     .positive()
     .optional()
-    .describe('Page number (1-based)'),
+    .describe(
+      'Page to fetch. Ask for the next page only when links.next shows there are more.',
+    ),
   page_size: z
     .number()
     .int()
@@ -82,13 +82,13 @@ export const listDocumentsInputSchema = z.object({
     .max(MAX_PAGE_SIZE)
     .optional()
     .default(MAX_PAGE_SIZE)
-    .describe(`Page size (default 25; maximum ${MAX_PAGE_SIZE})`),
+    .describe('Number of documents to return on this page.'),
   include_types: z
     .boolean()
     .optional()
     .default(false)
     .describe(
-      'Also return document_types: every document type code with its label. Default: false',
+      'Also return document_types: every document type code with its label.',
     ),
 });
 

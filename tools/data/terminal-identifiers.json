@@ -51,6 +51,10 @@
     "smdgCode": "ASLPB",
     "firmsCode": ""
   },
+  "BHAHD:BHAHDPOSU": {
+    "smdgCode": "POSU",
+    "firmsCode": ""
+  },
   "BDCGP:BDCGPCPA": {
     "smdgCode": "",
     "firmsCode": ""
@@ -59,12 +63,12 @@
     "smdgCode": "BRAPEC",
     "firmsCode": ""
   },
-  "CAHAL:2036": {
-    "smdgCode": "HAFXT",
+  "CAFSD:3401": {
+    "smdgCode": "FSD",
     "firmsCode": ""
   },
-  "CAMTR:2619": {
-    "smdgCode": "TMTMAI",
+  "CAHAL:2036": {
+    "smdgCode": "HAFXT",
     "firmsCode": ""
   },
   "CAMTR:2425": {
@@ -73,6 +77,10 @@
   },
   "CAMTR:2591": {
     "smdgCode": "MGTRAC",
+    "firmsCode": ""
+  },
+  "CAMTR:2619": {
+    "smdgCode": "TMTMAI",
     "firmsCode": ""
   },
   "CAMTR:5540": {
@@ -99,6 +107,22 @@
     "smdgCode": "STI",
     "firmsCode": ""
   },
+  "COBUN:COBUNTCBUN": {
+    "smdgCode": "TCBUN",
+    "firmsCode": ""
+  },
+  "CRMOB:CRMOBTMOIN": {
+    "smdgCode": "TMOIN",
+    "firmsCode": ""
+  },
+  "HRRJK:HRRJKRGW": {
+    "smdgCode": "RGW",
+    "firmsCode": ""
+  },
+  "DKAAR:DKAARAPMT": {
+    "smdgCode": "APMT",
+    "firmsCode": ""
+  },
   "DOHAI:DOHAIHIT": {
     "smdgCode": "HIT",
     "firmsCode": ""
@@ -109,6 +133,10 @@
   },
   "EGPSD:EGPSDSCCT": {
     "smdgCode": "SCCT",
+    "firmsCode": ""
+  },
+  "GEPTI:GEPTIAPMT": {
+    "smdgCode": "APMT",
     "firmsCode": ""
   },
   "DEBRV:DEBRVEGB": {
@@ -163,6 +191,14 @@
     "smdgCode": "MTLHK",
     "firmsCode": ""
   },
+  "INNSA:INNSAGTICI": {
+    "smdgCode": "GTICI",
+    "firmsCode": ""
+  },
+  "INPPV:INPPVAPMT": {
+    "smdgCode": "APMT",
+    "firmsCode": ""
+  },
   "IDJKT:IDJKTUTC1": {
     "smdgCode": "UTC1",
     "firmsCode": ""
@@ -203,6 +239,10 @@
     "smdgCode": "CONA",
     "firmsCode": ""
   },
+  "ITVDL:ITVDLVGT": {
+    "smdgCode": "VGT",
+    "firmsCode": ""
+  },
   "JMKIN:JMKINKCT": {
     "smdgCode": "KCT",
     "firmsCode": ""
@@ -213,6 +253,10 @@
   },
   "LBBEY:LBBEYBCTC": {
     "smdgCode": "BCTC",
+    "firmsCode": ""
+  },
+  "LRMLW:LRMLWAPMT": {
+    "smdgCode": "APMT",
     "firmsCode": ""
   },
   "MXATM:20": {
@@ -251,12 +295,44 @@
     "smdgCode": "ICAVE",
     "firmsCode": ""
   },
+  "MAPTM:MAPTMAPMT": {
+    "smdgCode": "APMT",
+    "firmsCode": ""
+  },
+  "MAPTM:MAPTMAPM2": {
+    "smdgCode": "APM2",
+    "firmsCode": ""
+  },
+  "NLRTM:NLRTMNLMVII": {
+    "smdgCode": "NLMVII",
+    "firmsCode": ""
+  },
+  "NZLYT:NZLYTLPC": {
+    "smdgCode": "LPC",
+    "firmsCode": ""
+  },
+  "NZTIU:NZTIUTCTL": {
+    "smdgCode": "TCTL",
+    "firmsCode": ""
+  },
+  "NGAPP:NGAPPAPMTER": {
+    "smdgCode": "APMTER",
+    "firmsCode": ""
+  },
+  "NGONN:NGONNAPMT": {
+    "smdgCode": "APMT",
+    "firmsCode": ""
+  },
   "OMSLL:OMSLLAPMT": {
     "smdgCode": "APMT",
     "firmsCode": ""
   },
   "PKKHI:PKKHISAPT": {
     "smdgCode": "SAPT",
+    "firmsCode": ""
+  },
+  "PAMIT:PAMITMIT": {
+    "smdgCode": "MIT",
     "firmsCode": ""
   },
   "PECLL:PECLLAPMCLL": {
@@ -287,12 +363,28 @@
     "smdgCode": "BNCT",
     "firmsCode": ""
   },
+  "KRPUS:KRPUSPNP": {
+    "smdgCode": "PNP",
+    "firmsCode": ""
+  },
   "ESALG:ESALGAPM": {
     "smdgCode": "APM",
     "firmsCode": ""
   },
+  "ESBCN:ESBCNTCB": {
+    "smdgCode": "TCB",
+    "firmsCode": ""
+  },
   "ESBCN:ESBCNBEST": {
     "smdgCode": "BEST",
+    "firmsCode": ""
+  },
+  "ESGIJ:ESGIJTEGIJ": {
+    "smdgCode": "TEGIJ",
+    "firmsCode": ""
+  },
+  "ESVLC:ESVLCTCV": {
+    "smdgCode": "TCV",
     "firmsCode": ""
   },
   "SEGOT:SEGOTCT1": {
@@ -343,6 +435,22 @@
     "smdgCode": "SMT",
     "firmsCode": "C324"
   },
+  "USBOS:A295": {
+    "smdgCode": "PWCMT",
+    "firmsCode": "A295"
+  },
+  "USCHS:LCT9": {
+    "smdgCode": "HLT",
+    "firmsCode": "LCT9"
+  },
+  "USCHS:L391": {
+    "smdgCode": "NCMT",
+    "firmsCode": "L391"
+  },
+  "USCHS:N598": {
+    "smdgCode": "WWMT",
+    "firmsCode": "N598"
+  },
   "USGLC:D104": {
     "smdgCode": "",
     "firmsCode": "D104"
@@ -379,6 +487,10 @@
     "smdgCode": "SSAPCT",
     "firmsCode": "W182"
   },
+  "USLGB:Z978": {
+    "smdgCode": "SSATA",
+    "firmsCode": "Z978"
+  },
   "USLGB:STA": {
     "smdgCode": "",
     "firmsCode": ""
@@ -386,10 +498,6 @@
   "USLGB:Z773": {
     "smdgCode": "",
     "firmsCode": "Z773"
-  },
-  "USLGB:Z978": {
-    "smdgCode": "SSATA",
-    "firmsCode": "Z978"
   },
   "USLGB:Z952": {
     "smdgCode": "TTI",
@@ -467,10 +575,6 @@
     "smdgCode": "B58",
     "firmsCode": "Z985"
   },
-  "USOAK:STO": {
-    "smdgCode": "",
-    "firmsCode": ""
-  },
   "USOAK:Y549": {
     "smdgCode": "TPOAK",
     "firmsCode": "Y549"
@@ -498,10 +602,6 @@
   "USSEA:X117": {
     "smdgCode": "SSA18",
     "firmsCode": "X117"
-  },
-  "USSEA:Y197": {
-    "smdgCode": "SSA30",
-    "firmsCode": "Y197"
   },
   "USSEA:Y400": {
     "smdgCode": "SSA5",
@@ -542,13 +642,5 @@
   "USILM:L194": {
     "smdgCode": "NCSPA",
     "firmsCode": "L194"
-  },
-  "NZLYT:NZLYTLPC": {
-    "smdgCode": "LPC",
-    "firmsCode": ""
-  },
-  "NZTIU:NZTIUTCTL": {
-    "smdgCode": "TCTL",
-    "firmsCode": ""
   }
 }

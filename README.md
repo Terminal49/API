@@ -12,7 +12,7 @@ This repository holds the public developer docs, the OpenAPI spec, and the clien
 | OpenAPI spec (source of truth for the API reference) | [`docs/openapi.json`](docs/openapi.json) | [API reference](https://terminal49.com/docs/api-docs/api-reference/shipments/list-shipments) |
 | TypeScript SDK | [`sdks/typescript-sdk/`](sdks/typescript-sdk/) | [`@terminal49/sdk`](https://www.npmjs.com/package/@terminal49/sdk) on npm |
 | CLI (`t49`) | [`sdks/typescript-sdk-cli/`](sdks/typescript-sdk-cli/) | [`@terminal49/cli`](https://www.npmjs.com/package/@terminal49/cli) on npm |
-| MCP server | [`packages/mcp/`](packages/mcp/) | `@terminal49/mcp`, hosted at `https://mcp.terminal49.com` |
+| MCP server | [`packages/mcp/`](packages/mcp/) | Hosted at `https://mcp.terminal49.com`. `@terminal49/mcp` is a private workspace; build it from this repo |
 | MCP OAuth gateway | [`api/`](api/) | Vercel functions behind `https://mcp.terminal49.com` |
 | Postman collection (generated from the OpenAPI spec) | [`Terminal49-API.postman_collection.json`](Terminal49-API.postman_collection.json) | Import into Postman |
 
@@ -58,9 +58,9 @@ t49 track MSCU1234567
 
 ### Connect the MCP server
 
-Point your MCP client at `https://mcp.terminal49.com`. Use the root URL, not `/mcp`. The client signs you in with OAuth, so you do not need an API key. In Claude, add Terminal49 from the [Claude Directory](https://claude.ai/directory/connectors/terminal49).
+Point your MCP client at `https://mcp.terminal49.com` (Streamable HTTP). Use that root origin, with no extra path. It is the canonical OAuth resource identifier. The client signs you in with OAuth, so you do not need an API key. In Claude, add Terminal49 from the [Claude Directory](https://claude.ai/directory/connectors/terminal49).
 
-For ChatGPT, Claude Code, Cursor, VS Code, and other clients, see the [MCP server docs](https://terminal49.com/docs/mcp/home).
+Clients that can't run a browser OAuth flow send `Authorization: Token YOUR_API_KEY`. For ChatGPT, Claude Code, Cursor, VS Code, and other clients, see the [MCP server docs](https://terminal49.com/docs/mcp/home). To run the stdio server on your machine, follow [Run it from this repository](MCP_README.md#run-it-from-this-repository).
 
 ## Develop in this repository
 
