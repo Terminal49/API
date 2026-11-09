@@ -10,6 +10,12 @@
 
 `@terminal49/mcp` is a private workspace in this repository. Connect to the hosted server, or build the stdio server from a clone.
 
+### Microsoft 365 Copilot
+
+The [AskT49 app package](integrations/microsoft-365-copilot/README.md) connects
+Microsoft 365 Copilot to the hosted MCP server using user OAuth. Its manifests
+and provisioning configuration ship independently of the MCP server.
+
 ### Use the hosted server
 
 The connector URL is `https://mcp.terminal49.com` (Streamable HTTP). Use that root origin, with no extra path. It is the canonical OAuth resource identifier.
@@ -111,7 +117,7 @@ Search for bill of lading 123456789
 
 ---
 
-## 🛠️ Available Tools (28)
+## 🛠️ Available Tools (30 by default)
 
 | Tool | Description |
 |------|-------------|
@@ -129,6 +135,8 @@ Search for bill of lading 123456789
 | `summarize_containers` | Count containers by terminal, status, carrier, port, hold, or date |
 | `list_shipments` | Browse all shipments |
 | `list_parties` | Find parties by company name or ID |
+| `set_party_role` | Attach, replace, or detach a party on up to 50 containers or shipments; asks before a record loses a party |
+| `set_custom_field` | Set or clear a custom field on up to 50 containers or shipments; asks before overwriting or clearing a value |
 | `list_custom_field_definitions` | List the account's custom fields |
 | `list_tracking_requests` | Browse tracking requests |
 | `get_tracking_request` | Get one tracking request |
@@ -143,6 +151,14 @@ Search for bill of lading 123456789
 | `get_trade_trends` | Time series of containers, TEUs, or estimated value (trade intelligence) |
 | `get_trade_breakdown` | Nested totals over one to three dimensions (trade intelligence) |
 | `get_trade_data_coverage` | Where trade data starts, the latest and last full month (trade intelligence) |
+
+The opt-in `tracking_lifecycle` toolset adds three write tools. A deployment serves them only when `T49_MCP_TOOLSETS` lists `tracking_lifecycle`. `stop_shipment_tracking` and `cancel_tracking_request` return a preview first and change data only after you approve it. A client that declares MCP 2026-07-28 form elicitation shows an `input_required` dialog and asks you to confirm. Any other client gets the preview and a `confirmation_token`, and sends the token back on a second call after you approve. See [Confirming writes](packages/mcp/README.md#confirming-writes).
+
+| Tool | Description |
+|------|-------------|
+| `stop_shipment_tracking` | Stop updates for a shipment and its containers, after a confirmed preview |
+| `resume_shipment_tracking` | Start tracking a stopped shipment again |
+| `cancel_tracking_request` | Cancel a pending tracking request, after a confirmed preview. It cannot be undone. |
 
 ### 🎯 Workflow Prompts (3)
 

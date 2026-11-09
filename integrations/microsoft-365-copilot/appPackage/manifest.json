@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.23/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.23",
+  "version": "1.0.4",
+  "id": "${{TEAMS_APP_ID}}",
+  "developer": {
+    "name": "Terminal49",
+    "websiteUrl": "https://terminal49.com",
+    "privacyUrl": "https://terminal49.com/privacy",
+    "termsOfUseUrl": "https://terminal49.com/terms"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "AskT49",
+    "full": "AskT49 for Microsoft 365 Copilot"
+  },
+  "description": {
+    "short": "Track containers, investigate delays, and plan pickups with Terminal49.",
+    "full": "AskT49 connects Microsoft 365 Copilot to your Terminal49 account. Ask about container locations, arrival estimates, holds, last free days, pickup readiness, and shipment events. Investigate exceptions across your tracked shipments and follow links to Terminal49 for details. Sign in with your Terminal49 account to access the data and tools available to you. A Terminal49 account and eligible Microsoft 365 Copilot access are required. Tool availability depends on your Terminal49 account permissions and subscription."
+  },
+  "accentColor": "#2BC983",
+  "copilotAgents": {
+    "declarativeAgents": [
+      {
+        "id": "terminal49",
+        "file": "declarativeAgent.json"
+      }
+    ]
+  },
+  "validDomains": [
+    "mcp.terminal49.com",
+    "auth.terminal49.com",
+    "app.terminal49.com"
+  ]
+}

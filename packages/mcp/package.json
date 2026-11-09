@@ -35,7 +35,7 @@
     "@sentry/node": "^10.76.2",
     "@terminal49/sdk": "0.6.0",
     "posthog-node": "^5.56.2",
-    "zod": "~4.3.6"
+    "zod": "~4.6.6"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.3.1",
