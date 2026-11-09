@@ -11,6 +11,7 @@ import type {
   TrackingRequest,
   CurrentAccount,
   CurrentCredential,
+  TrackingSlots,
   CurrentUser,
   Vessel,
   VesselPosition,
@@ -572,9 +573,27 @@ function mapCurrentAccount(
     plan: attrs.plan ?? undefined,
   };
   if (trackingSlots && 'tracking_slots' in attrs) {
-    account.trackingSlots = attrs.tracking_slots ?? null;
+    account.trackingSlots = mapTrackingSlots(attrs.tracking_slots);
   }
   return account;
+}
+
+// Map the known fields only. The backend adds fields to this object over time, and
+// consumers with strict output schemas (the MCP whoami tool) must not see them leak through.
+// Slot usage is informational, so a malformed object maps to null instead of failing `me()`.
+function mapTrackingSlots(raw: any): TrackingSlots | null {
+  if (raw == null) return null;
+  const { limit, used, remaining } = raw;
+  if (![limit, used, remaining].every((n) => typeof n === 'number'))
+    return null;
+  const slots: TrackingSlots = { limit, used, remaining };
+  if (typeof raw.active_containers === 'number') {
+    slots.activeContainers = raw.active_containers;
+  }
+  if (typeof raw.pending_tracking_requests === 'number') {
+    slots.pendingTrackingRequests = raw.pending_tracking_requests;
+  }
+  return slots;
 }
 
 /** Map a `GET /me` document to a {@link CurrentCredential}. */

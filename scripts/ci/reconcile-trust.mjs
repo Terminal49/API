@@ -324,6 +324,18 @@ export async function reconcilePull({
   return decision;
 }
 
+// Names the failing GitHub request and the permission GitHub wanted, so a 403
+// identifies the missing workflow grant instead of only "not accessible".
+function describeFailure(error) {
+  if (!(error instanceof Error)) return String(error);
+  const method = error.request?.method;
+  const url = error.request?.url;
+  if (!method || !url) return error.message;
+  const path = new URL(url, 'https://api.github.com').pathname;
+  const accepted = error.response?.headers?.['x-accepted-github-permissions'];
+  return `${error.message} (${method} ${path}${accepted ? `; accepted permissions: ${accepted}` : ''})`;
+}
+
 async function withDeadline(ms, run) {
   const controller = new AbortController();
   let timer;
@@ -394,10 +406,7 @@ export async function reconcileEvent({
       );
       await core.summary.addRaw(report.join('')).write();
     } catch (error) {
-      failures.push({
-        number,
-        message: error instanceof Error ? error.message : String(error),
-      });
+      failures.push({ number, message: describeFailure(error) });
     }
   }
   if (failures.length > 0) {

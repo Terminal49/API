@@ -1,7 +1,0 @@
-{
-  "ok": false,
-  "error": {
-    "code": "NO_OUTPUT",
-    "message": "No output captured for this live fixture."
-  }
-}

@@ -85,7 +85,7 @@ export function readQueryGuidanceResource(): string {
     '- Every list call retrieves one page, capped at 25 rows. _metadata.applied_filters records canonical filters, and _metadata.has_more is true, false, or null when paging is unknown.',
     '- When more pages remain, keep the same filters, sort, and includes and request _metadata.next_page or the page number from links.next. Never describe one page as an entire worklist.',
     '- A last page does not establish that earlier pages were retrieved. Distinguish retrieved count from API meta.total and account for records changing between calls.',
-    '- Full reference: https://docs.terminal49.com/api-docs/api-reference/list-filters',
+    '- Full reference: https://terminal49.com/docs/api-docs/api-reference/list-filters',
     '',
     '## Output Formatting Guidance',
     '',

@@ -172,6 +172,15 @@ describe('tracking requests', () => {
       data: { id: 'PATCH /tracking_requests/tr%201/cancel', type: 'stub' },
     });
   });
+
+  it('returns the cancel response in the requested format', async () => {
+    const { client } = buildClient();
+    const served = servedBody('PATCH', '/v2/tracking_requests/tr-1/cancel');
+
+    await expect(
+      client.trackingRequests.cancel('tr-1', { format: 'both' }),
+    ).resolves.toEqual({ raw: served, mapped: served });
+  });
 });
 
 describe('shipping lines', () => {

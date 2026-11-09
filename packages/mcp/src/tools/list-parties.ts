@@ -6,11 +6,18 @@
  * takes party IDs, so a question like "containers for customer Acme" needs the
  * ID first. The API has no name search (unknown params are ignored), so this
  * loads a bounded set of the account's parties and matches names here.
+ *
+ * GET /parties keeps its legacy contract: a customer created before party
+ * roles is listed under its customer account id, not the party id that party
+ * roles and advanced_filters.parties use. customer_id filters accept both, so
+ * customers are routed there.
  */
 
 import { z } from 'zod';
 import { Terminal49Client } from '@terminal49/sdk';
 import { containerFilterShape } from '../generated/list-filter-schemas.js';
+import { partyAttributesSchema, partyName } from './party-roles.js';
+import { httpStatus } from './soft-results.js';
 
 const PAGE_SIZE = 100;
 const MAX_PAGES = 10;
@@ -20,6 +27,13 @@ export const PARTY_ROLES = Object.keys(
 );
 
 export const listPartiesInputSchema = z.strictObject({
+  id: z
+    .string()
+    .uuid()
+    .describe(
+      'One party ID to look up, for example party_id from a party role. When set, search and limit are ignored.',
+    )
+    .optional(),
   search: z
     .string()
     .trim()
@@ -34,7 +48,7 @@ export const listPartiesInputSchema = z.strictObject({
     .int()
     .positive()
     .max(50)
-    .describe('Most parties to return, from 1 to 50.')
+    .describe('Most parties to return.')
     .default(25),
 });
 export type ListPartiesArgs = z.input<typeof listPartiesInputSchema>;
@@ -65,7 +79,17 @@ export async function executeListParties(
   args: ListPartiesArgs,
   client: Terminal49Client,
 ): Promise<ListPartiesResult> {
-  const { search, limit } = listPartiesInputSchema.parse(args);
+  const { id, search, limit } = listPartiesInputSchema.parse(args);
+  if (id) {
+    const party = await getParty(id, client);
+    return {
+      total_matched: party ? 1 : 0,
+      parties: party ? [party] : [],
+      truncated: false,
+      usage: usage(),
+    };
+  }
+
   const parties: { id: string; name: string }[] = [];
   let truncated = false;
   for (let page = 1; page <= MAX_PAGES; page++) {
@@ -74,12 +98,13 @@ export async function executeListParties(
       pageSize: PAGE_SIZE,
       format: 'raw',
     });
-    for (const item of doc?.data ?? []) {
+    rawPartyPageSchema.parse(doc);
+    for (const item of doc.data) {
       const name = item?.attributes?.company_name ?? item?.attributes?.name;
       if (item?.id && typeof name === 'string' && name.trim())
         parties.push({ id: item.id, name: name.trim() });
     }
-    if (!doc?.links?.next || (doc?.data ?? []).length === 0) break;
+    if (!doc.links?.next || doc.data.length === 0) break;
     if (page === MAX_PAGES) truncated = true;
   }
 
@@ -98,6 +123,46 @@ export async function executeListParties(
     total_matched: matches.length,
     parties: matches.slice(0, limit),
     truncated: truncated || matches.length > limit,
-    usage: `Filter containers by a party with list_containers or summarize_containers advanced_filters.parties, keyed by role: { "<role>": "<party id>" }. Roles: ${PARTY_ROLES.join(', ')}. Use @exists for "has any".`,
+    usage: usage(),
   };
+}
+
+function usage(): string {
+  return (
+    'Filter by a customer with advanced_filters.customer_id: "<id>" on list_containers, summarize_containers, or list_shipments. ' +
+    `For other roles use advanced_filters.parties on list_containers or summarize_containers, keyed by role: { "<role>": "<party id>" }. Roles: ${PARTY_ROLES.filter((role) => role !== 'customer').join(', ')}. Use @exists for "has any".`
+  );
+}
+
+// An unreadable page fails the load instead of reading as the last one.
+const rawPartyPageSchema = z.object({
+  data: z.array(z.unknown()),
+  links: z.object({ next: z.string().nullish() }).nullish(),
+});
+
+const rawPartySchema = z.object({
+  data: z.object({
+    id: z.string(),
+    attributes: partyAttributesSchema,
+  }),
+});
+
+/**
+ * The party with this id, or null when the account has none. A party with no
+ * display name is still returned, named by its id.
+ */
+async function getParty(
+  id: string,
+  client: Terminal49Client,
+): Promise<{ id: string; name: string } | null> {
+  let raw: unknown;
+  try {
+    raw = await client.parties.get(id, { format: 'raw' });
+  } catch (error) {
+    if (httpStatus(error) === 404) return null;
+    throw error;
+  }
+  // The response id can be the customer account id; the caller's id stays valid.
+  const { data } = rawPartySchema.parse(raw);
+  return { id, name: partyName(data.attributes) ?? id };
 }

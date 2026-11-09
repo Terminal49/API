@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "data": {
+    "id": "tracking_request-1",
+    "requestType": "bill_of_lading",
+    "requestNumber": "SYNTHBOL000001",
+    "status": "created",
+    "scac": "SYNU",
+    "refNumbers": [
+      "SYNTHREF000001"
+    ],
+    "shipment": {
+      "id": "shipment-1",
+      "billOfLading": "SYNTHBOL000001",
+      "shippingLineScac": "SYNU"
+    },
+    "createdAt": "2026-01-10T12:00:00Z",
+    "updatedAt": "2026-01-10T12:00:00Z"
+  }
+}

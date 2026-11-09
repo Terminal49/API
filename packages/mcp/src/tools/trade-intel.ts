@@ -38,12 +38,12 @@ export function isTradeIntelTool(name: string): name is TradeIntelToolName {
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 const STATE = /^[A-Za-z]{2}$/;
 
-const usState = (what: string) =>
+const usState = (what: string, note = '') =>
   z
     .string()
     .trim()
     .regex(STATE)
-    .describe(`Two-letter US state code of ${what}, such as "CA".`);
+    .describe(`US state of ${what}, such as "CA".${note}`);
 
 const substring = (description: string) =>
   z.string().trim().min(1).max(200).describe(description);
@@ -53,7 +53,7 @@ const hs4 = z
   .trim()
   .regex(/^\d{4}$/)
   .describe(
-    'Four-digit HS product code, such as "9401" (seats). Get it from search_commodities.',
+    'Harmonized System (HS) product code, such as "9401" (seats). Get it from search_commodities.',
   );
 
 const month = (description: string) =>
@@ -87,7 +87,7 @@ const measure = z
   .enum(['containers', 'teus', 'estimated_value'])
   .default('containers')
   .describe(
-    'containers = physical containers, each counted once (default); teus = twenty-foot equivalent units; estimated_value = modelled US dollar estimate, not the declared customs value. ' +
+    'containers = physical containers, each counted once; teus = twenty-foot equivalent units; estimated_value = modelled US dollar estimate, not the declared customs value. ' +
       'estimated_value is not available by lane: requests that also group, break down, or filter by pol, pol_country, or container_type are rejected, so use containers or teus for those.',
   );
 
@@ -107,7 +107,9 @@ export const tradeFiltersSchema = z
     origin_country: substring(
       'Origin country, substring match on the records\' spelling: "china" matches "PEOPLES REP OF CHINA".',
     ).optional(),
-    origin_region: substring('Origin region, substring match.').optional(),
+    origin_region: substring(
+      'World region the goods come from: the grouping above origin_country, as in a region > country breakdown. Substring match on the records\' spelling; a get_trade_breakdown with dims ["origin_region"] lists the names.',
+    ).optional(),
     pol: substring('Foreign port of loading, substring match.').optional(),
     pol_country: substring(
       'Country of the foreign port of loading, substring match.',
@@ -169,7 +171,7 @@ export const searchImportersInputSchema = z.strictObject({
     .min(1)
     .max(25)
     .default(10)
-    .describe('Most importers to return, from 1 to 25.'),
+    .describe('Most importers to return.'),
 });
 export type SearchImportersArgs = z.input<typeof searchImportersInputSchema>;
 
@@ -183,7 +185,8 @@ export const getImporterProfileInputSchema = z.strictObject({
       'Exact company_name returned by search_importers. A near match returns found: false.',
     ),
   company_state: usState(
-    "one location to restrict to; omit to combine all of the company's states",
+    'one location of the company to restrict to',
+    " Omit it to combine all of the company's states.",
   ).optional(),
   months: z
     .number()
@@ -192,7 +195,7 @@ export const getImporterProfileInputSchema = z.strictObject({
     .max(60)
     .default(12)
     .describe(
-      'Full calendar months ending last month, from 1 to 60. Use 24 or more to compare against the same months a year earlier.',
+      'How many full calendar months to cover, ending last month. Use 24 or more to compare against the same months a year earlier.',
     ),
 });
 export type GetImporterProfileArgs = z.input<
@@ -214,7 +217,7 @@ export const searchCommoditiesInputSchema = z.strictObject({
     .min(1)
     .max(20)
     .default(8)
-    .describe('Most product codes to return, from 1 to 20.'),
+    .describe('Most product codes to return.'),
 });
 export type SearchCommoditiesArgs = z.input<
   typeof searchCommoditiesInputSchema
@@ -234,14 +237,14 @@ export const rankImportersInputSchema = z.strictObject({
     .min(1)
     .max(60)
     .default(12)
-    .describe('Full calendar months ending last month, from 1 to 60.'),
+    .describe('How many full calendar months to cover, ending last month.'),
   limit: z
     .number()
     .int()
     .min(1)
     .max(50)
     .default(20)
-    .describe('Most importers to return, from 1 to 50.'),
+    .describe('Most importers to return.'),
 });
 export type RankImportersArgs = z.input<typeof rankImportersInputSchema>;
 
@@ -251,7 +254,7 @@ export const getTradeTrendsInputSchema = z.strictObject({
     .array(dimension)
     .max(2)
     .describe(
-      `Split the series by up to two dimensions, keeping the largest groups. ${DIMENSION_GUIDE}`,
+      `Split the series by these dimensions, keeping the largest groups. ${DIMENSION_GUIDE}`,
     )
     .optional(),
   filters: tradeFiltersSchema.optional(),
@@ -262,10 +265,10 @@ export const getTradeTrendsInputSchema = z.strictObject({
       'Period size. Month for a year or less, quarter for two to three years.',
     ),
   since: month(
-    'First month, YYYY-MM, inclusive. Default: 23 months before until, so the default series covers 24 months. Data goes back to 2022-01. Set since and until explicitly when the number of periods matters.',
+    'First month to include. Default: 23 months before until, so the default series covers 24 months. Data goes back to 2022-01. Set since and until explicitly when the number of periods matters.',
   ).optional(),
   until: month(
-    'Last month, YYYY-MM, inclusive. Default: the current month, which is still incomplete. Set it to the last full month for any comparison.',
+    'Last month to include. Default: the current month, which is still incomplete. Set it to the last full month for any comparison.',
   ).optional(),
   top: z
     .number()
@@ -273,7 +276,7 @@ export const getTradeTrendsInputSchema = z.strictObject({
     .min(1)
     .max(25)
     .default(10)
-    .describe('Keep this many largest groups, from 1 to 25.'),
+    .describe('How many of the largest groups to keep.'),
 });
 type TradeFilters = z.output<typeof tradeFiltersSchema>;
 
@@ -301,10 +304,10 @@ export const getTradeBreakdownInputSchema = z.strictObject({
   measure,
   filters: tradeFiltersSchema.optional(),
   since: month(
-    'First month, YYYY-MM, inclusive. Default: 11 months before until, so the default window is the 12 months ending with the current, incomplete month, not 12 full months. For an annual total set since and until to 12 full months.',
+    'First month to include. Default: 11 months before until, so the default window is the 12 months ending with the current, incomplete month, not 12 full months. For an annual total set since and until to 12 full months.',
   ).optional(),
   until: month(
-    'Last month, YYYY-MM, inclusive. Default: the current month, which is still incomplete. Set it to the last full month for clean totals.',
+    'Last month to include. Default: the current month, which is still incomplete. Set it to the last full month for clean totals.',
   ).optional(),
   top: z
     .number()
@@ -312,15 +315,170 @@ export const getTradeBreakdownInputSchema = z.strictObject({
     .min(1)
     .max(20)
     .default(10)
-    .describe(
-      'Keep this many largest children under each parent, from 1 to 20.',
-    ),
+    .describe('How many of the largest children to keep under each parent.'),
 });
 export type GetTradeBreakdownArgs = z.input<
   typeof getTradeBreakdownInputSchema
 >;
 
 export const getTradeDataCoverageInputSchema = z.strictObject({});
+
+// ==================== Output schemas ====================
+
+// What the executors below return, so tools/list tells agents the result
+// shape. Upstream values can be missing, so most fields are optional.
+const num = z.number().nullish();
+const str = z.string().nullish();
+const notEnabledOutput = {
+  error: z
+    .string()
+    .optional()
+    .describe('FeatureNotEnabled when the account lacks trade intelligence.'),
+  message: z.string().optional(),
+  alternative: z.string().optional(),
+};
+const monthRange = z
+  .object({ from: str, to: str, note: z.string().optional() })
+  .passthrough()
+  .describe('First and last month (YYYY-MM) the figures cover.');
+const namedVolume = z
+  .object({ name: str, containers: num, teus: num })
+  .passthrough();
+const productVolume = z
+  .object({
+    hs4: str,
+    description: str,
+    containers: num,
+    estimated_value_usd: num,
+  })
+  .passthrough();
+const moreNotShown = z
+  .record(z.string(), z.number())
+  .optional()
+  .describe('For each capped list, how many entries were left out.');
+const notes = z
+  .array(z.unknown())
+  .optional()
+  .describe('Caveats from the data service about these figures.');
+
+export const searchImportersOutputSchema = z
+  .object({
+    ...notEnabledOutput,
+    period: monthRange.optional(),
+    importers: z
+      .array(
+        z
+          .object({
+            company_name: str,
+            state: str,
+            containers: num,
+            containers_as_consignee: num,
+            containers_as_notify_party: num,
+            share_as_notify_party: num.describe(
+              'Share of containers where the company is the notify party, 0 to 1.',
+            ),
+            teus: num,
+            estimated_value_usd: num,
+            reefer_share: num,
+            first_month: str,
+            last_month: str,
+            top_ports: z.array(namedVolume).optional(),
+            top_origins: z.array(namedVolume).optional(),
+            top_carriers: z.array(namedVolume).optional(),
+            top_products: z.array(productVolume).optional(),
+            more_not_shown: moreNotShown,
+          })
+          .passthrough(),
+      )
+      .optional()
+      .describe(
+        'Matching importers, best match first; one row per company and state.',
+      ),
+  })
+  .passthrough();
+
+export const getImporterProfileOutputSchema = z
+  .object({
+    ...notEnabledOutput,
+    company_name: str,
+    state: str,
+    found: z
+      .boolean()
+      .optional()
+      .describe('false when no imports were found under this exact name.'),
+    period: monthRange.optional(),
+    totals: z
+      .object({
+        containers: num,
+        containers_as_consignee: num,
+        containers_as_notify_party: num,
+        share_as_notify_party: num,
+        teus: num,
+        states: z.unknown().optional(),
+      })
+      .passthrough()
+      .optional(),
+    monthly: z
+      .array(z.object({ month: str, containers: num, teus: num }).passthrough())
+      .optional(),
+    ports_of_discharge: z.array(namedVolume).optional(),
+    origin_countries: z.array(namedVolume).optional(),
+    carriers: z.array(namedVolume).optional(),
+    destination_states: z.array(namedVolume).optional(),
+    products: z.array(productVolume).optional(),
+    notes,
+    more_not_shown: moreNotShown,
+  })
+  .passthrough();
+
+export const searchCommoditiesOutputSchema = z
+  .object({
+    ...notEnabledOutput,
+    products: z
+      .array(
+        z
+          .object({
+            hs4: str,
+            description: str,
+            common_goods: z
+              .array(z.string())
+              .optional()
+              .describe('Goods commonly declared under this code.'),
+            common_goods_not_shown: num,
+            importers: num.describe('Number of importers using this code.'),
+            estimated_value_usd_12_months: num,
+          })
+          .passthrough(),
+      )
+      .optional(),
+  })
+  .passthrough();
+
+export const rankImportersOutputSchema = z
+  .object({
+    ...notEnabledOutput,
+    period: monthRange.optional(),
+    ranked_by: z.unknown().optional(),
+    filters: z.unknown().optional(),
+    importers: z
+      .array(
+        z
+          .object({
+            rank: z.number(),
+            company_name: str,
+            states: z.unknown().optional(),
+            containers: num,
+            teus: num,
+            estimated_value_usd: num.describe(
+              'Present only when hs4 is given.',
+            ),
+          })
+          .passthrough(),
+      )
+      .optional(),
+    notes,
+  })
+  .passthrough();
 
 // ==================== Results ====================
 
