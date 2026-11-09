@@ -135,6 +135,7 @@ describe('api/mcp handler lifecycle', () => {
     delete process.env.T49_MCP_TOOLSETS;
     delete process.env.T49_MCP_READ_ONLY;
     delete process.env.T49_MCP_ALLOW_SHARED_TOKEN_WRITES;
+    delete process.env.T49_MCP_CONFIRMATION_SECRET;
   });
 
   it('serves both protocol eras and closes the handler after a request', async () => {
@@ -210,6 +211,27 @@ describe('api/mcp handler lifecycle', () => {
       toolsets: DEFAULT_TOOLSETS,
       readOnly: false,
     });
+  });
+
+  it('passes T49_MCP_CONFIRMATION_SECRET to the server', async () => {
+    process.env.T49_MCP_CONFIRMATION_SECRET =
+      'a-test-secret-that-is-long-enough-to-sign';
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    await handler(createRequest() as any, new MockResponse() as any);
+
+    expect(mockState.serverCreateArgs[0]?.options).toMatchObject({
+      confirmationSecret: 'a-test-secret-that-is-long-enough-to-sign',
+    });
+  });
+
+  it('passes no confirmation secret when the env sets none', async () => {
+    const { default: handler } = await import('../../../api/mcp.ts');
+    await handler(createRequest() as any, new MockResponse() as any);
+
+    expect(
+      mockState.serverCreateArgs[0]?.options?.confirmationSecret,
+    ).toBeUndefined();
   });
 
   it('does not forward account context from an ordinary API key', async () => {

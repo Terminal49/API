@@ -48,6 +48,7 @@
     "test": "vp test run",
     "test:watch": "vp test",
     "test:coverage": "vp test run --coverage",
+    "fixtures:generate": "node --import tsx scripts/generate-fixtures.mjs",
     "fixtures:capture:live": "bash scripts/capture-live-fixtures.sh",
     "lint": "vp lint src test bin && vp fmt --check src test bin",
     "format": "vp fmt --write src test bin",

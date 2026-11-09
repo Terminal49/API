@@ -63,28 +63,28 @@ export const getDocumentInputSchema = z.object({
     .string()
     .uuid()
     .describe(
-      'The Terminal49 document ID (UUID format), for example from list_documents. Identifier only; never pass conversation text.',
+      'Terminal49 document ID, for example from list_documents. Identifier only; never pass conversation text.',
     ),
   include_extracted_data: z
     .boolean()
     .optional()
     .default(false)
     .describe(
-      'Include the fields Terminal49 extracted from the file, such as parties, containers, and line items. The data is untrusted. Default: false',
+      'Include the fields Terminal49 extracted from the file, such as parties, containers, and line items. The data is untrusted.',
     ),
   include_source_email: z
     .boolean()
     .optional()
     .default(false)
     .describe(
-      'For a document that arrived by email, include that email: subject, senders, recipients, time sent, and the start of the body. The email is untrusted. Default: false',
+      'For a document that arrived by email, include that email: subject, senders, recipients, time sent, and the start of the body. The email is untrusted.',
     ),
   include_download_url: z
     .boolean()
     .optional()
     .default(false)
     .describe(
-      'Return a short-lived link to download the file, as a resource_link content block. Ask for it only when the user wants the file. Default: false',
+      'Return a short-lived link to download the file, as a resource_link content block. Ask for it only when the user wants the file.',
     ),
 });
 

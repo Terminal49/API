@@ -663,7 +663,7 @@ export interface paths {
         };
         /**
          * Get a vessel using the id
-         * @description Returns a vessel by id. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>
+         * @description Returns a vessel by id, with its current position. Add `show_positions` to include its position history. <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>
          */
         get: operations["get-vessels-id"];
         put?: never;
@@ -690,7 +690,7 @@ export interface paths {
         };
         /**
          * Get a vessel using the imo
-         * @description Returns a vessel by the given IMO number. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>
+         * @description Returns a vessel by the given IMO number, with its current position. Add `show_positions` to include its position history. <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>
          */
         get: operations["get-vessels-imo"];
         put?: never;
@@ -712,7 +712,7 @@ export interface paths {
         };
         /**
          * Get vessel future positions
-         * @description Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>
+         * @description Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>
          */
         get: operations["get-vessels-id-future-positions"];
         put?: never;
@@ -734,7 +734,7 @@ export interface paths {
         };
         /**
          * Get vessel future positions from coordinates
-         * @description Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>
+         * @description Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>
          */
         get: operations["get-vessels-id-future-positions-with-coordinates"];
         put?: never;
@@ -7197,6 +7197,8 @@ export interface operations {
                             group_by: "current_status" | "pod_terminal" | "shipping_line" | "port_of_discharge" | "hold_type" | "pickup_lfd_date" | "pod_arrival_date";
                             /** @description True when more than 200 groups exist; only the first 200 are returned. */
                             truncated: boolean;
+                            /** @description Requested filter keys that were not applied. Omitted when all filters are recognized; the response remains HTTP 200 for compatibility. */
+                            ignored_filters?: string[];
                         };
                     };
                 };
@@ -7611,7 +7613,8 @@ export interface operations {
                     };
                 };
             };
-            /** @description Forbidden - Feature not enabled */
+            401: components["responses"]["Unauthorized"];
+            /** @description Forbidden - Routing data feature is not enabled for this account */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7660,7 +7663,8 @@ export interface operations {
                     };
                 };
             };
-            /** @description Forbidden - Feature not enabled */
+            401: components["responses"]["Unauthorized"];
+            /** @description Forbidden - Routing data feature is not enabled for this account */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7713,6 +7717,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Forbidden - Routing data feature is not enabled for this account */
             403: {
                 headers: {
@@ -7769,6 +7774,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Forbidden - Routing data feature is not enabled for this account */
             403: {
                 headers: {

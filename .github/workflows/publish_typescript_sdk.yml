@@ -18,32 +18,58 @@ jobs:
   publish:
     runs-on: ubuntu-24.04
     steps:
+      - name: Select release family
+        id: release-family
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          case "$GITHUB_EVENT_NAME:$RELEASE_TAG" in
+            workflow_dispatch:*|release:sdk-v*|release:v*|release:[0-9]*) echo "selected=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "selected=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
       - name: Resolve release tag
         id: release-tag
-        run: echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> "$GITHUB_OUTPUT"
+        if: steps.release-family.outputs.selected == 'true'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^(sdk-v-v|sdk-v|v)?[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release tag."
+            exit 1
+          fi
+          printf 'tag=%s\n' "$RELEASE_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
-        uses: actions/checkout@v5
+        if: steps.release-family.outputs.selected == 'true'
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
-          ref: ${{ steps.release-tag.outputs.tag }}
+          ref: refs/tags/${{ steps.release-tag.outputs.tag }}
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        if: steps.release-family.outputs.selected == 'true'
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: 24
+          node-version-file: .tool-versions
           registry-url: https://registry.npmjs.org/
 
       - name: Read SDK version
         id: sdk-version
+        if: steps.release-family.outputs.selected == 'true'
         run: |
           version=$(node -p "require('./sdks/typescript-sdk/package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Check release tag matches SDK version
         id: tag-check
+        if: steps.release-family.outputs.selected == 'true'
+        env:
+          RELEASE_TAG: ${{ steps.release-tag.outputs.tag }}
+          PACKAGE_VERSION: ${{ steps.sdk-version.outputs.version }}
         run: |
-          tag="${{ steps.release-tag.outputs.tag }}"
-          version="${{ steps.sdk-version.outputs.version }}"
+          tag="$RELEASE_TAG"
+          version="$PACKAGE_VERSION"
           if [[ "$tag" == "v$version" || "$tag" == "sdk-v$version" || "$tag" == "$version" || "$tag" == "sdk-v-v$version" ]]; then
             echo "publish=true" >> "$GITHUB_OUTPUT"
           else
