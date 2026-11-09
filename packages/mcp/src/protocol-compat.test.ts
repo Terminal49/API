@@ -9,7 +9,7 @@ import {
   createTerminal49McpServer,
   TERMINAL49_SERVER_INSTRUCTIONS,
 } from './server.js';
-import { defaultTools } from './tools/registry.js';
+import { defaultTools, selectTools, TOOLSETS } from './tools/registry.js';
 
 const LEGACY_PROTOCOL_VERSIONS = [
   '2025-11-25',
@@ -165,6 +165,38 @@ describe('MCP protocol compatibility', () => {
     );
   });
 
+  it('documents when to call track_container using the advertised annotations', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const annotations = new Map(
+      tools.map((tool) => [tool.name, tool.annotations]),
+    );
+    const trackSection = documentedToolSection('track_container');
+
+    expect(annotations.get('track_container')?.readOnlyHint).toBe(false);
+    expect(annotations.get('search_container')?.readOnlyHint).toBe(true);
+    expect(trackSection).toMatch(
+      /call `track_container` only when the user asks to track/,
+    );
+    expect(trackSection).toContain('`readOnlyHint: false`');
+    expect(trackSection).toMatch(/confirm with the user first/);
+    expect(trackSection).toMatch(/To look a number up, use `search_container`/);
+  });
+
+  it('advertises the explicit-request rule for track_container in instructions and tools/list', async () => {
+    const client = await connectClient({ era: 'modern' });
+    const { tools } = await client.listTools();
+    const description = tools.find(
+      (tool) => tool.name === 'track_container',
+    )?.description;
+    const rule = /track_container only when the user asks to track/;
+
+    expect(client.getInstructions()).toMatch(rule);
+    expect(description).toMatch(
+      /call this only when the user asks to track or add a number/,
+    );
+  });
+
   it('warns that estimated_value is not available by lane, in tools/list and the docs', async () => {
     // The API answers estimated_value with a lane dimension or lane filter
     // (pol, pol_country, container_type) with a 400: the trade-intel service
@@ -259,20 +291,28 @@ describe('MCP protocol compatibility', () => {
       ),
     };
 
+    // A doc counts either the default tools/list or every registered tool.
+    const allTools = selectTools({ toolsets: TOOLSETS, readOnly: false });
     for (const [path, text] of Object.entries(docs)) {
       const counts = [
         ...text.matchAll(
-          /\b(\d+)\*{0,2} (?:specialized )?tools\b|Tools \((\d+) Available\)/gi,
+          /\b(\d+)\*{0,2} (?:specialized )?tools\b|Tools \((\d+) (?:Available|by default)/gi,
         ),
       ].map((match) => Number(match[1] ?? match[2]));
       expect(counts.length, path).toBeGreaterThan(0);
-      for (const count of counts) expect(count, path).toBe(tools.length);
+      for (const count of counts) {
+        expect([tools.length, allTools.length], path).toContain(count);
+      }
     }
 
+    // The README's first tool table lists the default tools.
+    const readme = docs['packages/mcp/README.md'];
+    const defaultTable = readme.slice(
+      readme.indexOf('| Tool |'),
+      readme.indexOf('\n\n', readme.indexOf('| Tool |')),
+    );
     const readmeTable = [
-      ...docs['packages/mcp/README.md'].matchAll(
-        /^\| \*\*`([a-z_]+)`\*\* \|/gm,
-      ),
+      ...defaultTable.matchAll(/^\| \*\*`([a-z_]+)`\*\* \|/gm),
     ].map((match) => match[1]);
     expect(readmeTable.sort()).toEqual(tools.map((tool) => tool.name).sort());
   });
@@ -431,10 +471,18 @@ describe('MCP protocol compatibility', () => {
             'track_container',
             'set_party_role',
             'set_custom_field',
+            'stop_shipment_tracking',
+            'resume_shipment_tracking',
+            'cancel_tracking_request',
+            'update_record',
           ].includes(tool.name),
-          destructiveHint: ['set_party_role', 'set_custom_field'].includes(
-            tool.name,
-          ),
+          destructiveHint: [
+            'set_party_role',
+            'set_custom_field',
+            'stop_shipment_tracking',
+            'cancel_tracking_request',
+            'update_record',
+          ].includes(tool.name),
           openWorldHint: tool.name === 'search_docs',
         });
       }

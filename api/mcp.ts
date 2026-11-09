@@ -729,6 +729,9 @@ export default async function handler(
             credentialType: resolvedTerminal49Auth.credentialType,
             toolsets: toolSelection.toolsets,
             readOnly: toolSelection.readOnly,
+            // Serverless instances share no memory, so HTTP has no fallback
+            // secret: without this env var, tier C tools refuse to write.
+            confirmationSecret: process.env.T49_MCP_CONFIRMATION_SECRET,
             writeDeadlineAt: deadlineAt,
           },
         ),

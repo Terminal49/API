@@ -9,6 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 import handler from '../../../api/mcp.ts';
+import { HELP_CENTER_ORIGIN } from '../src/tools/help-center.js';
 import { MINTLIFY_SEARCH_API_URL } from '../src/tools/search-docs.js';
 
 const nativeFetch = globalThis.fetch;
@@ -94,6 +95,10 @@ describe('paid documentation search through the native HTTP gateway', () => {
       'fetch',
       async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
         const request = new Request(input, init);
+        // The Help Center search runs alongside and is public; these tests cover the paid path.
+        if (request.url.startsWith(HELP_CENTER_ORIGIN)) {
+          return new Response('', { status: 404 });
+        }
         requests.push(request);
         if (request.url === 'https://api.test/v2/me') {
           return acceptIdentity

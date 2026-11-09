@@ -256,6 +256,51 @@ describe('Terminal49Client transport resilience', () => {
     expect(attempt).toBe(1);
   });
 
+  it('carries the Retry-After wait on a RateLimitError, uncapped', async () => {
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl: (async () =>
+        new Response(JSON.stringify({ errors: [{ detail: 'slow down' }] }), {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/vnd.api+json',
+            'Retry-After': '120',
+          },
+        })) as unknown as typeof fetch,
+      maxRetries: 0,
+    });
+
+    await expect(
+      client.createTrackingRequest({
+        requestType: 'container',
+        requestNumber: 'MSCU1234567',
+      }),
+    ).rejects.toMatchObject({ name: 'RateLimitError', retryAfterMs: 120_000 });
+  });
+
+  it('leaves retryAfterMs undefined when a 429 has no Retry-After', async () => {
+    const client = new Terminal49Client({
+      apiToken: 'token-123',
+      apiBaseUrl: baseUrl,
+      fetchImpl: (async () =>
+        jsonResponse(
+          { errors: [{ detail: 'slow down' }] },
+          429,
+        )) as unknown as typeof fetch,
+      maxRetries: 0,
+    });
+
+    const error = await client
+      .createTrackingRequest({
+        requestType: 'container',
+        requestNumber: 'MSCU1234567',
+      })
+      .catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(RateLimitError);
+    expect((error as RateLimitError).retryAfterMs).toBeUndefined();
+  });
+
   it('stops iterate() at the safety page bound even when next never ends', async () => {
     // A misconfigured/no-op filter where the server always advertises a
     // `next` link would otherwise walk the entire dataset forever. The
