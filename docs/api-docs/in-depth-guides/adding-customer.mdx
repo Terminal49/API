@@ -144,10 +144,12 @@ A customer has two possible IDs:
 
 `relationships.customer` is `null` when the customer party has no linked account. Parties created through `POST /v2/parties` have no linked account.
 
+On a shipment that another account shares with you, `relationships.customer` is omitted. A missing `relationships.customer` does not mean the shipment has no customer.
+
 To match records to your customers, store the party ID:
 
 1. When you receive a shipment, call [`GET /v2/shipments/SHIPMENT_ID/party_roles`](/api-docs/api-reference/party-roles/list-shipment-party-roles). Find the role with `role` set to `customer`. The linked party is returned in `included`.
-2. To list shipments or containers for a customer, pass the party ID to `filter[customer_id]`. This filter accepts a customer party ID or a customer account ID. See [List filters](/api-docs/api-reference/list-filters).
+2. To list shipments or containers for a customer, pass the party ID to `filter[customer_id]`. This filter accepts a customer party ID or a customer account ID. An account ID also matches that account's own shipments that have no customer role, because the filter falls back to the shipment creator. See [List filters](/api-docs/api-reference/list-filters).
 
 ## Create a party for a customer
 
