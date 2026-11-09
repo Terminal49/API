@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://aka.ms/m365-agents-toolkits/v1.12/yaml.schema.json
+version: v1.12
+environmentFolderPath: ./env
+provision:
+  - uses: teamsApp/create
+    with:
+      name: AskT49
+    writeToEnvironmentFile:
+      teamsAppId: TEAMS_APP_ID
+  - uses: oauth/register
+    with:
+      name: Terminal49 Copilot MCP
+      appId: ${{TEAMS_APP_ID}}
+      # Copilot MCP cannot resolve a Teams-specific app restriction.
+      applicableToApps: AnyApp
+      targetAudience: AnyTenant
+      clientId: ${{TERMINAL49_MCP_CLIENT_ID}}
+      clientSecret: ${{SECRET_TERMINAL49_MCP_CLIENT_SECRET}}
+      authorizationUrl: https://auth.terminal49.com/oauth2/authorize
+      tokenUrl: https://auth.terminal49.com/oauth2/token
+      refreshUrl: https://auth.terminal49.com/oauth2/token
+      scope: openid,profile,email,offline_access
+      flow: authorizationCode
+      identityProvider: Custom
+      isPKCEEnabled: true
+      tokenExchangeMethodType: PostRequestBody
+      baseUrl: https://mcp.terminal49.com
+    writeToEnvironmentFile:
+      configurationId: TERMINAL49_MCP_AUTH_ID
+  - uses: teamsApp/zipAppPackage
+    with:
+      manifestPath: ./appPackage/manifest.json
+      outputZipPath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
+      outputFolder: ./appPackage/build
+  - uses: teamsApp/validateAppPackage
+    with:
+      appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
+  - uses: teamsApp/update
+    with:
+      appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
+  - uses: teamsApp/extendToM365
+    with:
+      appPackagePath: ./appPackage/build/appPackage.${{TEAMSFX_ENV}}.zip
+    writeToEnvironmentFile:
+      titleId: M365_TITLE_ID
+      appId: M365_APP_ID
+  # Keep existing registrations aligned; oauth/register only creates new records.
+  - uses: oauth/update
+    with:
+      name: Terminal49 Copilot MCP
+      appId: ${{TEAMS_APP_ID}}
+      configurationId: ${{TERMINAL49_MCP_AUTH_ID}}
+      applicableToApps: AnyApp
+      targetAudience: AnyTenant
+      clientId: ${{TERMINAL49_MCP_CLIENT_ID}}
+      clientSecret: ${{SECRET_TERMINAL49_MCP_CLIENT_SECRET}}
+      authorizationUrl: https://auth.terminal49.com/oauth2/authorize
+      tokenUrl: https://auth.terminal49.com/oauth2/token
+      refreshUrl: https://auth.terminal49.com/oauth2/token
+      scope: openid,profile,email,offline_access
+      isPKCEEnabled: true
+      tokenExchangeMethodType: PostRequestBody
+      baseUrl: https://mcp.terminal49.com

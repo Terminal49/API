@@ -31,6 +31,31 @@
 
   analytics.invoked = true;
 
+  function pageUrl(value) {
+    if (!value || typeof value !== 'string') return undefined;
+    try {
+      var url = new URL(value, location.origin);
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') return undefined;
+      return url.origin + url.pathname;
+    } catch {
+      return undefined;
+    }
+  }
+
+  function referrerOrigin(value) {
+    var url = pageUrl(value);
+    return url ? new URL(url).origin : undefined;
+  }
+
+  function minimizePage(page) {
+    if (!page || typeof page !== 'object') return;
+    if ('url' in page) page.url = pageUrl(page.url);
+    if ('referrer' in page) page.referrer = referrerOrigin(page.referrer);
+    delete page.search;
+    delete page.query;
+    delete page.hash;
+  }
+
   analytics.methods = [
     'trackSubmit',
     'trackClick',
@@ -69,12 +94,12 @@
         var c = document.querySelector("link[rel='canonical']");
         n.push({
           __t: 'bpc',
-          c: (c && c.getAttribute('href')) || void 0,
+          c: pageUrl(c && c.getAttribute('href')),
           p: location.pathname,
-          u: location.href,
-          s: location.search,
+          s: '',
+          u: pageUrl(location.href),
           t: document.title,
-          r: document.referrer,
+          r: referrerOrigin(document.referrer),
         });
       }
       n.unshift(e);
@@ -101,6 +126,21 @@
 
   analytics._writeKey = WRITE_KEY;
   analytics.SNIPPET_VERSION = '5.2.1';
+
+  analytics.addSourceMiddleware(function (event) {
+    var data = event.payload.obj;
+    if (data.context) {
+      minimizePage(data.context.page);
+      if (typeof data.context.referrer === 'string') {
+        data.context.referrer = referrerOrigin(data.context.referrer);
+      } else if (data.context.referrer) {
+        data.context.referrer.url = referrerOrigin(data.context.referrer.url);
+      }
+      delete data.context.campaign;
+    }
+    if (data.type === 'page') minimizePage(data.properties);
+    event.next(event.payload);
+  });
 
   analytics.load(WRITE_KEY, {
     integrations: { 'Segment.io': { apiHost: API_HOST } },

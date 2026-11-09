@@ -62,4 +62,6 @@ For CIMD testing, the app serves metadata at:
 http://localhost:8787/client-metadata.json
 ```
 
-Because WorkOS cannot fetch your localhost URL from the cloud, expose this through a public HTTPS tunnel and use that tunnel URL as the OAuth `client_id`.
+Because WorkOS cannot fetch your localhost URL from the cloud, expose only `GET /client-metadata.json` through a public HTTPS proxy. Reject every other path and method at that proxy, and use the metadata document's HTTPS URL as the OAuth `client_id`. Keep the helper bound to `127.0.0.1`. Its browser page, callback, and `/api/*` routes use a local session cookie and have no public-access authentication.
+
+Clicking **Clear** invalidates pending authorization, discovery, and refresh requests for that session. Those requests return HTTP `409` if they finish after the clear. A second refresh also returns HTTP `409` while the first refresh is in progress. Wait for the first response before retrying.

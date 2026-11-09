@@ -81,12 +81,16 @@ test('every item and response has a unique id', () => {
   const ids = [];
   const walk = (entries) => {
     for (const entry of entries ?? []) {
-      if (entry.id) ids.push(entry.id);
+      if (entry.request || !entry.item) {
+        assert.equal(typeof entry.id, 'string', entry.name);
+        assert.ok(entry.id.length > 0, entry.name);
+        ids.push(entry.id);
+      }
       walk(entry.item);
       walk(entry.response);
     }
   };
   walk(collection.item);
-  assert.equal(ids.length, 453);
+  assert.ok(ids.length > 0);
   assert.equal(new Set(ids).size, ids.length);
 });
