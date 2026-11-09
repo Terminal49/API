@@ -2,9 +2,9 @@
  * t49 webhook-notifications <action>
  */
 
+import type { WebhookEvent } from '@terminal49/sdk';
 import type { Command } from 'commander';
-import { positiveInt } from '../util/input.js';
-import { action } from './action.js';
+import { action, defineList } from './action.js';
 
 type ListOptions = {
   page?: number;
@@ -12,7 +12,8 @@ type ListOptions = {
 };
 
 type ExamplesOptions = {
-  event?: string;
+  /** Validated by the API, which answers 400 for an unknown event. */
+  event: WebhookEvent;
 };
 
 function localOptions<T>(command: Command): T {
@@ -27,19 +28,19 @@ export function registerWebhookNotificationsCommand(program: Command): void {
 
   const listCommand = cmd
     .command('list')
-    .description('List webhook notifications')
-    .option('--page <number>', 'Page number', positiveInt('--page'))
-    .option('--page-size <number>', 'Page size', positiveInt('--page-size'));
-  listCommand.action(
-    action('webhook-notifications.list', async ({ client, globals }) => {
+    .description('List webhook notifications');
+  defineList(listCommand, {
+    name: 'webhook-notifications.list',
+    paginated: true,
+    run: ({ client, format }) => {
       const options = localOptions<ListOptions>(listCommand);
       return client.webhookNotifications.list({
         page: options.page,
         pageSize: options.pageSize,
-        format: globals.format,
+        format,
       });
-    }),
-  );
+    },
+  });
 
   cmd
     .command('get <id>')
@@ -54,8 +55,11 @@ export function registerWebhookNotificationsCommand(program: Command): void {
 
   const examplesCommand = cmd
     .command('examples')
-    .description('Get webhook payload examples')
-    .option('--event <event>', 'Filter by event type');
+    .description('Get the example webhook payload for an event')
+    .requiredOption(
+      '--event <event>',
+      'Webhook event name, for example container.created',
+    );
   examplesCommand.action(
     action('webhook-notifications.examples', async ({ client, globals }) => {
       const options = localOptions<ExamplesOptions>(examplesCommand);

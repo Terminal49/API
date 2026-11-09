@@ -1,0 +1,10 @@
+{
+  "bol_number": "SYNTHBOL000001",
+  "found": true,
+  "containers": [
+    {
+      "container_number": "SYNX0000001",
+      "consignee": "EXAMPLE FIXTURE SUPPLY"
+    }
+  ]
+}

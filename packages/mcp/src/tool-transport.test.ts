@@ -4,7 +4,9 @@ import {
 } from '@modelcontextprotocol/client';
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { mapContainerRoute } from '@terminal49/sdk';
 import { createTerminal49McpServer } from './server.js';
+import { EXPECTED_ROUTE_SUMMARY, routeFixture } from './test/route-fixture.js';
 
 vi.mock('@sentry/node', () => ({
   captureException: vi.fn(),
@@ -25,14 +27,18 @@ const sdk = vi.hoisted(() => ({
   shipmentsList: vi.fn(),
   shippingLinesList: vi.fn(),
   trackingRequestsList: vi.fn(),
+  me: vi.fn(),
 }));
 
-vi.mock('@terminal49/sdk', () => ({
+vi.mock('@terminal49/sdk', async (importOriginal) => ({
+  mapContainerRoute: (await importOriginal<typeof import('@terminal49/sdk')>())
+    .mapContainerRoute,
   Terminal49Client: class Terminal49Client {
     search = sdk.search;
     createTrackingRequestFromInfer = sdk.createTrackingRequestFromInfer;
     createTrackingRequest = sdk.createTrackingRequest;
     getContainer = sdk.containersGet;
+    me = sdk.me;
     containers = {
       get: sdk.containersGet,
       events: sdk.containersEvents,
@@ -63,6 +69,7 @@ const TOOL_NAMES = [
   'list_shipments',
   'list_containers',
   'list_tracking_requests',
+  'whoami',
 ] as const;
 type ToolName = (typeof TOOL_NAMES)[number];
 
@@ -184,49 +191,6 @@ function eventsRaw() {
   };
 }
 
-function routeRaw() {
-  return {
-    data: {
-      id: 'route-1',
-      type: 'route',
-      attributes: {
-        created_at: '2026-07-01T00:00:00Z',
-        updated_at: '2026-08-21T05:00:00Z',
-      },
-      relationships: {
-        route_locations: {
-          data: [{ id: 'route-location-1', type: 'route_location' }],
-        },
-      },
-    },
-    included: [
-      {
-        id: 'route-location-1',
-        type: 'route_location',
-        attributes: {
-          inbound_mode: 'vessel',
-          inbound_scac: 'MAEU',
-          inbound_eta_at: '2026-08-18T10:00:00Z',
-          outbound_mode: 'truck',
-        },
-        relationships: {
-          port: { data: { id: 'port-1', type: 'port' } },
-        },
-      },
-      {
-        id: 'port-1',
-        type: 'port',
-        attributes: {
-          code: 'USLAX',
-          name: 'Los Angeles',
-          city: 'Los Angeles',
-          country_code: 'US',
-        },
-      },
-    ],
-  };
-}
-
 async function connectClient() {
   const handler = createMcpHandler(
     () => createTerminal49McpServer('fixture-token', 'https://api.test'),
@@ -294,8 +258,25 @@ function configureHappyPath(toolName: ToolName): void {
         },
       ]);
       return;
+    case 'whoami':
+      sdk.me.mockResolvedValue({
+        id: 'key-1',
+        kind: 'api_key',
+        channel: 'api',
+        name: 'Production key',
+        features: { data_out_api: { status: 'available' } },
+        account: {
+          id: 'b7e2c9a1-5d3f-4e8b-9c0a-1f2e3d4c5b6a',
+          companyName: 'Acme Logistics',
+          companyType: 'shipper',
+          plan: 'customer',
+          trackingSlots: null,
+        },
+        user: null,
+      });
+      return;
     case 'get_container_route':
-      sdk.containersRoute.mockResolvedValue({ raw: routeRaw() });
+      sdk.containersRoute.mockResolvedValue(mapContainerRoute(routeFixture));
       return;
     case 'list_shipments':
       sdk.shipmentsList.mockResolvedValue({
@@ -342,7 +323,7 @@ function configureHappyPath(toolName: ToolName): void {
             id: 'tracking-request-1',
             requestNumber: 'CAIU1234567',
             requestType: 'container',
-            status: 'succeeded',
+            status: 'created',
             scac: 'MAEU',
             createdAt: '2026-08-20T12:00:00Z',
             updatedAt: '2026-08-20T12:05:00Z',
@@ -378,7 +359,9 @@ function argumentsFor(toolName: ToolName): Record<string, unknown> {
     case 'list_containers':
       return { page: 1, page_size: 10 };
     case 'list_tracking_requests':
-      return { status: 'succeeded', page: 1, page_size: 10 };
+      return { status: 'created', page: 1, page_size: 10 };
+    case 'whoami':
+      return {};
     default: {
       const exhaustive: never = toolName;
       throw new Error(`Unhandled tool ${exhaustive}`);
@@ -434,16 +417,21 @@ function expectedOutputFor(toolName: ToolName): Record<string, unknown> {
           expect.objectContaining({ scac: 'MAEU', name: 'Maersk' }),
         ],
       };
-    case 'get_container_route':
+    case 'whoami':
       return {
-        route_id: 'route-1',
-        total_legs: 1,
-        route_locations: [
-          expect.objectContaining({
-            port: expect.objectContaining({ code: 'USLAX' }),
-          }),
-        ],
+        kind: 'api_key',
+        channel: 'api',
+        credential_name: 'Production key',
+        account: expect.objectContaining({
+          company_name: 'Acme Logistics',
+          company_type: 'shipper',
+          plan: 'customer',
+        }),
+        user: null,
+        other_accounts: [],
       };
+    case 'get_container_route':
+      return EXPECTED_ROUTE_SUMMARY;
     case 'list_shipments':
       return {
         items: [
@@ -469,7 +457,7 @@ function expectedOutputFor(toolName: ToolName): Record<string, unknown> {
         items: [
           expect.objectContaining({
             requestNumber: 'CAIU1234567',
-            status: 'succeeded',
+            status: 'created',
           }),
         ],
       };
@@ -512,6 +500,9 @@ function configureFailure(toolName: ToolName, error: Error): void {
       return;
     case 'list_tracking_requests':
       sdk.trackingRequestsList.mockRejectedValue(error);
+      return;
+    case 'whoami':
+      sdk.me.mockRejectedValue(error);
       return;
     default: {
       const exhaustive: never = toolName;
@@ -646,11 +637,93 @@ describe('all public tools over MCP client transport', () => {
     },
   );
 
+  it.each([
+    {
+      name: 'AuthenticationError',
+      status: 401,
+      expected:
+        'Terminal49 rejected the credentials for this request (HTTP 401). Check that the API key or connection is valid and has API access.',
+    },
+    {
+      name: 'AuthorizationError',
+      status: 403,
+      expected:
+        'This Terminal49 account is not permitted to make this request (HTTP 403).',
+    },
+  ])(
+    'list_shipments names a $status credential failure without upstream detail',
+    async ({ name, status, expected }) => {
+      const denied = Object.assign(
+        new Error('private upstream auth detail token=secret-token'),
+        { name, status },
+      );
+      configureFailure('list_shipments', denied);
+      const { client, handler } = await connectClient();
+
+      try {
+        const result = await client.callTool({
+          name: 'list_shipments',
+          arguments: argumentsFor('list_shipments'),
+        });
+
+        expect(result.isError).toBe(true);
+        expect(result.content).toEqual([{ type: 'text', text: expected }]);
+      } finally {
+        await client.close();
+        await handler.close();
+      }
+    },
+  );
+
+  it('track_container returns the created request alongside its readable linked container', async () => {
+    sdk.search.mockResolvedValue({ data: [] });
+    sdk.createTrackingRequestFromInfer.mockResolvedValue({
+      infer: { inferred_type: 'container', selected_scac: 'MAEU' },
+      trackingRequest: {
+        data: {
+          id: 'tr-created',
+          type: 'tracking_request',
+          attributes: { request_type: 'container', scac: 'MAEU' },
+        },
+        included: [{ id: CONTAINER_ID, type: 'container' }],
+      },
+    });
+    sdk.containersGet.mockResolvedValue({ raw: containerRaw() });
+    const { client, handler } = await connectClient();
+
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'CAIU2885402', scac: 'MAEU' },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        id: CONTAINER_ID,
+        tracking_request_created: true,
+        tracking_request: {
+          id: 'tr-created',
+          request_number: 'CAIU2885402',
+          number_type: 'container',
+          scac: 'MAEU',
+        },
+      });
+    } finally {
+      await client.close();
+      await handler.close();
+    }
+  });
+
   it('track_container preserves a created request when its linked container is not readable yet', async () => {
     sdk.search.mockResolvedValue({ data: [] });
     sdk.createTrackingRequestFromInfer.mockResolvedValue({
       infer: { inferred_type: 'container', selected_scac: 'MAEU' },
       trackingRequest: {
+        data: {
+          id: 'tr-created',
+          type: 'tracking_request',
+          attributes: { request_type: 'container', scac: 'MAEU' },
+        },
         included: [{ id: CONTAINER_ID, type: 'container' }],
       },
     });
@@ -669,7 +742,9 @@ describe('all public tools over MCP client transport', () => {
       expect(result.structuredContent).toMatchObject({
         tracking_request_created: true,
         tracking_request: {
+          id: 'tr-created',
           request_number: 'CAIU2885402',
+          number_type: 'container',
           container_id: CONTAINER_ID,
         },
       });

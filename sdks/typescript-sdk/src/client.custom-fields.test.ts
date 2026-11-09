@@ -111,4 +111,38 @@ describe('custom fields', () => {
     expect(calls[0].url.pathname).toBe('/v2/shipments/ship%201/custom_fields');
     expect(result[0].name).toBe('Project Manager');
   });
+
+  it('maps tracking request custom fields from the tracking request sub-resource', async () => {
+    const { client, calls } = buildClient(
+      '/tracking_requests/tr-1/custom_fields?include=definition',
+    );
+
+    const result = await client.trackingRequests.customFields('tr-1', {
+      format: 'mapped',
+    });
+
+    expect(calls[0].url.pathname).toBe(
+      '/v2/tracking_requests/tr-1/custom_fields',
+    );
+    expect(result).toEqual([
+      {
+        id: 'cf-1',
+        slug: 'project_manager',
+        name: 'Project Manager',
+        value: 'Roberto',
+        displayValue: 'Roberto',
+        dataType: 'short_text',
+        updatedAt: '2026-09-29T08:00:00Z',
+      },
+      {
+        id: 'cf-2',
+        slug: 'is_priority',
+        name: undefined,
+        value: true,
+        displayValue: 'Yes',
+        dataType: undefined,
+        updatedAt: null,
+      },
+    ]);
+  });
 });

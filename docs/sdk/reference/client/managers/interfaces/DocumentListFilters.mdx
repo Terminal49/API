@@ -1,0 +1,17 @@
+---
+title: "Interface: DocumentListFilters"
+---
+
+# Interface: DocumentListFilters
+
+Filters accepted by [DocumentManager.list](/sdk/reference/client/managers/classes/DocumentManager#list).
+
+## Properties
+
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| <a id="property-documenttypes"></a> `documentTypes?` | readonly `string`[] | One or more document types (sent comma-separated). |
+| <a id="property-filename"></a> `filename?` | `string` | Full-text match on the document filename. |
+| <a id="property-include"></a> `include?` | `string` | Comma-separated JSON:API includes. |
+| <a id="property-reference"></a> `reference?` | `string` | Filter by reference token. |
+| <a id="property-sort"></a> `sort?` | `string` | Sort by `document_type`, `added_by`, or `created_at`; prefix with `-` for descending. |

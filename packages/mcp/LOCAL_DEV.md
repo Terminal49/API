@@ -48,7 +48,7 @@ npm run build --workspace @terminal49/mcp
 - Live-reload variant (no build): `"command": "npx", "args": ["-y","tsx","<REPO>/packages/mcp/src/index.ts"]`.
 
 Restart Claude Desktop, then ask: *"List the Terminal49 tools"* and
-*"Track container CAIU1234567 with Maersk."*
+*"Track container MSKU4330011 with Maersk."*
 
 ---
 

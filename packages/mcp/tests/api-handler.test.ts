@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import { DEFAULT_TOOLSETS } from '../src/tools/registry.js';
 
 const mockState = vi.hoisted(() => ({
   servers: [] as any[],
@@ -9,6 +10,7 @@ const mockState = vi.hoisted(() => ({
     apiToken: string;
     apiBaseUrl: string | undefined;
     accountId: string | undefined;
+    options: Record<string, unknown> | undefined;
   }>,
   handleRequestImpl: undefined as
     | ((req: unknown, res: unknown, body: unknown) => Promise<void>)
@@ -17,12 +19,22 @@ const mockState = vi.hoisted(() => ({
 
 vi.mock('../src/server.js', () => ({
   createTerminal49McpServer: vi.fn(
-    (apiToken: string, apiBaseUrl?: string, accountId?: string) => {
+    (
+      apiToken: string,
+      apiBaseUrl?: string,
+      accountId?: string,
+      options?: Record<string, unknown>,
+    ) => {
       const server = {
         close: vi.fn().mockResolvedValue(undefined),
       };
 
-      mockState.serverCreateArgs.push({ apiToken, apiBaseUrl, accountId });
+      mockState.serverCreateArgs.push({
+        apiToken,
+        apiBaseUrl,
+        accountId,
+        options,
+      });
       mockState.servers.push(server);
       return server;
     },
@@ -120,6 +132,10 @@ describe('api/mcp handler lifecycle', () => {
     delete process.env.T49_API_BASE_URL;
     delete process.env.T49_MCP_ALLOWED_HOSTS;
     delete process.env.T49_MCP_ALLOWED_ORIGINS;
+    delete process.env.T49_MCP_TOOLSETS;
+    delete process.env.T49_MCP_READ_ONLY;
+    delete process.env.T49_MCP_ALLOW_SHARED_TOKEN_WRITES;
+    delete process.env.T49_MCP_CONFIRMATION_SECRET;
   });
 
   it('serves both protocol eras and closes the handler after a request', async () => {
@@ -190,6 +206,32 @@ describe('api/mcp handler lifecycle', () => {
     await handler(req as any, res as any);
 
     expect(mockState.serverCreateArgs[0]?.apiToken).toBe('token-scheme-value');
+    expect(mockState.serverCreateArgs[0]?.options).toMatchObject({
+      credentialType: 'api_key',
+      toolsets: DEFAULT_TOOLSETS,
+      readOnly: false,
+    });
+  });
+
+  it('passes T49_MCP_CONFIRMATION_SECRET to the server', async () => {
+    process.env.T49_MCP_CONFIRMATION_SECRET =
+      'a-test-secret-that-is-long-enough-to-sign';
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    await handler(createRequest() as any, new MockResponse() as any);
+
+    expect(mockState.serverCreateArgs[0]?.options).toMatchObject({
+      confirmationSecret: 'a-test-secret-that-is-long-enough-to-sign',
+    });
+  });
+
+  it('passes no confirmation secret when the env sets none', async () => {
+    const { default: handler } = await import('../../../api/mcp.ts');
+    await handler(createRequest() as any, new MockResponse() as any);
+
+    expect(
+      mockState.serverCreateArgs[0]?.options?.confirmationSecret,
+    ).toBeUndefined();
   });
 
   it('does not forward account context from an ordinary API key', async () => {
@@ -229,6 +271,7 @@ describe('api/mcp handler lifecycle', () => {
     expect(mockState.serverCreateArgs[0]).toMatchObject({
       apiToken: 'Bearer token-scheme-value',
       accountId,
+      options: { credentialType: 'agent' },
     });
   });
 
@@ -319,6 +362,135 @@ describe('api/mcp handler lifecycle', () => {
     await handler(req as any, res as any);
 
     expect(mockState.serverCreateArgs[0]?.apiToken).toBe('env-token-value');
+    expect(mockState.serverCreateArgs[0]?.options).toMatchObject({
+      credentialType: 'shared_token',
+      toolsets: ['core', 'trade'],
+    });
+  });
+
+  it('keeps the shared env token on core and trade even when the operator allows more', async () => {
+    process.env.T49_API_TOKEN = 'env-token-value';
+    process.env.T49_MCP_CLIENT_SECRET = 'mcp-client-secret';
+    process.env.T49_MCP_TOOLSETS = 'core,documents,operations';
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer mcp-client-secret',
+        'x-t49-mcp-toolsets': 'operations',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(mockState.serverCreateArgs[0]?.options).toMatchObject({
+      toolsets: [],
+    });
+  });
+
+  it('narrows the operator toolsets to the requested toolsets', async () => {
+    process.env.T49_MCP_TOOLSETS = 'core,documents';
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Token token-scheme-value',
+        'x-t49-mcp-toolsets': 'documents,operations',
+        'x-t49-mcp-read-only': 'true',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(mockState.serverCreateArgs[0]?.options).toMatchObject({
+      toolsets: ['documents'],
+      readOnly: true,
+    });
+  });
+
+  it('applies read-only mode from the server env', async () => {
+    process.env.T49_MCP_READ_ONLY = 'true';
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Token token-scheme-value',
+        'x-t49-mcp-read-only': 'false',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(mockState.serverCreateArgs[0]?.options).toMatchObject({
+      readOnly: true,
+    });
+  });
+
+  it.each([
+    ['x-t49-mcp-toolsets', 'core,admin'],
+    ['x-t49-mcp-read-only', 'sometimes'],
+  ])(
+    'rejects a malformed %s header before constructing a server',
+    async (header, value) => {
+      const { default: handler } = await import('../../../api/mcp.ts');
+      const req = createRequest({
+        headers: {
+          host: 'localhost',
+          authorization: 'Token token-scheme-value',
+          [header]: value,
+        },
+      });
+      const res = new MockResponse();
+
+      await handler(req as any, res as any);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.payload).toMatchObject({ error: 'Bad Request' });
+      expect(mockState.servers).toHaveLength(0);
+    },
+  );
+
+  it('fails with a generic 500 when the server toolsets env is malformed', async () => {
+    process.env.T49_MCP_TOOLSETS = 'core,admin';
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Token token-scheme-value',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toEqual({
+      jsonrpc: '2.0',
+      error: { code: -32603, message: 'Internal server error' },
+      id: null,
+    });
+    expect(mockState.servers).toHaveLength(0);
+  });
+
+  it('allows browsers to send the toolset headers', async () => {
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const res = new MockResponse();
+
+    await handler(createRequest({ method: 'OPTIONS' }) as any, res as any);
+
+    expect(res.headers['Access-Control-Allow-Headers']).toContain(
+      'X-T49-MCP-Toolsets',
+    );
+    expect(res.headers['Access-Control-Allow-Headers']).toContain(
+      'X-T49-MCP-Read-Only',
+    );
   });
 
   it('resolves WorkOS MCP bearer tokens into Terminal49 bearer account context', async () => {
@@ -367,6 +539,7 @@ describe('api/mcp handler lifecycle', () => {
       apiToken: 'Bearer terminal49-local-jwt',
       apiBaseUrl: 'https://api.test/v2',
       accountId: 'account-123',
+      options: { credentialType: 'user' },
     });
   });
 

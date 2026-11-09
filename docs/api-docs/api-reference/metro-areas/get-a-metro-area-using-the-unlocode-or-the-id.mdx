@@ -5,3 +5,5 @@ og:title: Get Metro Area by UNLOCODE or ID | Terminal49 API
 og:description: Retrieve detailed metro area information using the UNLOCODE or ID, enhancing geographic data management with Terminal49's API.
 openapi: get /metro_areas/{id}
 ---
+
+Pass a metro area ID or a UN/LOCODE. An unknown ID or UN/LOCODE returns status `200` with `data: null`, not `404`.

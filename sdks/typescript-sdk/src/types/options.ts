@@ -25,6 +25,16 @@ export interface ListOptions extends CallOptions {
   maxRows?: number;
 }
 
+/** Dimensions `containers.summary` can count by. */
+export type ContainerSummaryGroupBy =
+  | 'current_status'
+  | 'pod_terminal'
+  | 'shipping_line'
+  | 'port_of_discharge'
+  | 'hold_type'
+  | 'pickup_lfd_date'
+  | 'pod_arrival_date';
+
 export type IncludeParam<TInclude extends string> =
   | readonly TInclude[]
   | string;
@@ -46,4 +56,7 @@ export type ContainerInclude =
   | 'pickup_facility'
   | 'transport_events';
 
-export type TrackingRequestInclude = 'shipment' | 'container';
+/** Relationships the API serializes on a tracking request. Any other include returns 400. */
+export type TrackingRequestInclude = 'tracked_object' | 'customer' | 'user';
+
+export type WebhookNotificationInclude = 'webhook' | 'reference_object';

@@ -14,7 +14,7 @@ import {
   createSuccessEnvelope,
   serializeEnvelope,
 } from './json.js';
-import { projectFields } from './fields.js';
+import { normalizePathList, projectFields } from './fields.js';
 import { renderTable } from './table.js';
 
 export interface FormatterOptions {
@@ -70,7 +70,11 @@ export function createFormatter(opts: FormatterOptions = {}): Formatter {
         return;
       }
 
-      process.stdout.write(renderTable(command, payload));
+      process.stdout.write(
+        renderTable(command, payload, {
+          fields: normalizePathList(opts.fields),
+        }),
+      );
     },
     outputError(command, error) {
       const payload = createErrorEnvelope(command, error);

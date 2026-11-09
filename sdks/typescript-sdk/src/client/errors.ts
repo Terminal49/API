@@ -11,7 +11,7 @@ export class Terminal49Error extends Error {
   }
 }
 
-/** Thrown when the API token is invalid or missing (HTTP 401). */
+/** Thrown on HTTP 401: the API token is invalid or missing, or the API denied the action for this token. */
 export class AuthenticationError extends Terminal49Error {
   constructor(message: string, status = 401, details?: unknown) {
     super(message, status, details);
@@ -53,9 +53,18 @@ export class ValidationError extends Terminal49Error {
 
 /** Thrown when the API rate limit has been exceeded (HTTP 429). The SDK retries automatically. */
 export class RateLimitError extends Terminal49Error {
-  constructor(message: string, status = 429, details?: unknown) {
+  /** How long the API asked the caller to wait, from its `Retry-After` header. Undefined when it sent none. */
+  retryAfterMs?: number;
+
+  constructor(
+    message: string,
+    status = 429,
+    details?: unknown,
+    retryAfterMs?: number,
+  ) {
     super(message, status, details);
     this.name = 'RateLimitError';
+    this.retryAfterMs = retryAfterMs;
   }
 }
 
@@ -137,6 +146,18 @@ export function extractErrorMessage(body: any): string {
     return body.detail;
   }
 
+  // Schema validation failures from the trade intelligence endpoints:
+  // `{ detail: [{ loc: ["body", "limit"], msg: "...", type: "..." }] }`.
+  if (Array.isArray(body?.detail) && body.detail.length > 0) {
+    return body.detail
+      .map((item: any) => {
+        const msg = item?.msg || item?.type || 'Invalid value';
+        const loc = Array.isArray(item?.loc) ? item.loc.join('.') : undefined;
+        return loc ? `${msg} (${loc})` : msg;
+      })
+      .join('; ');
+  }
+
   return 'Unknown error';
 }
 
@@ -144,13 +165,17 @@ export function toTerminal49Error(
   status: number,
   message: string,
   details?: unknown,
+  retryAfterMs?: number,
 ): Terminal49Error {
   switch (status) {
     case 400:
       return new ValidationError(message, status, details);
     case 401:
+      // The API also answers 401 for a valid token that lacks permission, with a detail saying so.
       return new AuthenticationError(
-        'Invalid or missing API token',
+        message && message !== 'Unknown error'
+          ? message
+          : 'Invalid or missing API token',
         status,
         details,
       );
@@ -174,6 +199,7 @@ export function toTerminal49Error(
         message || 'Rate limit exceeded',
         status,
         details,
+        retryAfterMs,
       );
     case 500:
     case 502:

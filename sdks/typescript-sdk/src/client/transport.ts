@@ -1,8 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import createClient, {
-  type FetchResponse,
-  type MiddlewareCallbackParams,
-} from 'openapi-fetch';
+import createClient, { type MiddlewareCallbackParams } from 'openapi-fetch';
 import type { paths } from '../generated/terminal49.js';
 import { readSuccessBody } from './body.js';
 import { toNetworkError } from './errors.js';
@@ -73,17 +70,20 @@ export class Transport {
     this.client.use(interceptor);
   }
 
-  public async execute<T = any>(
-    fn: () => Promise<FetchResponse<any, any, any>>,
-  ): Promise<T> {
+  public async execute<R extends { data?: unknown }>(
+    fn: () => Promise<R>,
+  ): Promise<Extract<R, { data: unknown }>['data']> {
     const { data } = await fn();
-    return data as T;
+    // SAFETY: ErrorMappingInterceptor throws on every non-2xx response, so a
+    // call that returns here is openapi-fetch's success branch, whose data is
+    // undefined for an operation the spec gives no response body.
+    return data as Extract<R, { data: unknown }>['data'];
   }
 
   /**
-   * Run a request that has no entry in the generated OpenAPI types (currently
-   * only `search()`) through the same Auth -> Retry -> ErrorMapping pipeline the
-   * typed client uses, including the timeout-wrapped fetch. Successful bodies are
+   * Run a hand-built request (routes or query params the OpenAPI spec does not
+   * describe) through the same Auth -> Retry -> ErrorMapping pipeline the typed
+   * client uses, including the timeout-wrapped fetch. Successful bodies are
    * read with {@link readSuccessBody} so a non-JSON success body is surfaced
    * rather than silently collapsed to `undefined`.
    */
@@ -143,10 +143,25 @@ export class Transport {
 
   private manualMiddlewareContext(
     request: Request,
-  ): Pick<MiddlewareCallbackParams, 'id' | 'request'> {
+  ): Pick<MiddlewareCallbackParams, 'id' | 'request' | 'schemaPath'> {
     return {
       request,
       id: `manual:${randomUUID()}`,
+      schemaPath: this.schemaPathOf(request),
     };
+  }
+
+  /**
+   * The request path relative to the API base, so manual requests get the
+   * same retry treatment as typed ones (openapi-fetch supplies `schemaPath`
+   * for the typed client; the manual path has no schema, so the concrete
+   * path stands in for it).
+   */
+  private schemaPathOf(request: Request): string {
+    const basePath = new URL(this.baseUrl).pathname.replace(/\/+$/, '');
+    const { pathname } = new URL(request.url);
+    return pathname.startsWith(basePath)
+      ? pathname.slice(basePath.length)
+      : pathname;
   }
 }

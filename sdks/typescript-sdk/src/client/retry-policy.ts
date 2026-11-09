@@ -26,6 +26,21 @@ export function isIdempotentMethod(method: string): boolean {
   return IDEMPOTENT_METHODS.has(method.toUpperCase());
 }
 
+/**
+ * Route prefixes whose `POST` operations are pure queries: the body carries
+ * search or analytics parameters and the server changes nothing, so replaying
+ * one is as safe as replaying a `GET`.
+ */
+const READ_ONLY_QUERY_PATH_PREFIXES = ['/trade_intel/'];
+
+/** Whether a `POST` to this schema path is a read-only query (safe to retry). */
+export function isReadOnlyQueryPath(path: string | undefined): boolean {
+  if (!path) return false;
+  return READ_ONLY_QUERY_PATH_PREFIXES.some((prefix) =>
+    path.startsWith(prefix),
+  );
+}
+
 /** Whether the response status is one the SDK retries (429 + 5xx). */
 export function isRetryableStatus(status: number): boolean {
   return status === 429 || status >= 500;
@@ -61,15 +76,21 @@ export interface RetryRequestContext {
   method: string;
   /** Set when the caller supplied an `Idempotency-Key`, making a write safe to replay. */
   hasIdempotencyKey?: boolean;
+  /** Schema path of the request (e.g. `/trade_intel/trends`), used to recognize read-only query `POST`s. */
+  path?: string;
 }
 
 /**
  * Whether a request may be retried at all. Idempotent methods are always
- * eligible; non-idempotent writes are only eligible when the caller opted in
- * with an `Idempotency-Key` header.
+ * eligible, as are `POST`s to read-only query routes (see
+ * {@link isReadOnlyQueryPath}); other non-idempotent writes are only eligible
+ * when the caller opted in with an `Idempotency-Key` header.
  */
 export function shouldRetryRequest(ctx: RetryRequestContext): boolean {
   if (isIdempotentMethod(ctx.method)) return true;
+  if (ctx.method.toUpperCase() === 'POST' && isReadOnlyQueryPath(ctx.path)) {
+    return true;
+  }
   return ctx.hasIdempotencyKey === true;
 }
 
@@ -84,26 +105,29 @@ const MAX_RETRY_AFTER_MS = 60_000;
 /**
  * Parse a `Retry-After` header into milliseconds. Supports both delta-seconds
  * (`"120"`) and an HTTP-date. Returns `undefined` when absent/unparseable, never
- * returns a negative delay, and clamps the result to {@link MAX_RETRY_AFTER_MS}.
+ * returns a negative delay, and clamps the result to `maxMs`.
  *
  * @param now - Reference time (ms since epoch) used for HTTP-date math; defaults
  *   to `Date.now()` and is injectable for deterministic tests.
+ * @param maxMs - Upper bound; defaults to {@link MAX_RETRY_AFTER_MS}, the cap on
+ *   a retry sleep.
  */
 export function parseRetryAfterMs(
   value: string | null | undefined,
   now: number = Date.now(),
+  maxMs: number = MAX_RETRY_AFTER_MS,
 ): number | undefined {
   if (value == null) return undefined;
   const trimmed = value.trim();
   if (trimmed === '') return undefined;
 
   if (/^\d+$/.test(trimmed)) {
-    return Math.min(Number(trimmed) * 1000, MAX_RETRY_AFTER_MS);
+    return Math.min(Number(trimmed) * 1000, maxMs);
   }
 
   const dateMs = Date.parse(trimmed);
   if (Number.isNaN(dateMs)) return undefined;
-  return Math.min(Math.max(0, dateMs - now), MAX_RETRY_AFTER_MS);
+  return Math.min(Math.max(0, dateMs - now), maxMs);
 }
 
 /** Base unit (ms) for exponential backoff: attempt 0 -> 500ms, 1 -> 1000ms, ... */

@@ -115,7 +115,7 @@ export function railTerminalArtifacts(input, page) {
         `| ${fields.map((key) => markdownCell(terminal[key])).join(' | ')} |`,
     ),
   ].join('\n');
-  const reference = `This complete directory lists ${catalog.count} enabled inland rail terminals in Terminal49's location catalog. Location listing does not guarantee every carrier field or milestone at every facility. See [rail carrier coverage](/coverage/rail) for feature coverage. Rail last free day requires the [Rail Plan](/api-docs/useful-info/entitlements).\n\n[JSON](/data/coverage/inland-rail-terminals.json) · [CSV](/data/coverage/inland-rail-terminals.csv)\n\n${table}\n\nLast updated ${catalog.updatedOn}. We continually improve our integrations, so coverage may have changed since this date. Contact [support](mailto:support@terminal49.com) to confirm coverage for your route.\n`;
+  const reference = `This complete directory lists ${catalog.count} enabled inland rail terminals in Terminal49's location catalog. Location listing does not guarantee every carrier field or milestone at every facility. See [rail carrier coverage](/coverage/rail) for feature coverage. Rail last free day requires the [Rail Plan](/api-docs/useful-info/entitlements).\n\n[JSON](https://raw.githubusercontent.com/Terminal49/API/main/docs/data/coverage/inland-rail-terminals.json) · [CSV](https://raw.githubusercontent.com/Terminal49/API/main/docs/data/coverage/inland-rail-terminals.csv)\n\n${table}\n\nLast updated ${catalog.updatedOn}. We continually improve our integrations, so coverage may have changed since this date. Contact [support](mailto:support@terminal49.com) to confirm coverage for your route.\n`;
   if (
     page.split(start).length !== 2 ||
     page.split(end).length !== 2 ||

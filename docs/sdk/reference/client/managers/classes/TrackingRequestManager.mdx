@@ -20,7 +20,7 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
 | `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
-| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+| `defaultFormat?` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
 
 #### Returns
 
@@ -31,6 +31,26 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 [`BaseManager`](/sdk/reference/client/managers/classes/BaseManager).[`constructor`](/sdk/reference/client/managers/classes/BaseManager#constructor)
 
 ## Methods
+
+### cancel()
+
+> **cancel**(`id`, `options?`): `Promise`\<`any`\>
+
+Cancel a tracking request that is still `pending` or `awaiting_manifest`.
+It moves to status `cancelled`. Any other status returns 422.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
 
 ### create()
 
@@ -63,11 +83,50 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 | Parameter | Type |
 | ------ | ------ |
 | `number` | `string` |
-| `options` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
+| `options?` | [`CreateTrackingRequestFromInferOptions`](/sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions) |
 
 #### Returns
 
 `Promise`\<\{ `infer`: `any`; `trackingRequest`: `any`; \}\>
+
+***
+
+### customFields()
+
+> **customFields**(`id`, `options?`): `Promise`\<`any`\>
+
+List custom field values set on a tracking request, with their definitions.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### deleteCustomField()
+
+> **deleteCustomField**(`id`, `apiSlug`, `options?`): `Promise`\<`any`\>
+
+Remove a custom field value from a tracking request.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
 
 ***
 
@@ -112,7 +171,7 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) \| `undefined` |
+| `filters?` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) \| `undefined` |
 | `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
 
 #### Returns
@@ -129,8 +188,29 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
+| `filters?` | [`TrackingRequestListFilters`](/sdk/reference/client/managers/interfaces/TrackingRequestListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### setCustomField()
+
+> **setCustomField**(`id`, `apiSlug`, `value`, `options?`): `Promise`\<`any`\>
+
+Create a custom field value on a tracking request.
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `id` | `string` |
+| `apiSlug` | `string` |
+| `value` | `string` \| `number` \| `boolean` \| `string`[] \| \{\[`key`: `string`\]: `unknown`; \} \| `null` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
 
@@ -144,10 +224,32 @@ description: "TrackingRequestManager in the Terminal49 TypeScript SDK, used to c
 
 #### Parameters
 
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `id` | `string` | - |
+| `attrs` | \{ `ref_numbers?`: `string`[]; \} | - |
+| `attrs.ref_numbers?` | `string`[] | **Description** Customer reference numbers. The list you send replaces the existing list. **Example** `[ "REFNUMBER11" ]` |
+| `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) | - |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
+### updateCustomField()
+
+> **updateCustomField**(`id`, `apiSlug`, `value`, `options?`): `Promise`\<`any`\>
+
+Update an existing custom field value on a tracking request.
+
+#### Parameters
+
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `attrs` | `Record`\<`string`, `any`\> |
+| `apiSlug` | `string` |
+| `value` | `string` \| `number` \| `boolean` \| `string`[] \| \{\[`key`: `string`\]: `unknown`; \} \| `null` |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns

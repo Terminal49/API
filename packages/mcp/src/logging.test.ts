@@ -8,6 +8,8 @@ import {
 } from 'vite-plus/test';
 import { sanitizeMcpLogEvent, logMcpEvent } from './logging.js';
 
+const CONFIRMATION_TOKEN = `t49ct1.k9x2m1.${'A'.repeat(43)}.${'B'.repeat(43)}`;
+
 describe('sanitizeMcpLogEvent', () => {
   it('redacts sensitive keys', () => {
     const input = {
@@ -109,6 +111,36 @@ describe('sanitizeMcpLogEvent', () => {
 
     expect((result.nested as any).api_key).toBe('[REDACTED]');
     expect((result.nested as any).safe_value).toBe('visible');
+  });
+
+  it('redacts signed URLs from values under any key', () => {
+    const url =
+      'https://bucket.s3.amazonaws.com/a.pdf?X-Amz-Expires=3600&X-Amz-Signature=abc';
+    const result = sanitizeMcpLogEvent({
+      event: 'test',
+      detail: `fetched ${url}`,
+      nested: { links: [url] },
+    });
+
+    expect(result).toEqual({
+      event: 'test',
+      detail: 'fetched [REDACTED_URL]',
+      nested: { links: ['[REDACTED_URL]'] },
+    });
+  });
+
+  it('redacts confirmation tokens from values under any key', () => {
+    const result = sanitizeMcpLogEvent({
+      event: 'test',
+      detail: `sent ${CONFIRMATION_TOKEN}`,
+      nested: { tokens: [CONFIRMATION_TOKEN] },
+    });
+
+    expect(result).toEqual({
+      event: 'test',
+      detail: 'sent [REDACTED_CONFIRMATION_TOKEN]',
+      nested: { tokens: ['[REDACTED_CONFIRMATION_TOKEN]'] },
+    });
   });
 
   it('preserves non-sensitive operational fields', () => {

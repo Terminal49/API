@@ -9,18 +9,19 @@ import {
 import { createMockFetch, jsonResponse } from './test/mock-fetch.js';
 
 const baseUrl = 'https://api.test/v2';
+const EMPTY_ROUTE = { type: 'FeatureCollection', features: [] };
 
 describe('Terminal49Client', () => {
   it('retries on 500 and succeeds on second attempt', async () => {
     vi.useFakeTimers();
     let attempt = 0;
     const { fetchImpl, calls } = createMockFetch({
-      '/containers/abc/route?include=port,vessel,route_location': () => {
+      '/containers/abc/map_geojson': () => {
         attempt += 1;
         if (attempt === 1) {
           return jsonResponse({ errors: [{ detail: 'server error' }] }, 500);
         }
-        return jsonResponse({ data: { id: 'route-1' } });
+        return jsonResponse(EMPTY_ROUTE);
       },
     });
 
@@ -36,7 +37,7 @@ describe('Terminal49Client', () => {
       await vi.advanceTimersByTimeAsync(500);
       const result = await resultPromise;
 
-      expect(result.data.id).toBe('route-1');
+      expect(result).toEqual(EMPTY_ROUTE);
       expect(calls.length).toBe(2);
     } finally {
       vi.useRealTimers();
@@ -147,14 +148,10 @@ describe('Terminal49Client', () => {
     expect(headers.get('x-account-id')).toBe('account-123');
   });
 
-  it('sets include params on shipment and lists shipping lines with search', async () => {
+  it('sets include params on shipment', async () => {
     const { fetchImpl, calls } = createMockFetch({
       '/shipments/ship-1?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal':
         () => jsonResponse({ data: { id: 'ship-1' } }),
-      '/shipping_lines?search=MAEU': () =>
-        jsonResponse({
-          data: [{ attributes: { scac: 'MAEU', name: 'Maersk' } }],
-        }),
     });
 
     const client = new Terminal49Client({
@@ -164,7 +161,6 @@ describe('Terminal49Client', () => {
     });
 
     await client.getShipment('ship-1');
-    await client.listShippingLines('MAEU');
 
     const includeCall = calls.find((c) =>
       c.url.pathname.endsWith('/shipments/ship-1'),
@@ -173,12 +169,6 @@ describe('Terminal49Client', () => {
     expect(includeCall?.url.searchParams.get('include')).toContain(
       'containers',
     );
-
-    const shippingCall = calls.find((c) =>
-      c.url.pathname.endsWith('/shipping_lines'),
-    );
-    expect(shippingCall).toBeDefined();
-    expect(shippingCall?.url.searchParams.get('search')).toBe('MAEU');
   });
 
   it('sends JSON:API payload when tracking container', async () => {
@@ -214,6 +204,45 @@ describe('Terminal49Client', () => {
     });
   });
 
+  it.each([
+    [{ bookingNumber: 'BK123' }, 'booking_number', 'BK123'],
+    [{ billOfLading: 'MAEU123456789' }, 'bill_of_lading', 'MAEU123456789'],
+    [
+      {
+        containerNumber: 'MSCU1234567',
+        bookingNumber: 'BK123',
+        billOfLading: 'B1',
+      },
+      'container',
+      'MSCU1234567',
+    ],
+    [{ bookingNumber: 'BK123', billOfLading: 'B1' }, 'booking_number', 'BK123'],
+  ])(
+    'sends the matching request_type for %o',
+    async (number, requestType, requestNumber) => {
+      let capturedBody: any = null;
+      const { fetchImpl } = createMockFetch({
+        '/tracking_requests': (init) => {
+          capturedBody = JSON.parse(String(init?.body));
+          return jsonResponse({ data: { id: 'tr-1', attributes: {} } }, 201);
+        },
+      });
+      const client = new Terminal49Client({
+        apiToken: 'token-123',
+        apiBaseUrl: baseUrl,
+        fetchImpl,
+      });
+
+      await client.trackContainer({ ...number, scac: 'MAEU' });
+
+      expect(capturedBody.data.attributes).toEqual({
+        request_type: requestType,
+        request_number: requestNumber,
+        scac: 'MAEU',
+      });
+    },
+  );
+
   it('uses deserialize helper to flatten JSON:API with included', async () => {
     const doc = {
       data: {
@@ -245,56 +274,6 @@ describe('Terminal49Client', () => {
     expect(simplified.id).toBe('cont-1');
     expect(simplified.shipment?.id).toBe('ship-1');
     expect(simplified.shipment?.bill_of_lading_number).toBe('BL123');
-  });
-
-  it('maps tracking request with linked shipment/container', async () => {
-    const doc = {
-      data: {
-        id: 'tr-1',
-        type: 'tracking_request',
-        attributes: {
-          request_type: 'container',
-          request_number: 'MSCU1234567',
-          status: 'created',
-          scac: 'MSCU',
-        },
-        relationships: {
-          shipment: { data: { type: 'shipment', id: 'ship-1' } },
-          container: { data: { type: 'container', id: 'cont-1' } },
-        },
-      },
-      included: [
-        {
-          id: 'ship-1',
-          type: 'shipment',
-          attributes: {
-            bill_of_lading_number: 'BL123',
-            shipping_line_scac: 'MSCU',
-          },
-        },
-        {
-          id: 'cont-1',
-          type: 'container',
-          attributes: { number: 'MSCU1234567', status: 'in_transit' },
-        },
-      ],
-    };
-
-    const { fetchImpl } = createMockFetch({
-      '/tracking_requests/tr-1': () => jsonResponse(doc),
-    });
-
-    const client = new Terminal49Client({
-      apiToken: 'token-123',
-      apiBaseUrl: baseUrl,
-      fetchImpl,
-    });
-
-    const result = await client.getTrackingRequest('tr-1', {
-      format: 'mapped',
-    });
-    expect((result as any).shipment?.id).toBe('ship-1');
-    expect((result as any).container?.number).toBe('MSCU1234567');
   });
 
   it('maps container list with equipment and terminals when included', async () => {
@@ -405,8 +384,19 @@ describe('Terminal49Client', () => {
 
   it('maps 403 feature gating to FeatureNotEnabledError', async () => {
     const { fetchImpl } = createMockFetch({
-      '/containers/abc/route?include=port,vessel,route_location': () =>
-        jsonResponse({ errors: [{ detail: 'Feature not enabled' }] }, 403),
+      '/containers/abc/map_geojson': () =>
+        jsonResponse(
+          {
+            errors: [
+              {
+                status: '403',
+                title: 'Forbidden',
+                detail: 'Routing data feature is not enabled for this account',
+              },
+            ],
+          },
+          403,
+        ),
     });
 
     const client = new Terminal49Client({

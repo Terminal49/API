@@ -1,0 +1,99 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          20,
+          10
+        ]
+      },
+      "properties": {
+        "feature_type": "port",
+        "ports_sequence": 1,
+        "ports_total": 3,
+        "location_id": "route-port-1",
+        "name": "Example Route Port 1",
+        "country_code": "ZZ",
+        "label": "POL",
+        "inbound_eta_at": null,
+        "inbound_ata_at": null,
+        "outbound_etd_at": null,
+        "outbound_atd_at": "2026-01-10T12:00:00Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30,
+          20
+        ]
+      },
+      "properties": {
+        "feature_type": "port",
+        "ports_sequence": 2,
+        "ports_total": 3,
+        "location_id": "route-port-2",
+        "name": "Example Route Port 2",
+        "country_code": "ZZ",
+        "label": "TS1",
+        "inbound_eta_at": null,
+        "inbound_ata_at": "2026-01-10T12:00:00Z",
+        "outbound_etd_at": null,
+        "outbound_atd_at": "2026-01-10T12:00:00Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          40,
+          30
+        ]
+      },
+      "properties": {
+        "feature_type": "port",
+        "ports_sequence": 3,
+        "ports_total": 3,
+        "location_id": "route-port-3",
+        "name": "Example Route Port 3",
+        "country_code": "ZZ",
+        "label": "POD",
+        "inbound_eta_at": "2026-01-10T12:00:00Z",
+        "inbound_ata_at": null,
+        "outbound_etd_at": null,
+        "outbound_atd_at": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          35,
+          25
+        ]
+      },
+      "properties": {
+        "feature_type": "current_vessel",
+        "vessel_name": "EXAMPLE VESSEL",
+        "vessel_imo": "0000001",
+        "voyage_number": "SYNTH01",
+        "vessel_location_heading": 90,
+        "vessel_location_speed": 12,
+        "vessel_location_timestamp": "2026-01-10T12:00:00Z",
+        "departure_port_id": "route-port-2",
+        "departure_port_name": "Example Route Port 2",
+        "departure_port_label": "TS1",
+        "arrival_port_id": "route-port-3",
+        "arrival_port_name": "Example Route Port 3",
+        "arrival_port_label": "POD"
+      }
+    }
+  ]
+}

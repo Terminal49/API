@@ -46,7 +46,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a shipment
-         * @description Update a shipment
+         * @description Update a shipment.
          */
         patch: operations["patch-shipments-id"];
         trace?: never;
@@ -169,7 +169,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a tracking request
-         * @description Update a tracking request
+         * @description Update a tracking request.
          */
         patch: operations["patch-track-request-by-id"];
         trace?: never;
@@ -229,21 +229,21 @@ export interface paths {
         };
         /**
          * Get single webhook
-         * @description Get the details of a single webhook
+         * @description Get the details of a single webhook.
          */
         get: operations["get-webhooks-id"];
         put?: never;
         post?: never;
         /**
          * Delete a webhook
-         * @description Delete a webhook
+         * @description Delete a webhook.
          */
         delete: operations["delete-webhooks-id"];
         options?: never;
         head?: never;
         /**
          * Edit a webhook
-         * @description Update a single webhook
+         * @description Update a single webhook.
          */
         patch: operations["patch-webhooks-id"];
         trace?: never;
@@ -303,10 +303,7 @@ export interface paths {
             };
             cookie?: never;
         };
-        /**
-         * Get a single webhook notification
-         * @description
-         */
+        /** Get a single webhook notification */
         get: operations["get-webhook-notification-id"];
         put?: never;
         post?: never;
@@ -345,7 +342,7 @@ export interface paths {
         };
         /**
          * Get webhook notification payload examples
-         * @description Returns an example payload as it would be sent to a webhook endpoint for the provided `event`
+         * @description Returns an example payload as it would be sent to a webhook endpoint for the provided `event`. The event must be one your account can subscribe to; otherwise the API returns 400.
          */
         get: operations["get-webhook-notifications-example"];
         put?: never;
@@ -413,11 +410,27 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/containers/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         /**
-         * Edit a container
-         * @description Update a container
+         * Summarize containers
+         * @description Counts the containers that `GET /containers` returns for the same filters, grouped by one dimension, in a single request. Accepts every `filter[...]` parameter of `GET /containers` (the same names and operators); pagination, sort, and include do not apply. Groups are ordered by count, most first, and capped at 200; `meta.truncated` is true when there are more.
          */
-        patch: operations["patch-containers-id"];
+        get: operations["summarize-containers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/containers/{id}": {
@@ -439,7 +452,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Edit a container
+         * @description Update a container's reference numbers, seal number, equipment type, length, and height, or weight. The container number cannot be edited: sending a different `number` returns 422. Equipment type, length, and height are validated together. When any of them changes, all three must have a value, or the request returns 422. A value outside the listed equipment enums also returns 422.
+         */
+        patch: operations["patch-containers-id"];
         trace?: never;
     };
     "/containers/{id}/raw_events": {
@@ -646,7 +663,7 @@ export interface paths {
         };
         /**
          * Get a vessel using the id
-         * @description Returns a vessel by id. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>
+         * @description Returns a vessel by id, with its current position. Add `show_positions` to include its position history. <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>
          */
         get: operations["get-vessels-id"];
         put?: never;
@@ -673,7 +690,7 @@ export interface paths {
         };
         /**
          * Get a vessel using the imo
-         * @description Returns a vessel by the given IMO number. <Note>`show_positions` is a paid feature. Please contact sales@terminal49.com.</Note>
+         * @description Returns a vessel by the given IMO number, with its current position. Add `show_positions` to include its position history. <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>
          */
         get: operations["get-vessels-imo"];
         put?: never;
@@ -695,7 +712,7 @@ export interface paths {
         };
         /**
          * Get vessel future positions
-         * @description Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>
+         * @description Returns the estimated route between two ports for a given vessel. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>
          */
         get: operations["get-vessels-id-future-positions"];
         put?: never;
@@ -717,7 +734,7 @@ export interface paths {
         };
         /**
          * Get vessel future positions from coordinates
-         * @description Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>This is a paid feature. Please contact sales@terminal49.com.</Note>
+         * @description Returns the estimated route between two ports for a given vessel from a set of coordinates. <Warning> The timestamp of the positions has fixed spacing of one minute.</Warning> <Note>Requires the Routing Data entitlement for API keys, including publishable keys. Without it, every vessel endpoint returns `403`. Only vessels on your account's actively tracked shipments are returned; any other vessel returns `404`. See [Entitlements and Paid Features](/api-docs/useful-info/entitlements#vessel-data-access).</Note>
          */
         get: operations["get-vessels-id-future-positions-with-coordinates"];
         put?: never;
@@ -775,10 +792,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List custom field definitions */
+        /**
+         * List custom field definition templates
+         * @description Lists the Terminal49 template definitions. To list the definitions configured for your account, use `GET /accounts/{account_id}/custom_field_definitions`. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
         get: operations["get-custom-field-definitions"];
         put?: never;
-        /** Create a custom field definition */
+        /**
+         * Create a custom field definition template
+         * @description Creates a Terminal49 template definition. Only Terminal49 accounts can create templates; other accounts receive 401. To create a definition for your account, use `POST /accounts/{account_id}/custom_field_definitions`.
+         */
         post: operations["post-custom-field-definitions"];
         delete?: never;
         options?: never;
@@ -800,7 +823,10 @@ export interface paths {
         get: operations["get-custom-field-definitions-id"];
         put?: never;
         post?: never;
-        /** Delete a custom field definition */
+        /**
+         * Delete a custom field definition
+         * @description Deletes a custom field definition. A definition that has values returns 422; archive it instead. Templates are Terminal49-managed: other accounts get 401 when they update or delete one, so only Terminal49 accounts can see the 422 for a template that other accounts use.
+         */
         delete: operations["delete-custom-field-definitions-id"];
         options?: never;
         head?: never;
@@ -818,7 +844,10 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** List custom field options */
+        /**
+         * List custom field options
+         * @description Lists every option of the definition. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
         get: operations["get-custom-field-options"];
         put?: never;
         /** Create a custom field option */
@@ -860,7 +889,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List custom fields */
+        /**
+         * List custom fields
+         * @description The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
         get: operations["get-custom-fields"];
         put?: never;
         /** Create a custom field */
@@ -1094,14 +1126,14 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** @description Returns a party by it's given identifier */
+        /** @description Returns a party by it's given identifier. */
         get: operations["get-parties-id"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Updates a party */
+        /** @description Updates a party. */
         patch: operations["edit-party"];
         trace?: never;
     };
@@ -1189,7 +1221,7 @@ export interface paths {
         head?: never;
         /**
          * Edit a document
-         * @description Updates manual extraction and classification fields.
+         * @description Updates the document type, classification notes, and manual extraction data.
          */
         patch: operations["patch-documents-id"];
         trace?: never;
@@ -1368,6 +1400,286 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tracking_requests/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tracking Request ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Cancel a tracking request
+         * @description Cancel a tracking request that is still `pending` or `awaiting_manifest`. The request moves to status `cancelled` with failed_reason `Cancelled by user`. Requests in any other status return 422. A request that belongs to another account also returns 422 with a string `errors`. An unknown tracking request ID currently returns a 500 server error, not 404. A 401 comes only from authentication. It means the API token is missing or invalid, or the account may not use the API.
+         */
+        patch: operations["patch-tracking-request-cancel"];
+        trace?: never;
+    };
+    "/accounts/{account_id}/custom_field_definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Your account ID. The API always uses the account of the authenticated user. */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * List custom field definitions
+         * @description Lists the custom field definitions configured for your account. The list is not paginated. The API ignores `page[number]` and `page[size]` and returns every row, but still sends pagination `links`. Do not follow `links.next`.
+         */
+        get: operations["get-account-custom-field-definitions"];
+        put?: never;
+        /**
+         * Create a custom field definition
+         * @description Creates a custom field definition for your account. Pass `template_id` to copy a Terminal49 template; attributes you send override the template's values.
+         */
+        post: operations["post-account-custom-field-definitions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current credential
+         * @description Return the credential that authenticated this request: whether it is an API key or a signed-in user, the account it is scoped to, and which features that credential can use on that account.
+         *
+         *     Accepts `Authorization: Token <api_key>` and `Authorization: Bearer <user_token>`. A user token selects the account with the `x-account-id` header and defaults to the user's primary account. The response is never cached (`Cache-Control: no-store`).
+         *
+         *     Unlike most endpoints, an API key on a free plan can call this endpoint: `features.data_out_api.status` tells it which other calls will be refused and why.
+         */
+        get: operations["get-me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get trade intelligence coverage
+         * @description Returns the window the search index covers, how far back history goes, which month is still partial, and when the data was last built. Call it to learn the exact `since_month` and `facts_since_month` before quoting a period, and to confirm the account has trade intelligence enabled (a `403` means it does not).
+         *
+         *     The data is US import bill-of-lading records (US Customs vessel manifests), January 2022 onward, refreshed daily.
+         */
+        get: operations["get-trade-intel-meta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/companies/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search importers
+         * @description Find US importers by name, by what they import, or both, from US import bill-of-lading records (US Customs vessel manifests). `name` is a fuzzy match (partial or misspelled names are fine); `imports` is a semantic match on product descriptions. With neither, the largest importers matching the other filters are returned. Each result carries 12-full-month containers (split by consignee and notify party), TEUs, estimated value, and top ports, origins, carriers, and HS4 headings.
+         *
+         *     **Results are ranked by match quality, not size.** A fuzzy search for a well-known retailer can return a small, similarly named company above the retailer itself; check `containers` before choosing a row. Companies are split by state and large importers use several names, so look through the whole list before concluding a company is small. Importers can also have their names withheld from manifests, so absent volume does not mean low volume.
+         *
+         *     Take `company_name` from a result and pass it unchanged to `companies/profile` for monthly history.
+         */
+        post: operations["post-trade-intel-companies-search"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/companies/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get an importer profile
+         * @description Import profile for one company from US import bill-of-lading records (US Customs vessel manifests): totals (containers as consignee and as notify party, TEUs), a monthly series, ports of discharge, origin countries, carriers, destination states, and HS4 headings with estimated value.
+         *
+         *     `company_name` must be the exact normalized name returned by `companies/search`. The period is `months` full calendar months ending last month, so the current, partial month is excluded; use `months: 24` or more to compare a year against the same months a year earlier.
+         *
+         *     Volume is physical containers, each counted once. Estimated values are modelled USD estimates, not declared customs values. A company's figures are a floor: related entities and alternative names are separate companies, and importers can have their names withheld from manifests. Carrier names are as spelled on manifests; merge variants before computing shares.
+         */
+        post: operations["post-trade-intel-companies-profile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/commodities/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search commodities
+         * @description Resolve a product description, or an HS code prefix, to 4-digit HS headings. Each result carries the heading description, goods commonly declared under it on bills of lading, 12-month estimated import value, and the number of importing companies.
+         *
+         *     HS heading descriptions are truncated and headings are broader than everyday product names (HS 0306 covers all frozen crustaceans, not only shrimp), so check `common_goods` before relying on a code. Feed `hs4` into `importers/top` or into the `hs4` filter of `trends` and `breakdown`.
+         */
+        post: operations["post-trade-intel-commodities-search"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/importers/top": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rank importers
+         * @description Rank US importers by physical containers over `months` full calendar months, optionally restricted to one HS4 heading, a port of discharge, or an origin country. Estimated value is included when `hs4` is given.
+         *
+         *     The ranking is built from US import bill-of-lading records (US Customs vessel manifests), so it lists consignees and notify parties: forwarders, NVOCCs, and customs brokers appear alongside cargo owners, and the response does not say which is which or give each company's total volume. Run `companies/search` on shortlisted names to get the consignee/notify split and totals. Large importers can be split across several names and states, and some have their names withheld from manifests, so absence from the ranking does not mean low volume.
+         */
+        post: operations["post-trade-intel-importers-top"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get import trends
+         * @description Monthly, quarterly, or yearly series of containers, TEUs, or estimated value, optionally split by up to two dimensions (keeping the top N groups) and filtered by any dimension. Volume is physical containers, each counted once.
+         *
+         *     **Defaults.** Without `since` the series covers the 24 months ending with `until`, so it starts 23 months before `until`, but history is available back to January 2022 (`facts_since_month` in `meta`). Without `until` the series ends with the current, partial month, which is flagged `partial`; exclude it from comparisons and compare like periods (the same months a year earlier).
+         *
+         *     **Filters.** `company` is a substring match, so `IKEA` also matches `IKEA SUPPLY AG`; for one company's own series use `companies/profile`. Countries, ports, and carriers use the manifests' spellings and carriers appear under variants, so filter with substrings and merge variants before computing shares. Market totals come from a series without a `company` filter; do not add volumes across HS codes or companies, since a container can carry several codes and companies can share containers.
+         *
+         *     The response names the fact table used in `fact` and lists counting caveats in `notes`.
+         */
+        post: operations["post-trade-intel-trends"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get an import breakdown
+         * @description Nested totals over a dimension hierarchy (for example region > country > port, or HS2 > HS4), with a grand total at level 0 and subtotals at every level, keeping the top N children under each parent. Volume is physical containers, each counted once; estimated value is a modelled USD estimate.
+         *
+         *     Defaults to the 12 months ending with the current, partial month (`since` is 11 months before `until`); set `since` and `until` to full months for comparisons. The `company` filter is a substring match. Countries, ports, and carriers use the manifests' spellings, so filter with substrings and merge carrier variants before computing shares. Do not add values across HS codes or companies; use a breakdown without a `company` filter for market totals.
+         */
+        post: operations["post-trade-intel-breakdown"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/containers/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look up a container's import record
+         * @description The most recent US import of a container from US import bill-of-lading records (US Customs vessel manifests): the bills of lading it travelled under (carrier, vessel, voyage, ports, destination) and the commodity lines on those bills with consignee, shipper, and notify party.
+         *
+         *     Only the most recent US import per container is on record; earlier trips are not returned. A malformed number returns `200` with `found: false` and an `error`; a well-formed number with no record returns `found: false`. Commodity lines are capped at 200 (`commodities_truncated`). This lookup reads record-level data and can take several seconds.
+         */
+        post: operations["post-trade-intel-containers-lookup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trade_intel/bills_of_lading/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look up a bill of lading
+         * @description The import record for a master or house bill of lading from US import bill-of-lading records (US Customs vessel manifests): the containers that moved under it and the commodity lines with consignee, shipper, and notify party.
+         *
+         *     The search covers the last `months` months (default 12). Up to 50 matching bill records are used (`bills_truncated`), and containers and commodity lines are each capped at 200 (`containers_truncated`, `commodities_truncated`). When nothing matches, `found` is `false` and `searched_since` tells you how far back the search went. This lookup reads record-level data and can take several seconds.
+         */
+        post: operations["post-trade-intel-bills-of-lading-lookup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1415,7 +1727,7 @@ export interface components {
                         type: "terminal";
                         /** Format: uuid */
                         id: string;
-                    };
+                    } | null;
                 };
                 destination_terminal?: {
                     data?: {
@@ -1423,7 +1735,7 @@ export interface components {
                         type: "terminal" | "rail_terminal";
                         /** Format: uuid */
                         id: string;
-                    };
+                    } | null;
                 };
                 line_tracking_stopped_by_user?: {
                     data?: {
@@ -1431,14 +1743,14 @@ export interface components {
                         type: "user";
                         /** Format: uuid */
                         id: string;
-                    };
+                    } | null;
                 };
             };
             attributes: {
                 bill_of_lading_number: string;
                 /** @description The normalized version of the shipment number used for querying the carrier */
                 normalized_number?: string;
-                ref_numbers?: string[] | null;
+                ref_numbers?: (string | null)[] | null;
                 /** Format: date-time */
                 created_at?: string;
                 tags?: string[];
@@ -1523,7 +1835,10 @@ export interface components {
             /** @enum {string} */
             type: "shipment";
             links: {
-                /** Format: uri */
+                /**
+                 * Format: uri-reference
+                 * @description Path of this resource, relative to the API host (for example `/v2/shipments/{id}`).
+                 */
                 self: string;
             };
         };
@@ -1534,21 +1849,20 @@ export interface components {
         };
         /** link */
         "link-self": {
-            /** Format: uri */
+            /** @description Absolute URL of the request, including its query string as sent. On a create, this is the collection URL the request was posted to, not the URL of the new resource. */
             self?: string;
         };
-        /** links */
+        /**
+         * links
+         * @description Pagination links. Each value is an absolute URL. `self` repeats the request URL as sent, including its query string and its encoding. `current`, `first`, `prev`, `next`, and `last` repeat the request's query parameters, with `page[number]` and `page[size]` in unencoded brackets.
+         */
         links: {
-            /** Format: uri */
-            last?: string;
-            /** Format: uri */
-            next?: string;
-            /** Format: uri */
-            prev?: string;
-            /** Format: uri */
-            first?: string;
-            /** Format: uri */
             self?: string;
+            current?: string;
+            first?: string;
+            prev?: string;
+            next?: string;
+            last?: string;
         };
         /**
          * Container model
@@ -1697,21 +2011,21 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "shipment";
-                    };
+                    } | null;
                 };
                 pickup_facility?: {
                     data?: {
                         id?: string;
                         /** @enum {string} */
                         type?: "terminal";
-                    };
+                    } | null;
                 };
                 pod_terminal?: {
                     data?: {
                         id?: string;
                         /** @enum {string} */
                         type?: "terminal";
-                    };
+                    } | null;
                 };
                 transport_events?: {
                     data?: {
@@ -1743,8 +2057,16 @@ export interface components {
                 country_code?: string;
                 /** @description IANA tz */
                 time_zone?: string;
-                latitude?: number | null;
-                longitude?: number | null;
+                /**
+                 * @description Latitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 22.57489971
+                 */
+                latitude?: string | null;
+                /**
+                 * @description Longitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 114.27769989
+                 */
+                longitude?: string | null;
             };
             /** @enum {string} */
             type: "port";
@@ -1788,7 +2110,7 @@ export interface components {
         /** Error model */
         error: {
             detail?: string | null;
-            title: string | null;
+            title?: string | null;
             source?: {
                 pointer?: string | null;
                 parameter?: string | null;
@@ -1811,8 +2133,16 @@ export interface components {
                 country_code?: string;
                 /** @description IANA tz */
                 time_zone?: string;
-                latitude?: number | null;
-                longitude?: number | null;
+                /**
+                 * @description Latitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 22.57489971
+                 */
+                latitude?: string | null;
+                /**
+                 * @description Longitude in decimal degrees, serialized as a decimal string (for example `"22.57489971"`).
+                 * @example 114.27769989
+                 */
+                longitude?: string | null;
             };
             /** @enum {string} */
             type: "metro_area";
@@ -1834,25 +2164,25 @@ export interface components {
             };
             attributes: {
                 name: string;
-                nickname?: string;
+                nickname?: string | null;
                 /** @description CBP FIRMS Code or CBS Sublocation Code */
-                firms_code?: string;
+                firms_code?: string | null;
                 /** @description SMDG Code */
-                smdg_code?: string;
+                smdg_code?: string | null;
                 /** @description BIC Facility Code */
-                bic_facility_code?: string;
+                bic_facility_code?: string | null;
                 /** @description Street part of the address */
-                street?: string;
+                street?: string | null;
                 /** @description City part of the address */
-                city?: string;
+                city?: string | null;
                 /** @description State part of the address */
-                state?: string;
+                state?: string | null;
                 /** @description State abbreviation for the state */
-                state_abbr?: string;
+                state_abbr?: string | null;
                 /** @description ZIP code part of the address */
-                zip?: string;
+                zip?: string | null;
                 /** @description Country part of the address */
-                country?: string;
+                country?: string | null;
             };
             /** @enum {string} */
             type?: "terminal";
@@ -1900,12 +2230,12 @@ export interface components {
                 ref_numbers?: string[] | null;
                 tags?: string[];
                 /** @enum {string} */
-                status: "pending" | "awaiting_manifest" | "created" | "failed" | "tracking_stopped";
+                status: "pending" | "awaiting_manifest" | "created" | "failed" | "tracking_stopped" | "cancelled";
                 /**
-                 * @description If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number.
+                 * @description If the tracking request has failed, or is currently failing, the last reason we were unable to complete the request. `scac_auto_detect_failed` means `auto_detect_vocc_scac` was set but no supported carrier SCAC could be inferred from the request number. A request waiting for the carrier to publish the shipment or its containers has status `awaiting_manifest` and failed_reason null. Only older records carry the `awaiting_manifest` failed_reason value. `shipping_line_not_supported` means Terminal49 cannot track that shipping line. A request cancelled through `PATCH /tracking_requests/{id}/cancel` has status `cancelled` and failed_reason `Cancelled by user`.
                  * @enum {string|null}
                  */
-                failed_reason?: "booking_cancelled" | "duplicate" | "expired" | "internal_processing_error" | "invalid_number" | "not_found" | "retries_exhausted" | "shipping_line_unreachable" | "unrecognized_response" | "data_unavailable" | "scac_auto_detect_failed" | null;
+                failed_reason?: "booking_cancelled" | "duplicate" | "expired" | "internal_processing_error" | "invalid_number" | "not_found" | "retries_exhausted" | "shipping_line_unreachable" | "unrecognized_response" | "data_unavailable" | "scac_auto_detect_failed" | "awaiting_manifest" | "shipping_line_not_supported" | "Cancelled by user" | null;
                 /**
                  * @example bill_of_lading
                  * @enum {string}
@@ -1939,6 +2269,15 @@ export interface components {
                         type?: "account";
                     } | null;
                 };
+                /** @description User who created the tracking request, or `null` when the request has no linked user. */
+                user?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "user";
+                    } | null;
+                };
             };
         };
         /** webhook */
@@ -1959,7 +2298,7 @@ export interface components {
                  */
                 active: boolean;
                 /** @description The list of events to enabled for this endpoint */
-                events: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed")[];
+                events: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created")[];
                 /** @description A random token that will sign all delivered webhooks */
                 secret: string;
                 headers?: {
@@ -2040,8 +2379,11 @@ export interface components {
             /** @enum {string} */
             type: "transport_event";
             attributes?: {
-                /** @enum {string} */
-                event?: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed";
+                /**
+                 * @description The event name. The three `container.pickup_lfd_*_calculated.changed` events are Last Free Day estimates that Terminal49 calculates. They can appear when you read transport events, but you cannot subscribe a webhook to them.
+                 * @enum {string}
+                 */
+                event?: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "container.pickup_lfd_line_calculated.changed" | "container.pickup_lfd_terminal_calculated.changed" | "container.pickup_lfd_rail_calculated.changed";
                 voyage_number?: string | null;
                 /** Format: date-time */
                 timestamp?: string | null;
@@ -2164,7 +2506,7 @@ export interface components {
             type?: "webhook_notification";
             attributes?: {
                 /** @enum {string} */
-                event: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed";
+                event: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created";
                 /**
                  * @description Whether the notification has been delivered to the webhook endpoint
                  * @default pending
@@ -2187,7 +2529,7 @@ export interface components {
                         /** Format: uuid */
                         id?: string;
                         /** @enum {string} */
-                        type?: "tracking_request" | "estimated_event" | "transport_event" | "container_updated_event" | "document";
+                        type?: "tracking_request" | "estimated_event" | "transport_event" | "container_updated_event" | "document" | "container_created_event" | "container_pod_terminal_changed_event" | "link" | "document_observation";
                     };
                 };
             };
@@ -2320,7 +2662,7 @@ export interface components {
                  */
                 created_at?: string;
                 /** @description The city or facility name of the event location */
-                location_name?: string;
+                location_name?: string | null;
                 /** @description UNLOCODE of the event location */
                 location_locode?: string | null;
                 /** @description The name of the vessel where applicable */
@@ -2338,7 +2680,7 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "port" | "metro_area";
-                    };
+                    } | null;
                 };
                 vessel?: {
                     data?: {
@@ -2346,14 +2688,32 @@ export interface components {
                         id?: string;
                         /** @enum {string} */
                         type?: "vessel";
+                    } | null;
+                };
+                container?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "container";
                     };
+                };
+                terminal?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "terminal";
+                    } | null;
                 };
             };
         };
         /** Container Pod Terminal Changed Event */
         container_pod_terminal_changed_event: {
+            /** Format: uuid */
             id?: string;
-            type?: string;
+            /** @enum {string} */
+            type?: "container_pod_terminal_changed_event";
             attributes?: {
                 /**
                  * @description Where the information about the terminal change came from
@@ -2369,23 +2729,29 @@ export interface components {
             };
             relationships?: {
                 container?: {
-                    /** Format: uuid */
-                    id?: string;
-                    /** @enum {string} */
-                    type?: "container";
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "container";
+                    } | null;
                 };
                 shipment?: {
-                    /** Format: uuid */
-                    id?: string;
-                    /** @enum {string} */
-                    type?: "shipment";
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "shipment";
+                    } | null;
                 };
                 /** @description The terminal the container has changed to. If this container is still on the vessel this represents an advisory. If it was previously at the terminal this represents an off-dock move. */
                 terminal?: {
-                    /** Format: uuid */
-                    id?: string;
-                    /** @enum {string} */
-                    type?: "terminal";
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "terminal";
+                    } | null;
                 };
             };
         };
@@ -2459,11 +2825,11 @@ export interface components {
             /** @description State name (if applicable) */
             state?: string | null;
             /** @description ISO country code */
-            country_code?: string;
+            country_code?: string | null;
             /** @description Country name */
-            country?: string;
+            country?: string | null;
             /** @description IANA timezone identifier */
-            time_zone?: string;
+            time_zone?: string | null;
             /** @description Port label: POL, POD, or TS1, TS2, etc. */
             label?: string;
             /**
@@ -2527,9 +2893,9 @@ export interface components {
             /** @description State name of departure port */
             departure_port_state?: string | null;
             /** @description Country code of departure port */
-            departure_port_country_code?: string;
+            departure_port_country_code?: string | null;
             /** @description Country name of departure port */
-            departure_port_country?: string;
+            departure_port_country?: string | null;
             /** @description Label of departure port (POL, POD, TS1, etc.) */
             departure_port_label?: string;
             /**
@@ -2538,7 +2904,7 @@ export interface components {
              */
             departure_port_atd?: string | null;
             /** @description Timezone of departure port */
-            departure_port_time_zone?: string;
+            departure_port_time_zone?: string | null;
             /** @description ID of the next port the vessel is heading to */
             arrival_port_id?: string | null;
             /** @description Name of the arrival port */
@@ -2645,7 +3011,9 @@ export interface components {
             coordinates: number[];
         };
         /** @description Raw custom field value (type depends on definition) */
-        custom_field_value: (string | number | boolean | string[] | Record<string, never>) | null;
+        custom_field_value: (string | null) | number | boolean | string[] | {
+            [key: string]: unknown;
+        };
         /** Custom field */
         custom_field: {
             /** Format: uuid */
@@ -2684,8 +3052,11 @@ export interface components {
             /** @enum {string} */
             type: "custom_field_definition";
             attributes?: {
-                /** @enum {string} */
-                entity_type: "Shipment" | "Container" | "TrackingRequest";
+                /**
+                 * @description The entity type this definition applies to. `Cargo` means containers.
+                 * @enum {string}
+                 */
+                entity_type: "Shipment" | "Cargo";
                 api_slug: string;
                 display_name: string;
                 description?: string | null;
@@ -2697,6 +3068,56 @@ export interface components {
                 } | null;
                 default_format?: string | null;
                 default_value?: components["schemas"]["custom_field_value"];
+                /** @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching. */
+                reference_number?: boolean;
+                /** @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views. */
+                sensitive?: boolean;
+                /** @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app. */
+                inline_option_creation?: boolean;
+                /**
+                 * Format: uuid
+                 * @description ID of the Terminal49 template this definition was copied from.
+                 */
+                template_id?: string | null;
+                /** @description Whether any entity has a value for this definition. */
+                has_data?: boolean;
+                /** Format: date-time */
+                created_at?: string;
+                /** Format: date-time */
+                updated_at?: string;
+                /**
+                 * Format: date-time
+                 * @description When the definition was archived.
+                 */
+                discarded_at?: string | null;
+            };
+            relationships?: {
+                /** @description The owning account. `null` for Terminal49 templates. */
+                account?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "account";
+                    } | null;
+                };
+                /** @description The user who created the definition. */
+                created_by?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "user";
+                    } | null;
+                };
+                options?: {
+                    data?: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "custom_field_option";
+                    }[];
+                };
             };
         };
         /** Custom field option */
@@ -2882,10 +3303,13 @@ export interface components {
                 id?: string;
                 /** @description Display name of the document. */
                 name?: string;
-                /** @description System-classified document type. */
+                /** @description Document type code. See `GET /documents/types` for allowed values. */
                 document_type?: string;
-                /** @description Document type set manually by a user, when available. */
-                document_type_manual?: string | null;
+                /**
+                 * @description Who set `document_type`: `customer` (set through the API or app), `admin` (Terminal49 staff) or `llm` (automatic classification).
+                 * @enum {string|null}
+                 */
+                document_type_source?: "customer" | "admin" | "llm" | null;
                 /** @description Additional notes captured during document classification. */
                 classification_notes?: string | null;
                 /**
@@ -3162,8 +3586,1232 @@ export interface components {
                 payload: components["schemas"]["sanitized_extraction_schema"];
             };
         };
+        /** container_created_event */
+        container_created_event: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            type?: "container_created_event";
+            attributes?: {
+                /** Format: date-time */
+                timestamp?: string;
+                /** @description IANA tz */
+                timezone?: string | null;
+            };
+            relationships?: {
+                container?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "container";
+                    } | null;
+                };
+                shipment?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "shipment";
+                    } | null;
+                };
+            };
+        };
+        /**
+         * link
+         * @description A link between a document and the shipment or container it belongs to.
+         */
+        link: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            type?: "link";
+            attributes?: {
+                kind?: string;
+                kind_label?: string;
+                created_by?: string;
+                created_by_label?: string;
+                /** @example Document */
+                source_type?: string;
+                /** Format: uuid */
+                source_id?: string;
+                /** @example Shipment */
+                target_type?: string;
+                /** Format: uuid */
+                target_id?: string;
+                has_parent?: boolean;
+                /** @example Document to Shipment */
+                link_description?: string;
+                /** Format: date-time */
+                created_at?: string;
+                /** Format: date-time */
+                updated_at?: string;
+            };
+            relationships?: {
+                source?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "document";
+                    } | null;
+                };
+                target?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "container" | "shipment";
+                    } | null;
+                };
+                user?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "user";
+                    } | null;
+                };
+                parent?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "link";
+                    } | null;
+                };
+                child_links?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "link";
+                    }[];
+                };
+            };
+        };
+        /**
+         * document_observation
+         * @description A shipment field value read from a document. The reference object of `shipment.routing.filled`.
+         */
+        document_observation: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            type?: "document_observation";
+            attributes?: {
+                kind?: string;
+                field?: string;
+                before?: unknown;
+                after?: unknown;
+                source?: string | null;
+                /** Format: date-time */
+                observed_at?: string | null;
+                document_name?: string | null;
+                /** Format: uuid */
+                document_processing_id?: string | null;
+                /** @example 2026-09-24 */
+                schema_version?: string | null;
+            };
+            relationships?: {
+                shipment?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "shipment";
+                    } | null;
+                };
+                document?: {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type?: "document";
+                    } | null;
+                };
+            };
+        };
+        /**
+         * Webhook notification included resource
+         * @description A resource that can appear in `included` on a webhook notification response.
+         */
+        webhook_notification_included: components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["container_pod_terminal_changed_event"] | components["schemas"]["container_created_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"] | components["schemas"]["document_observation"] | components["schemas"]["link"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["port"] | components["schemas"]["metro_area"] | components["schemas"]["terminal"] | components["schemas"]["vessel"] | components["schemas"]["shipping_line"] | components["schemas"]["account"];
+        /** Feature availability */
+        feature_availability: {
+            /**
+             * @description `available`: this credential can use the feature on this account. `requires_paid_plan`: the account's plan does not include it. `requires_user_credential`: only a signed-in user may use it, not an API key. `not_enabled`: the feature is not turned on for this account.
+             * @enum {string}
+             */
+            status: "available" | "requires_paid_plan" | "requires_user_credential" | "not_enabled";
+        };
+        /**
+         * Credential model
+         * @description The credential that authenticated the current request. Returned only by `GET /me`.
+         */
+        credential: {
+            /**
+             * Format: uuid
+             * @description The API key id when `kind` is `api_key`, otherwise the user id.
+             */
+            id: string;
+            /** @enum {string} */
+            type: "credential";
+            attributes: {
+                /**
+                 * @description `api_key` for `Authorization: Token`, `user` for a signed-in user's Bearer token.
+                 * @enum {string}
+                 */
+                kind: "api_key" | "user";
+                /**
+                 * @description How the credential reached Terminal49: a direct API call, the dashboard, an MCP connected client, or the AskT49 agent.
+                 * @enum {string}
+                 */
+                channel: "api" | "dashboard" | "mcp" | "askt49";
+                /** @description The API key's label from the developer portal. `null` for user tokens. */
+                name?: string | null;
+                /** @description Whether this credential can use each gated feature on the current account. Keys are stable; new keys may be added. */
+                features: {
+                    data_out_api: components["schemas"]["feature_availability"];
+                    custom_fields: components["schemas"]["feature_availability"];
+                    routing_data: components["schemas"]["feature_availability"];
+                    rail_data: components["schemas"]["feature_availability"];
+                    stop_tracking: components["schemas"]["feature_availability"];
+                    trade_intel: components["schemas"]["feature_availability"];
+                } & {
+                    [key: string]: components["schemas"]["feature_availability"];
+                };
+            };
+            relationships: {
+                /** @description The account this credential is scoped to. */
+                account: {
+                    data: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "account";
+                    };
+                };
+                /** @description The signed-in user. `data` is `null` for an API key unless the request also carried `x-user-email`. */
+                user: {
+                    data: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "user";
+                    } | null;
+                };
+            };
+        };
+        /**
+         * Credential account
+         * @description An account as `GET /me` describes it. Narrower than the `account` relationship elsewhere in the API.
+         */
+        credential_account: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "account";
+            attributes: {
+                company_name: string;
+                /**
+                 * @description The business type the account declared. `shipper` is a cargo owner (importer or exporter); `freight_forwarder` and `customs_broker` are service providers.
+                 * @enum {string|null}
+                 */
+                company_type?: "trucking_company" | "freight_forwarder" | "customs_broker" | "shipper" | "terminal_49" | "contractor" | "software_company" | "party_logistic" | "other" | null;
+                scac?: string | null;
+                /** @description Four-letter account abbreviation. */
+                abbr_name?: string | null;
+                city?: string | null;
+                state_abbr?: string | null;
+                country?: string | null;
+                /**
+                 * @description The account's billing lifecycle state.
+                 * @enum {string|null}
+                 */
+                plan?: "free_plan" | "in_trial" | "customer" | "locked" | "churned" | null;
+                /** @description Tracking-slot usage on free and trial plans. `null` when the plan is not slot-limited. Present only on the account the credential is scoped to. */
+                tracking_slots?: {
+                    /** @description Tracking slots the plan allows. */
+                    limit: number;
+                    /** @description Slots in use: active containers plus pending tracking requests that reserve capacity, deduplicated by container number. */
+                    used: number;
+                    /** @description Slots held by containers that are currently being tracked. */
+                    active_containers: number;
+                    /** @description Slots reserved by tracking requests that have not resolved yet (`pending` or `awaiting_manifest`). */
+                    pending_tracking_requests: number;
+                    /** @description Slots still available, never below zero. */
+                    remaining: number;
+                } | null;
+            };
+        };
+        /**
+         * Credential user
+         * @description The signed-in user as `GET /me` describes them to themselves.
+         */
+        credential_user: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "user";
+            attributes: {
+                /** Format: email */
+                email: string;
+                name?: string | null;
+                /**
+                 * @description `account_manager` can manage the account's users and billing.
+                 * @enum {string}
+                 */
+                role?: "member" | "account_manager";
+                /** @enum {string|null} */
+                job_role?: "other" | "dispatcher" | "driver" | "broker" | "shipper" | "forwarder" | null;
+                job_title?: string | null;
+                /** @description `true` only for Terminal49 staff. */
+                admin: boolean;
+            };
+            relationships: {
+                /** @description Every open account this user can select with `x-account-id`. */
+                accounts: {
+                    data: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        type: "account";
+                    }[];
+                };
+            };
+        };
+        /** @description Plain JSON error body returned by trade intelligence endpoints (not JSON:API). */
+        TradeIntelError: {
+            /**
+             * @description What was wrong with the request, or why trade intelligence could not answer.
+             * @example hs4 must be a 4-digit HS code, e.g. '0306'; use commodities/search to find one
+             */
+            error: string;
+        };
+        /** @description Schema validation failure (for example a `limit` above its maximum or a malformed month). */
+        TradeIntelValidationError: {
+            /** @description One entry per field that failed schema validation. */
+            detail: {
+                /** @description Path to the offending field, for example `["body", "limit"]`. */
+                loc: (string | number)[];
+                /** @description Human-readable validation message. */
+                msg: string;
+                /** @description Validation error type, for example `less_than_equal`. */
+                type: string;
+            }[];
+        };
+        /**
+         * @description What to measure. `containers` counts physical containers (each box once). `teus` sums twenty-foot equivalent units. `estimated_value` sums modelled USD estimates, not declared customs values.
+         * @default containers
+         * @enum {string}
+         */
+        TradeIntelMeasure: "containers" | "teus" | "estimated_value";
+        /**
+         * @description Bucket size for a time series. Every period is labelled by its first month, `YYYY-MM`: a quarter starting in April 2026 is `2026-04` and the year 2026 is `2026-01`.
+         * @default month
+         * @enum {string}
+         */
+        TradeIntelInterval: "month" | "quarter" | "year";
+        /**
+         * @description A dimension to group or break down by. `pod` is the US port of discharge, `pol` the foreign port of lading, `pod_coast` is `EAST`, `WEST`, or `GULF`, `dest_state` is the destination US state, `company_state` the importer's state, `hs2` and `hs4` are HS chapter and heading codes, and `reefer` splits refrigerated from dry containers. Lane dimensions (`pol`, `pol_country`, `container_type`) can't be combined with company or product dimensions (`company`, `company_state`, `hs4`, `hs2`) in one request, whether as dimensions or filters, and `estimated_value` isn't available by lane dimension; such requests return `400` with the reason.
+         * @enum {string}
+         */
+        TradeIntelDimension: "carrier" | "scac" | "origin_country" | "origin_region" | "pod" | "pod_coast" | "dest_state" | "reefer" | "pol" | "pol_country" | "container_type" | "company" | "company_state" | "hs4" | "hs2";
+        /** @description Filters for `trends` and `breakdown`. Name-like fields match case-insensitive substrings; codes (`hs4`, `hs2`, `pod_coast`, states, `scac`) match exactly. Omit a field to leave it unfiltered. Lane dimensions (`pol`, `pol_country`, `container_type`) can't be combined with company or product dimensions (`company`, `company_state`, `hs4`, `hs2`) in one request, whether as dimensions or filters, and `estimated_value` isn't available by lane dimension; such requests return `400` with the reason. */
+        TradeIntelFilters: {
+            /**
+             * @description Case-insensitive **substring** match on the company name, so `IKEA` also matches `IKEA SUPPLY AG`. For one company's own figures use `companies/profile`, which matches the exact name.
+             * @example CATERPILLAR
+             */
+            company?: string | null;
+            /**
+             * @description Two-letter US state of the importer; exact match.
+             * @example IL
+             */
+            company_state?: string | null;
+            /**
+             * @description 4-digit HS heading; exact match. Use `commodities/search` to find one.
+             * @example 0306
+             */
+            hs4?: string | null;
+            /**
+             * @description 2-digit HS chapter; exact match.
+             * @example 03
+             */
+            hs2?: string | null;
+            /**
+             * @description Substring of the ocean carrier name as it appears on manifests. Carriers appear under spelling variants; prefer `scac` for an exact match.
+             * @example MAERSK
+             */
+            carrier?: string | null;
+            /**
+             * @description Carrier SCAC; exact match.
+             * @example MAEU
+             */
+            scac?: string | null;
+            /**
+             * @description Substring of the origin country as spelled on manifests, for example `china` matches `PEOPLES REP OF CHINA`.
+             * @example vietnam
+             */
+            origin_country?: string | null;
+            /** @description Substring of the origin region. */
+            origin_region?: string | null;
+            /** @description Substring of the foreign port of lading. */
+            pol?: string | null;
+            /** @description Substring of the port-of-lading country. */
+            pol_country?: string | null;
+            /**
+             * @description Substring of the US port of discharge.
+             * @example savannah
+             */
+            pod?: string | null;
+            /**
+             * @description US coast of the port of discharge; exact match.
+             * @enum {string|null}
+             */
+            pod_coast?: "EAST" | "WEST" | "GULF" | null;
+            /**
+             * @description Two-letter destination US state; exact match.
+             * @example TX
+             */
+            dest_state?: string | null;
+            /** @description Substring of the container type description. */
+            container_type?: string | null;
+            /** @description Only refrigerated (`true`) or only dry (`false`) containers. */
+            reefer?: boolean | null;
+        };
+        /** @description Row counts of the monthly fact tables behind the analytics endpoints. */
+        TradeIntelFactRowCounts: {
+            /** @description Rows in the lane-by-month fact table. */
+            lane_month: number;
+            /** @description Rows in the company-by-month fact table. */
+            company_month: number;
+            /** @description Rows in the commodity-by-month fact table. */
+            commodity_month: number;
+            /** @description Rows in the HS-code-by-lane-by-month fact table. */
+            hs_lane_month: number;
+        };
+        /** @description Index window, freshness, and counts. Also returned as `index` by `companies/search`. */
+        TradeIntelMeta: {
+            /**
+             * @description First day (`YYYY-MM-DD`) of the first month of the 12-full-month window that search results cover.
+             * @example 2025-10-01
+             */
+            since_month: string;
+            /**
+             * @description First day (`YYYY-MM-DD`) of the month after the last full month in the search window (exclusive).
+             * @example 2026-10-01
+             */
+            until_month_exclusive: string;
+            /**
+             * @description Number of full months in the search window.
+             * @example 12
+             */
+            months: number;
+            /**
+             * @description Minimum containers in the window for a company to be in the search index.
+             * @example 5
+             */
+            min_containers: number;
+            /**
+             * @description Companies in the search index.
+             * @example 250000
+             */
+            companies: number;
+            /**
+             * @description HS4 codes in the search index.
+             * @example 1200
+             */
+            hs_codes: number;
+            /**
+             * @description First month of history available to `companies/profile`, `importers/top`, `trends`, and `breakdown`. History starts in January 2022. Formatted as the first day of the month (`YYYY-MM-DD`).
+             * @example 2022-01-01
+             */
+            facts_since_month: string;
+            /**
+             * @description Day after the date the index was built (`YYYY-MM-DD`, exclusive): the end of the loaded history.
+             * @example 2026-10-09
+             */
+            facts_until_exclusive: string;
+            /**
+             * @description First day (`YYYY-MM-DD`) of the current calendar month, which is still being loaded and is incomplete.
+             * @example 2026-10-01
+             */
+            partial_month: string;
+            /**
+             * @description How the index was built: `full` or `incremental`.
+             * @example incremental
+             */
+            mode: string;
+            /** @description Fingerprint of the current fact build. It changes whenever the data is refreshed. */
+            facts_hash: string;
+            /**
+             * @description Start of the period covered by the most recent daily refresh (`YYYY-MM-DD`).
+             * @example 2026-07-01
+             */
+            refreshed_since: string;
+            fact_rows: components["schemas"]["TradeIntelFactRowCounts"];
+            /**
+             * @description Unit of every `containers` figure: physical containers, each counted once.
+             * @example physical containers: distinct (container_number, imported_on)
+             */
+            volume_measure: string;
+            /**
+             * Format: date-time
+             * @description When the index was built.
+             * @example 2026-10-08T06:12:44Z
+             */
+            built_at: string;
+        };
+        TradeIntelNamedContainers: {
+            /** @description Port, country, or carrier name as spelled on manifests. */
+            name: string;
+            /** @description Physical containers. */
+            containers: number;
+        };
+        TradeIntelNamedVolume: {
+            /** @description Port, country, carrier, or state name as spelled on manifests. */
+            name: string;
+            /** @description Physical containers. */
+            containers: number;
+            /** @description Twenty-foot equivalent units. */
+            teus: number;
+        };
+        TradeIntelCommodityVolume: {
+            /**
+             * @description 4-digit HS heading.
+             * @example 9401
+             */
+            hs4: string;
+            /** @description HS heading description. Descriptions are truncated; check `common_goods` from `commodities/search` before relying on one. */
+            description: string;
+            /** @description Physical containers carrying this heading. */
+            containers: number;
+            /** @description Modelled USD estimate, not declared customs value. */
+            estimated_value: number;
+        };
+        /** @description Give `name`, `imports`, or both. With neither, lists the largest importers matching the filters. */
+        TradeIntelCompanySearchRequest: {
+            /**
+             * @description Company name; partial or misspelled is fine (fuzzy match). Results are ranked by match quality, not size, so a close but small match can outrank a large importer.
+             * @example home depot
+             */
+            name?: string | null;
+            /**
+             * @description What the company imports, in plain words (semantic match).
+             * @example frozen shrimp
+             */
+            imports?: string | null;
+            /**
+             * @description US state code of the importer.
+             * @example FL
+             */
+            state?: string | null;
+            /**
+             * @description Substring of a US port name.
+             * @example Long Beach
+             */
+            port_of_discharge?: string | null;
+            /**
+             * @description Substring of an origin country.
+             * @example Vietnam
+             */
+            origin_country?: string | null;
+            /** @description Minimum containers in the index window. */
+            min_containers?: number | null;
+            /**
+             * @description Maximum results to return.
+             * @default 10
+             */
+            limit?: number;
+        };
+        TradeIntelCompanySearchResult: {
+            /**
+             * @description Normalized company name. Pass it unchanged to `companies/profile`.
+             * @example CATERPILLAR
+             */
+            company_name: string;
+            /**
+             * @description US state this row covers, or `null` when the row spans all states.
+             * @example IL
+             */
+            company_state: string | null;
+            /** @description Physical containers in the index window. */
+            containers: number;
+            /** @description Containers where the company is the consignee. */
+            containers_as_consignee: number;
+            /** @description Containers where the company is the notify party. A share above about 70% usually indicates a logistics provider rather than the cargo owner. */
+            containers_as_notify_party: number;
+            /** @description Twenty-foot equivalent units. */
+            teus: number;
+            /** @description Modelled USD estimate, not declared customs value. */
+            estimated_value: number;
+            /** @description Share of containers that were refrigerated, 0 to 1. */
+            reefer_share: number;
+            /**
+             * @description First day (`YYYY-MM-DD`) of the first month with volume in the window.
+             * @example 2025-10-01
+             */
+            first_month: string;
+            /**
+             * @description First day (`YYYY-MM-DD`) of the last month with volume in the window.
+             * @example 2026-09-01
+             */
+            last_month: string;
+            /** @description Top US ports of discharge. */
+            top_ports: components["schemas"]["TradeIntelNamedContainers"][];
+            /** @description Top origin countries. */
+            top_origins: components["schemas"]["TradeIntelNamedContainers"][];
+            /** @description Top ocean carriers. */
+            top_carriers: components["schemas"]["TradeIntelNamedContainers"][];
+            /** @description Top HS4 headings. */
+            top_commodities: components["schemas"]["TradeIntelCommodityVolume"][];
+            /** @description Match quality; higher is better. Not a measure of size. */
+            score: number;
+        };
+        TradeIntelCompanySearchResponse: {
+            index: components["schemas"]["TradeIntelMeta"];
+            /** @description Matches ordered by `score`. */
+            results: components["schemas"]["TradeIntelCompanySearchResult"][];
+        };
+        TradeIntelCompanyProfileRequest: {
+            /**
+             * @description Exact `company_name` from `companies/search`.
+             * @example CATERPILLAR
+             */
+            company_name: string;
+            /**
+             * @description Restrict to one state; omit for all states.
+             * @example IL
+             */
+            company_state?: string | null;
+            /**
+             * @description Full calendar months ending last month. Use 24 or more for a year-over-year view.
+             * @default 12
+             */
+            months?: number;
+        };
+        TradeIntelCompanyProfileTotals: {
+            /** @description Physical containers in the period. */
+            containers: number;
+            /** @description Containers where the company is the consignee. */
+            containers_as_consignee: number;
+            /** @description Containers where the company is the notify party. */
+            containers_as_notify_party: number;
+            /** @description Twenty-foot equivalent units. */
+            teus: number;
+            /** @description US states the company's rows are split across, or `null` when none of its rows carries a state. */
+            states: string[] | null;
+        };
+        TradeIntelMonthlyVolume: {
+            /**
+             * @description Calendar month.
+             * @example 2026-03
+             */
+            month: string;
+            /** @description Physical containers. */
+            containers: number;
+            /** @description Twenty-foot equivalent units. */
+            teus: number;
+        };
+        /** @description Import profile for one company. When `found` is `true` the period end (`until`), totals, monthly series, breakdowns, and notes are returned; when it is `false` only `company_name`, `company_state`, `since`, and `found` are. */
+        TradeIntelCompanyProfile: {
+            /**
+             * @description The requested company name.
+             * @example CATERPILLAR
+             */
+            company_name: string;
+            /** @description The requested state, or `null` for all states. */
+            company_state: string | null;
+            /**
+             * @description First month of the period (inclusive).
+             * @example 2025-10
+             */
+            since: string;
+            /**
+             * @description Last month of the period (inclusive). Present only when `found` is `true`.
+             * @example 2026-09
+             */
+            until?: string;
+            /** @description `false` when the exact name has no volume in the period. The name must match `companies/search` exactly; a company can also be split across several names. */
+            found: boolean;
+            totals?: components["schemas"]["TradeIntelCompanyProfileTotals"];
+            /** @description Volume per month, oldest first. */
+            monthly?: components["schemas"]["TradeIntelMonthlyVolume"][];
+            /** @description US ports of discharge. */
+            ports_of_discharge?: components["schemas"]["TradeIntelNamedVolume"][];
+            /** @description Origin countries. */
+            origin_countries?: components["schemas"]["TradeIntelNamedVolume"][];
+            /** @description Ocean carriers as spelled on manifests. Merge spelling variants before computing shares. */
+            carriers?: components["schemas"]["TradeIntelNamedVolume"][];
+            /** @description Destination US states. */
+            destination_states?: components["schemas"]["TradeIntelNamedVolume"][];
+            /** @description HS4 headings with estimated value. */
+            commodities_hs4?: components["schemas"]["TradeIntelCommodityVolume"][];
+            /** @description Counting caveats that apply to this response, for example that volume is physical containers or that the window includes a partial month. Surface these to end users. */
+            notes?: string[];
+        };
+        TradeIntelCommoditySearchRequest: {
+            /**
+             * @description Product description in plain words, or an HS code prefix.
+             * @example office chairs
+             */
+            query: string;
+            /**
+             * @description Maximum results to return.
+             * @default 10
+             */
+            limit?: number;
+        };
+        TradeIntelCommoditySearchResult: {
+            /**
+             * @description 4-digit HS heading. Pass it to `importers/top` or as an `hs4` filter.
+             * @example 9401
+             */
+            hs4: string;
+            /** @description HS heading description (truncated). */
+            description: string;
+            /** @description 12-month modelled USD import value, not declared customs value. */
+            estimated_value: number;
+            /** @description Companies importing this heading in the index window. */
+            companies: number;
+            /** @description Goods commonly declared under this heading on bills of lading. Use these to confirm the heading covers what you mean; HS 0306, for example, covers all frozen crustaceans, not only shrimp. */
+            common_goods: string[];
+            /** @description Match quality; higher is better. */
+            score: number;
+        };
+        TradeIntelCommoditySearchResponse: {
+            /** @description Matches ordered by `score`. */
+            results: components["schemas"]["TradeIntelCommoditySearchResult"][];
+        };
+        TradeIntelTopImportersRequest: {
+            /**
+             * @description 4-digit HS heading: rank importers of containers carrying it. Any other value returns `400`. Use `commodities/search` to find one.
+             * @example 0306
+             */
+            hs4?: string | null;
+            /**
+             * @description Substring of a US port name.
+             * @example savannah
+             */
+            port_of_discharge?: string | null;
+            /**
+             * @description Substring of an origin country.
+             * @example vietnam
+             */
+            origin_country?: string | null;
+            /**
+             * @description Full calendar months ending last month.
+             * @default 12
+             */
+            months?: number;
+            /**
+             * @description Maximum importers to return.
+             * @default 20
+             */
+            limit?: number;
+        };
+        TradeIntelTopImporter: {
+            /** @description Normalized company name; pass it to `companies/search` or `companies/profile`. */
+            company_name: string;
+            /** @description US states the company's volume is split across, or `null` when none of its rows carries a state. */
+            states: string[] | null;
+            /** @description Physical containers matching the filters. */
+            containers: number;
+            /** @description Twenty-foot equivalent units. */
+            teus: number;
+            /** @description Modelled USD estimate when `hs4` was given; `null` otherwise. */
+            estimated_value: number | null;
+        };
+        TradeIntelTopImporters: {
+            /**
+             * @description First month of the period (inclusive).
+             * @example 2025-10
+             */
+            since: string;
+            /**
+             * @description Last month of the period (inclusive).
+             * @example 2026-09
+             */
+            until: string;
+            /**
+             * @description The measure the ranking uses.
+             * @example containers
+             */
+            ranked_by: string;
+            /** @description The filters that were applied, keyed by the names the service uses: a `port_of_discharge` request comes back as `pod`. Only filters that were given appear. */
+            filters: {
+                /** @description The four-digit HS heading. */
+                hs4?: string;
+                /** @description The `port_of_discharge` substring. */
+                pod?: string;
+                /** @description The `origin_country` substring. */
+                origin_country?: string;
+            };
+            /** @description Counting caveats that apply to this response, for example that volume is physical containers or that the window includes a partial month. Surface these to end users. */
+            notes: string[];
+            /** @description Importers in descending order. The list does not distinguish forwarders from cargo owners and does not give each company's total volume; use `companies/search` for those. */
+            importers: components["schemas"]["TradeIntelTopImporter"][];
+        };
+        TradeIntelTrendsRequest: {
+            measure?: components["schemas"]["TradeIntelMeasure"];
+            /** @description Split the series by up to two dimensions, keeping the top `top` groups. */
+            group_by?: components["schemas"]["TradeIntelDimension"][];
+            filters?: components["schemas"]["TradeIntelFilters"];
+            interval?: components["schemas"]["TradeIntelInterval"];
+            /**
+             * @description First period, `YYYY-MM` inclusive. Defaults to 23 months before `until`, so the default series covers 24 months; history is available back to January 2022 (`facts_since_month` in `meta`).
+             * @example 2024-01
+             */
+            since?: string | null;
+            /**
+             * @description Last period, `YYYY-MM` inclusive. Defaults to the current, partial month.
+             * @example 2026-09
+             */
+            until?: string | null;
+            /**
+             * @description Keep the top N groups by total over the range.
+             * @default 10
+             */
+            top?: number;
+        };
+        /** @description One point in the series. When `group_by` is set, each point also carries one property per dimension (for example `origin_country`). */
+        TradeIntelTrendPoint: {
+            /**
+             * @description First month of the period, `YYYY-MM`, whatever the `interval`: quarters are `2026-01`, `2026-04`, and so on, and years are `2026-01`.
+             * @example 2026-01
+             */
+            period: string;
+            /** @description The measure for this period and group. */
+            value: number;
+            /** @description `true` when the period includes the current, incomplete month. Exclude such periods from comparisons. */
+            partial?: boolean;
+        } & {
+            [key: string]: unknown;
+        };
+        TradeIntelTrends: {
+            measure: components["schemas"]["TradeIntelMeasure"];
+            interval: components["schemas"]["TradeIntelInterval"];
+            /**
+             * @description First period (inclusive).
+             * @example 2024-10
+             */
+            since: string;
+            /**
+             * @description Last period (inclusive).
+             * @example 2026-10
+             */
+            until: string;
+            /** @description The dimensions the series is split by. */
+            group_by: components["schemas"]["TradeIntelDimension"][];
+            filters: components["schemas"]["TradeIntelFilters"];
+            /** @description Name of the fact table the series was computed from. */
+            fact: string;
+            /** @description Counting caveats that apply to this response, for example that volume is physical containers or that the window includes a partial month. Surface these to end users. */
+            notes: string[];
+            /** @description Points ordered by period, then by group. */
+            series: components["schemas"]["TradeIntelTrendPoint"][];
+        };
+        TradeIntelBreakdownRequest: {
+            /** @description Hierarchy, outermost first, for example `["origin_region", "origin_country", "pod"]` or `["hs2", "hs4"]`. */
+            dims: components["schemas"]["TradeIntelDimension"][];
+            measure?: components["schemas"]["TradeIntelMeasure"];
+            filters?: components["schemas"]["TradeIntelFilters"];
+            /**
+             * @description First month, `YYYY-MM` inclusive. Defaults to 11 months before `until`, so the default range covers 12 months.
+             * @example 2025-10
+             */
+            since?: string | null;
+            /**
+             * @description Last month, `YYYY-MM` inclusive. Defaults to the current, partial month.
+             * @example 2026-09
+             */
+            until?: string | null;
+            /**
+             * @description Top N children under each parent.
+             * @default 10
+             */
+            top?: number;
+        };
+        /** @description One row of the rollup. Besides `level` and `value`, each row carries one property per dimension down to its level (for example `pod_coast` and `pod`). */
+        TradeIntelBreakdownRow: {
+            /** @description Depth in the hierarchy: `0` is the grand total, `1` a subtotal for the first dimension, and so on. A row at level N carries a property for each of the first N dimensions. */
+            level: number;
+            /** @description The measure for this row. */
+            value: number;
+        } & {
+            [key: string]: unknown;
+        };
+        TradeIntelBreakdown: {
+            measure: components["schemas"]["TradeIntelMeasure"];
+            /** @description The hierarchy, outermost first. */
+            dims: components["schemas"]["TradeIntelDimension"][];
+            filters: components["schemas"]["TradeIntelFilters"];
+            /**
+             * @description First month (inclusive).
+             * @example 2025-10
+             */
+            since: string;
+            /**
+             * @description Last month (inclusive).
+             * @example 2026-10
+             */
+            until: string;
+            /** @description Name of the fact table the rollup was computed from. */
+            fact: string;
+            /** @description Counting caveats that apply to this response, for example that volume is physical containers or that the window includes a partial month. Surface these to end users. */
+            notes: string[];
+            /** @description Grand total first, then subtotals per level, keeping the top N children under each parent. */
+            rows: components["schemas"]["TradeIntelBreakdownRow"][];
+        };
+        TradeIntelContainerLookupRequest: {
+            /**
+             * @description ISO 6346 container number. Spaces and hyphens are removed and letters uppercased before matching.
+             * @example MSCU1234567
+             */
+            container_number: string;
+        };
+        /** @description One commodity line from a bill of lading, with the parties on that bill. */
+        TradeIntelCommodityLine: {
+            /**
+             * Format: date
+             * @description Import date.
+             */
+            imported_on?: string | null;
+            /** @description Carrier (master) bill of lading number. */
+            master_bill_of_lading_number?: string | null;
+            /** @description House bill of lading number, when the cargo moved under an NVOCC. */
+            house_bill_of_lading_number?: string | null;
+            /** @description Consignee name as declared on the manifest. */
+            consignee?: string | null;
+            consignee_city?: string | null;
+            /** @description Two-letter US state. */
+            consignee_state?: string | null;
+            /** @description Notify party as declared on the manifest. */
+            notify_party?: string | null;
+            /** @description Shipper name as declared on the manifest. */
+            shipper?: string | null;
+            shipper_country?: string | null;
+            /** @description Goods description from the manifest line. */
+            commodity_short_description?: string | null;
+            /** @description 6-digit HS code assigned to the line. */
+            commodity_hs_code_6?: string | null;
+            commodity_hs_code_6_description?: string | null;
+            /** @description Declared quantity. */
+            commodity_quantity?: number | null;
+            /** @description Unit of the declared quantity. */
+            commodity_quantity_uom?: string | null;
+            /** @description Modelled USD estimate for the line, not declared customs value. */
+            commodity_estimated_value?: number | null;
+            /** @description Weight of the bill of lading in metric tons. */
+            bol_metric_tons?: number | null;
+            /** @description TEUs on the bill of lading. */
+            bol_teus?: number | null;
+            /** @description SCAC of the NVOCC, when one filed the bill. */
+            nvocc_scac?: string | null;
+            /** @description NVOCC name. */
+            nvocc_scac_description?: string | null;
+        };
+        /** @description A bill of lading the container travelled under on its most recent US import. */
+        TradeIntelContainerBillOfLading: {
+            /**
+             * Format: date
+             * @description Import date.
+             */
+            imported_on?: string | null;
+            /** @description Carrier (master) bill of lading number. */
+            master_bill_of_lading_number?: string | null;
+            /** @description House bill of lading number, when the cargo moved under an NVOCC. */
+            house_bill_of_lading_number?: string | null;
+            /** @description Ocean carrier SCAC. */
+            scac?: string | null;
+            /** @description Ocean carrier name. */
+            scac_name?: string | null;
+            vessel_name?: string | null;
+            voyage_number?: string | null;
+            /** @description Foreign port where the container was loaded. */
+            port_of_lading_name?: string | null;
+            port_of_lading_country?: string | null;
+            /** @description US port where the container was discharged. */
+            port_of_discharge_name?: string | null;
+            destination_city?: string | null;
+            /** @description Two-letter US state. */
+            destination_state?: string | null;
+            ultimate_origin_country?: string | null;
+            /** @description Container type, for example a 40-foot high cube. */
+            container_type_short_description?: string | null;
+            /** @description TEUs of the container. */
+            container_teu?: number | null;
+            /** @description Whether the container is refrigerated. */
+            container_reefer_flag?: boolean | null;
+        };
+        TradeIntelContainerLookup: {
+            /**
+             * @description The normalized container number that was looked up.
+             * @example MSCU1234567
+             */
+            container_number: string;
+            /** @description `false` when no US import of this container is on record, or the number is malformed. */
+            found: boolean;
+            /**
+             * @description Only when `found` is `false` because the number is malformed.
+             * @example expected ISO 6346 format, e.g. MSCU1234567
+             */
+            error?: string;
+            /** @description Summary of the container's most recent US import (import date, carrier, vessel, ports, and destination), present when `found` is `true`. */
+            latest_import?: {
+                [key: string]: unknown;
+            };
+            /** @description Bills of lading the container travelled under on that import. */
+            bills_of_lading?: components["schemas"]["TradeIntelContainerBillOfLading"][];
+            /** @description Commodity lines on those bills, grouped by bill with the highest estimated value first within each bill. At most 200 lines are returned; the cap keeps the first 200 in that order, not the 200 highest-value lines overall. */
+            commodities?: components["schemas"]["TradeIntelCommodityLine"][];
+            /** @description `true` when more than 200 commodity lines exist and only the first 200 are returned. */
+            commodities_truncated?: boolean;
+            /**
+             * @description Coverage caveat for this response.
+             * @example only the most recent US import of this container is on record; earlier imports are not included
+             */
+            note?: string;
+        };
+        TradeIntelBillOfLadingLookupRequest: {
+            /**
+             * @description Master (SCAC-prefixed) or house bill of lading number. Spaces and hyphens are removed and letters uppercased before matching.
+             * @example MEDUW9559867
+             */
+            bol_number: string;
+            /**
+             * @description How many months back to search.
+             * @default 12
+             */
+            months?: number;
+        };
+        /** @description A container that moved under the bill of lading. */
+        TradeIntelBillOfLadingContainer: {
+            /** @description ISO 6346 container number. */
+            container_number?: string | null;
+            /**
+             * Format: date
+             * @description Import date.
+             */
+            imported_on?: string | null;
+            /** @description Ocean carrier SCAC. */
+            scac?: string | null;
+            vessel_name?: string | null;
+            voyage_number?: string | null;
+            /** @description Foreign port where the container was loaded. */
+            port_of_lading_name?: string | null;
+            /** @description US port where the container was discharged. */
+            port_of_discharge_name?: string | null;
+            destination_city?: string | null;
+            /** @description Two-letter US state. */
+            destination_state?: string | null;
+            /** @description Container type. */
+            container_type_short_description?: string | null;
+            /** @description TEUs of the container. */
+            container_teu?: number | null;
+        };
+        TradeIntelBillOfLadingLookup: {
+            /**
+             * @description The normalized bill of lading number that was looked up.
+             * @example MEDUW9559867
+             */
+            bol_number: string;
+            /** @description `false` when no import under this number is on record in the search window. */
+            found: boolean;
+            /**
+             * Format: date
+             * @description Start of the search window.
+             * @example 2025-10-01
+             */
+            searched_since: string;
+            /** @description Distinct bill of lading records matched (at most 50). */
+            bills_matched?: number;
+            /** @description `true` when more than 50 records matched and only the most recent 50 are used. */
+            bills_truncated?: boolean;
+            /** @description Containers on the matched bills (at most 200). */
+            containers?: components["schemas"]["TradeIntelBillOfLadingContainer"][];
+            /** @description `true` when more than 200 containers exist and only the first 200 are returned. */
+            containers_truncated?: boolean;
+            /** @description Commodity lines on the matched bills, grouped by bill with the highest estimated value first within each bill. At most 200 lines are returned; the cap keeps the first 200 in that order, not the 200 highest-value lines overall. */
+            commodities?: components["schemas"]["TradeIntelCommodityLine"][];
+            /** @description `true` when more than 200 commodity lines exist and only the first 200 are returned. */
+            commodities_truncated?: boolean;
+        };
     };
-    responses: never;
+    responses: {
+        /** @description Bad Request */
+        BadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "status": "400",
+                 *           "title": "Bad Request",
+                 *           "source": {
+                 *             "parameter": "include"
+                 *           }
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+        /** @description Unauthorized. The API token is missing or invalid, or the account may not perform this action. */
+        Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "detail": "You are not allowed to perform this action"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+        /** @description Not Found */
+        NotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "status": "404",
+                 *           "title": "Not Found"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+        /** @description Unprocessable Entity */
+        UnprocessableEntity: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "errors": [
+                 *         {
+                 *           "status": "422",
+                 *           "source": {
+                 *             "pointer": "/data/attributes/label"
+                 *           },
+                 *           "title": "Unprocessable Entity",
+                 *           "detail": "Label can't be blank",
+                 *           "code": "blank"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    errors?: components["schemas"]["error"][];
+                };
+            };
+        };
+        /** @description Bad Request - the request was understood but a value is invalid, for example an `hs4` that is not a 4-digit HS code. */
+        TradeIntelBadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": "hs4 must be a 4-digit HS code, e.g. '0306'; use commodities/search to find one"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelError"];
+            };
+        };
+        /** @description Unauthorized - the API key is missing or invalid. */
+        TradeIntelUnauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": "Terminal49 API key could not be verified"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelError"];
+            };
+        };
+        /** @description Forbidden - trade intelligence is not enabled for this account. Contact sales@terminal49.com. */
+        TradeIntelNotEnabled: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": "Trade intelligence is not enabled for this account"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelError"];
+            };
+        };
+        /** @description Unprocessable Entity - either the body failed schema validation (a value out of range, a malformed month, or an unknown enum value), reported in `detail`, or the request would read more data than the query cost cap allows, reported in `error`. Narrow the time window or filters for the second. */
+        TradeIntelValidationFailed: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["TradeIntelValidationError"] | components["schemas"]["TradeIntelError"];
+            };
+        };
+        /** @description Too Many Requests - about 120 requests per minute are allowed per account. */
+        TradeIntelRateLimited: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": "Rate limit exceeded; retry in a minute"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelError"];
+            };
+        };
+        /** @description Bad Gateway or Gateway Timeout - trade intelligence is temporarily unavailable; retry shortly. */
+        TradeIntelUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": "Trade intelligence is temporarily unavailable; try again shortly"
+                 *     }
+                 */
+                "application/json": components["schemas"]["TradeIntelError"];
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;
@@ -3499,6 +5147,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Not Found */
             404: {
                 headers: {
@@ -3545,6 +5194,16 @@ export interface operations {
                              *     ]
                              */
                             ref_numbers?: string[];
+                            /**
+                             * @description Master bill of lading number you provide for the shipment.
+                             * @example MEDUFR030802
+                             */
+                            user_provided_mbl_number?: string;
+                            /**
+                             * @description Booking number you provide for the shipment.
+                             * @example BK123456
+                             */
+                            user_provided_booking_number?: string;
                             /** @description Tags related to a shipment */
                             tags?: string[];
                         };
@@ -3564,6 +5223,10 @@ export interface operations {
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "patch-shipments-id-stop-tracking": {
@@ -3588,6 +5251,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "patch-shipments-id-resume-tracking": {
@@ -3612,6 +5278,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-tracking-requests": {
@@ -3624,8 +5293,8 @@ export interface operations {
                 q?: string;
                 /** @description filter by `request_number` */
                 "filter[request_number]"?: string;
-                /** @description filter by `status` */
-                "filter[status]"?: "created" | "pending" | "failed";
+                /** @description filter by `status`. `pending` matches requests with status `pending`; any value other than `created`, `failed` or `cancelled` is treated as `pending`. */
+                "filter[status]"?: "created" | "pending" | "failed" | "cancelled";
                 /** @description filter by shipping line `scac` */
                 "filter[scac]"?: string;
                 /** @description filter by tracking_requests `created_at` after a certain ISO8601 timestamp */
@@ -3636,7 +5305,7 @@ export interface operations {
                 "filter[updated_at][start]"?: string;
                 /** @description filter by tracking_requests `updated_at` before a certain ISO8601 timestamp */
                 "filter[updated_at][end]"?: string;
-                /** @description Comma delimited list of relations to include. 'tracked_object' is included by default. */
+                /** @description Comma-delimited list of relationships to include. Accepted values: `tracked_object`, `customer`, and `user`. `tracked_object` is included by default. */
                 include?: string;
                 "page[number]"?: number;
                 "page[size]"?: number;
@@ -3663,13 +5332,17 @@ export interface operations {
                             /** @enum {string} */
                             type?: "shipment";
                             links?: {
-                                /** Format: uri */
+                                /**
+                                 * Format: uri-reference
+                                 * @description Path of this resource, relative to the API host (for example `/v2/shipments/{id}`).
+                                 */
                                 self?: string;
                             };
-                        })[];
+                        } | components["schemas"]["user"])[];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
             /** @description Not Found */
             404: {
                 headers: {
@@ -3953,7 +5626,7 @@ export interface operations {
     "get-track-request-by-id": {
         parameters: {
             query?: {
-                /** @description Comma delimited list of relations to include. 'tracked_object' is included by default. */
+                /** @description Comma-delimited list of relationships to include. Accepted values: `tracked_object`, `customer`, and `user`. `tracked_object` is included by default. */
                 include?: string;
             };
             header?: never;
@@ -3973,10 +5646,12 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["tracking_request"];
-                        included?: (components["schemas"]["account"] | components["schemas"]["shipment"] | components["schemas"]["shipping_line"])[];
+                        included?: (components["schemas"]["account"] | components["schemas"]["shipment"] | components["schemas"]["shipping_line"] | components["schemas"]["user"])[];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
             /** @description Not Found */
             404: {
                 headers: {
@@ -4006,10 +5681,12 @@ export interface operations {
                     data?: {
                         attributes: {
                             /**
-                             * @description Tracking request ref number.
-                             * @example REFNUMBER11
+                             * @description Customer reference numbers. The list you send replaces the existing list.
+                             * @example [
+                             *       "REFNUMBER11"
+                             *     ]
                              */
-                            ref_number?: string;
+                            ref_numbers?: string[];
                         };
                     };
                 };
@@ -4027,11 +5704,17 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-tracking-requests-custom-fields": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Comma-separated relationships to include: `definition`, `entity`, `updated_by`. */
+                include?: string;
+            };
             header?: never;
             path: {
                 /** @description Tracking request ID */
@@ -4051,9 +5734,12 @@ export interface operations {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
+                        included?: (components["schemas"]["custom_field_definition"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["tracking_request"] | components["schemas"]["user"])[];
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "post-tracking-requests-custom-fields": {
@@ -4104,6 +5790,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "delete-tracking-requests-custom-fields-api-slug": {
@@ -4127,6 +5816,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-tracking-requests-custom-fields-api-slug": {
@@ -4167,6 +5858,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-webhooks-id": {
@@ -4191,6 +5885,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-webhooks-id": {
@@ -4204,13 +5900,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-webhooks-id": {
@@ -4234,7 +5932,7 @@ export interface operations {
                              */
                             url?: string;
                             /** @description The list of events to enable for this endpoint. */
-                            events?: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed")[];
+                            events?: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created")[];
                             active?: boolean;
                             /** @description Optional custom headers to pass with each webhook invocation */
                             headers?: {
@@ -4262,6 +5960,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-webhooks": {
@@ -4310,8 +6011,9 @@ export interface operations {
                              */
                             url: string;
                             /** @description The list of events to enable for this endpoint. */
-                            events?: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed")[];
-                            active: boolean;
+                            events: ("container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created")[];
+                            /** @default true */
+                            active?: boolean;
                             /** @description Optional custom headers to pass with each webhook invocation */
                             headers?: {
                                 /** @description The name of the header. (Please note this will be auto-capitalized) */
@@ -4339,6 +6041,7 @@ export interface operations {
                     "application/xml": components["schemas"]["webhook"];
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-webhooks-events": {
@@ -4396,10 +6099,12 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["webhook_notification"];
-                        included?: (components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"])[];
+                        included?: components["schemas"]["webhook_notification_included"][];
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "get-webhook-notifications": {
@@ -4426,7 +6131,7 @@ export interface operations {
                         data?: components["schemas"]["webhook_notification"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
-                        included?: (components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"])[];
+                        included?: components["schemas"]["webhook_notification_included"][];
                     };
                 };
             };
@@ -4434,9 +6139,9 @@ export interface operations {
     };
     "get-webhook-notifications-example": {
         parameters: {
-            query?: {
+            query: {
                 /** @description The webhook notification event name you wish to see an example of */
-                event?: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed";
+                event: "container.transport.vessel_arrived" | "container.transport.estimated.vessel_arrived" | "container.transport.vessel_discharged" | "container.transport.vessel_loaded" | "container.transport.vessel_departed" | "container.transport.estimated.vessel_departed" | "container.transport.rail_departed" | "container.transport.rail_arrived" | "container.transport.rail_loaded" | "container.transport.rail_unloaded" | "container.transport.transshipment_arrived" | "container.transport.transshipment_discharged" | "container.transport.transshipment_loaded" | "container.transport.transshipment_departed" | "container.transport.feeder_arrived" | "container.transport.feeder_discharged" | "container.transport.feeder_loaded" | "container.transport.feeder_departed" | "container.transport.empty_out" | "container.transport.full_in" | "container.transport.full_out" | "container.transport.empty_in" | "container.transport.vessel_berthed" | "shipment.estimated.arrival" | "tracking_request.succeeded" | "tracking_request.failed" | "tracking_request.awaiting_manifest" | "tracking_request.tracking_stopped" | "container.created" | "container.updated" | "container.pod_terminal_changed" | "container.transport.arrived_at_inland_destination" | "container.transport.estimated.arrived_at_inland_destination" | "container.pickup_lfd.changed" | "container.pickup_lfd_line.changed" | "container.pickup_lfd_terminal.changed" | "container.pickup_lfd_rail.changed" | "container.pickup_appointment.changed" | "container.transport.available" | "container.transport.not_available" | "container.transport.delivered" | "document_representation.created" | "document_representation.failed" | "container.detention_lfd_line.changed" | "container.delivery_appointment.changed" | "shipment.routing.filled" | "link.created";
             };
             header?: never;
             path?: never;
@@ -4451,13 +6156,12 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data?: components["schemas"]["webhook_notification"][];
-                        links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
-                        included?: (components["schemas"]["webhook"] | components["schemas"]["tracking_request"] | components["schemas"]["transport_event"] | components["schemas"]["estimated_event"] | components["schemas"]["container_updated_event"] | components["schemas"]["document"] | components["schemas"]["document_representation"] | components["schemas"]["document_email_submission"])[];
+                        data?: components["schemas"]["webhook_notification"];
+                        included?: components["schemas"]["webhook_notification_included"][];
                     };
                 };
             };
+            400: components["responses"]["BadRequest"];
         };
     };
     "get-webhooks-ips": {
@@ -5253,7 +6957,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["container"][];
-                        included?: components["schemas"]["shipment"][];
+                        included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"] | components["schemas"]["raw_event"])[];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
                     };
@@ -5272,24 +6976,317 @@ export interface operations {
             };
         };
     };
-    "patch-containers-id": {
+    "summarize-containers": {
         parameters: {
-            query?: never;
+            query: {
+                /** @description Dimension to count by. `pod_terminal` and `port_of_discharge` groups are keyed by ID and labeled by name; `shipping_line` groups are keyed by ID and labeled by SCAC; `current_status` groups are keyed and labeled by status. `pickup_lfd_date` and `pod_arrival_date` groups are keyed by display-local calendar day (`YYYY-MM-DD`), using UTC when the display timezone is missing or invalid. Arrival dates use the POD timezone. LFD dates use the destination timezone for rail LFD unless a visible shipping-line LFD takes precedence; otherwise they use the POD timezone. `hold_type` counts each distinct current POD terminal hold name, including pending holds, so a container with two holds counts twice and group counts can add up to more than `total`. A null key means the container has no value for the dimension. */
+                group_by: "current_status" | "pod_terminal" | "shipping_line" | "port_of_discharge" | "hold_type" | "pickup_lfd_date" | "pod_arrival_date";
+                /**
+                 * @description Exact number match. Shipment arrays mean OR; container arrays of exact numbers mean AND. Use comma-separated container numbers for OR. Shipment scalar commas are literal. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example CAIU1234567
+                 */
+                "filter[number]"?: string;
+                /**
+                 * @description Port of lading name (including raw routing data when no port relationship exists). Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[pol]"?: string;
+                /**
+                 * @description Port of discharge name (including raw routing data when no port relationship exists). Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[pod]"?: string;
+                /**
+                 * @description Destination name, including raw routing data when no port relationship exists. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[destination]"?: string;
+                /**
+                 * @description Port of lading UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example CNSHA
+                 */
+                "filter[pol_code]"?: string;
+                /**
+                 * @description Port of discharge UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example USLAX
+                 */
+                "filter[pod_code]"?: string;
+                /**
+                 * @description Destination UN/LOCODE. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example USLAX
+                 */
+                "filter[destination_code]"?: string;
+                /**
+                 * @description Shipping line Standard Carrier Alpha Code (SCAC). Obtain valid values from GET /shipping_lines; preserve their exact codes. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example MAEU
+                 */
+                "filter[shipping_line_scac]"?: string;
+                /**
+                 * @description Customer account ID or customer party ID. Falls back to the shipment creator when no customer party role exists. Presence checks refer to the customer party role. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example 00000000-0000-4000-8000-000000000001
+                 */
+                "filter[customer_id]"?: string;
+                /**
+                 * @description Exact, case-sensitive customer company name. Prefer customer_id for names containing punctuation rejected by the string parser. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[customer_name]"?: string;
+                /**
+                 * @description Exact vessel name. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[vessel_name]"?: string;
+                /**
+                 * @description Port of discharge terminal ID. Obtain it from the related terminal resource. Exact match by default; optional =, @exists, or @not_exists. Comma-separated literals mean OR. Arrays mean AND unless the parameter description says otherwise. ~ is not supported.
+                 * @example 00000000-0000-4000-8000-000000000001
+                 */
+                "filter[pod_terminal_id]"?: string;
+                /**
+                 * @description Container status. Known values: new, on_ship, available, not_available, grounded, on_rail, picked_up, off_dock, delivered, dropped, loaded, empty_returned, awaiting_inland_transfer. Unknown values return no matches in the API; the SDK rejects them. Comma-separated states mean OR; arrays mean AND.
+                 * @example available
+                 */
+                "filter[current_status]"?: string;
+                /**
+                 * @description true requires nonempty terminal fees; false requires an explicitly empty terminal fee array. Unreported/null fees match neither branch.
+                 * @example true
+                 */
+                "filter[has_fees]"?: boolean;
+                /**
+                 * @description true requires a terminal demurrage fee; false selects terminal records without a demurrage fee. Missing terminal data can be excluded.
+                 * @example true
+                 */
+                "filter[has_demurrage_fees]"?: boolean;
+                /**
+                 * @description true requires fees OR holds; false requires both arrays to be explicitly empty. Missing terminal data can be excluded.
+                 * @example true
+                 */
+                "filter[has_fees_or_holds]"?: boolean;
+                /**
+                 * @description true selects attention-marked, overdue pickup, or approaching-LFD containers. false selects containers whose stored attention value is false or null; it is not the exact complement of true.
+                 * @example true
+                 */
+                "filter[requires_attention]"?: boolean;
+                /**
+                 * @description Selects containers with estimated-event changes in the last 24 hours. Both true and false apply the positive selector in the API. The SDK accepts only true.
+                 * @example true
+                 */
+                "filter[eta_changed_in_last_24h]"?: boolean;
+                /**
+                 * @description Selects containers with estimated-event changes in the past three days. Both true and false apply the positive selector in the API. The SDK accepts only true.
+                 * @example true
+                 */
+                "filter[eta_changed_in_past_3_days]"?: boolean;
+                /**
+                 * @description true requires nonempty terminal holds; false requires an explicitly empty holds array. Unreported/null holds match neither branch.
+                 * @example true
+                 */
+                "filter[has_holds]"?: boolean;
+                /**
+                 * @description true selects shipments with tracking not stopped; false selects stopped tracking. Applies via the related shipment for containers.
+                 * @example true
+                 */
+                "filter[actively_tracked]"?: boolean;
+                /**
+                 * @description Prefix text search of container and linked shipment identifiers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[search_by_ids]"?: string;
+                /**
+                 * @description Prefix text search of container numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[search_by_number]"?: string;
+                /**
+                 * @description Prefix text search of shipment numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[search_by_shipment_number]"?: string;
+                /**
+                 * @description Prefix text search of shipment reference numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[search_by_shipment_ref_numbers]"?: string;
+                /**
+                 * @description Prefix text search of container reference numbers. Optional ~ prefix is supported here. Do not use ~ on exact string filters.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[search_by_ref_numbers]"?: string;
+                /**
+                 * @description User IDs associated with containers. Use one ID or comma-separated user IDs; bracketed arrays are not supported by this scope. Presence and search operators do not apply.
+                 * @example 00000000-0000-4000-8000-000000000001
+                 */
+                "filter[search_by_owner_id]"?: string;
+                /**
+                 * @description Delivery date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[delivered_at]"?: string;
+                /**
+                 * @description POD discharge date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pod_discharged_at]"?: string;
+                /**
+                 * @description Container POD arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pod_arrived_at]"?: string;
+                /**
+                 * @description Estimated port of lading departure date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pol_etd_at]"?: string;
+                /**
+                 * @description Actual port of lading departure date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pol_atd_at]"?: string;
+                /**
+                 * @description Empty equipment out date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[empty_out_at]"?: string;
+                /**
+                 * @description Full equipment in at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pol_full_in_at]"?: string;
+                /**
+                 * @description Vessel loading at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pol_vessel_loaded_at]"?: string;
+                /**
+                 * @description Vessel departure at port of lading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pol_vessel_departed_at]"?: string;
+                /**
+                 * @description POD arrival date: actual arrival takes precedence over estimated arrival. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[arrival]"?: string;
+                /**
+                 * @description Pickup date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[picked_up_at]"?: string;
+                /**
+                 * @description Empty return date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[empty_returned_at]"?: string;
+                /**
+                 * @description Creation date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[created_at]"?: string;
+                /**
+                 * @description Last record update date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[updated_at]"?: string;
+                /**
+                 * @description Inclusive two-date range, encoded as filter[last_free_day_on][]=FROM and filter[last_free_day_on][]=TO, without operators. Requires both dates. Also restricts to available/not_available/off_dock containers, tracking not stopped, and destination absent or the same as POD. Use pickup_lfd for general comparisons.
+                 * @example [
+                 *       "2026-10-01",
+                 *       "2026-10-07"
+                 *     ]
+                 */
+                "filter[last_free_day_on][]"?: string[];
+                /**
+                 * @description Inland rail unloading date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[inland_destination_rail_unloaded_at]"?: string;
+                /**
+                 * @description Final destination full out date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[final_destination_full_out_at]"?: string;
+                /**
+                 * @description Estimated inland destination arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[inland_destination_eta_at]"?: string;
+                /**
+                 * @description Actual inland destination arrival date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[inland_destination_ata_at]"?: string;
+                /**
+                 * @description Rail departure from POD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pod_rail_departed_at]"?: string;
+                /**
+                 * @description Pickup last free day (LFD) date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd]"?: string;
+                /**
+                 * @description Reported rail pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd_rail_on]"?: string;
+                /**
+                 * @description Reported terminal pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd_terminal_on]"?: string;
+                /**
+                 * @description Reported shipping-line pickup LFD date. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd_line_on]"?: string;
+                /**
+                 * @description Terminal pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd_terminal_effective_on]"?: string;
+                /**
+                 * @description Shipping-line pickup LFD. Calculated values are used only when enabled and visible for the account/carrier; otherwise reported values are used. Use YYYY-MM-DD or today/N.days.ago/N.days.from_now; prefix with =, <, <=, >, or >=. Arrays combine bounds with AND. Comma-separated dates mean OR. Use @exists or @not_exists for presence. Compares the stored date component, not timestamp instants; no automatic conversion to the port timezone is applied.
+                 * @example >=2026-10-01
+                 */
+                "filter[pickup_lfd_line_effective_on]"?: string;
+                /**
+                 * @description Account-scoped shipment tags. Comma-separated names or arrays match ANY tag by default.
+                 * @example EXAMPLE_VALUE
+                 */
+                "filter[tags]"?: string;
+                /**
+                 * @description With tags, true requires ALL tags; false or absent means ANY. Has no effect without tags. The SDK requires tags (or shipment tag) when this modifier is supplied.
+                 * @example true
+                 */
+                "filter[tags_and]"?: boolean;
+                /**
+                 * @description Filter by account-visible party IDs or presence, grouped by role. IDs within a role use OR; different roles use AND. pickup_dray_carrier checks only the container role; other roles check container or shipment roles. Unknown roles are ignored by the API and rejected by the SDK.
+                 * @example {
+                 *       "shipper": "00000000-0000-4000-8000-000000000001"
+                 *     }
+                 */
+                "filter[parties]"?: {
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    shipper?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    consignee?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    notify_party?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    customs_broker?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    customer?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    freight_forwarder?: string;
+                    /** @description A party UUID, comma-separated UUIDs, or a supported presence expression. */
+                    pickup_dray_carrier?: string;
+                };
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    data?: {
-                        attributes: {
-                            ref_numbers?: string[];
-                        };
-                    };
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -5298,9 +7295,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data?: components["schemas"]["container"];
+                        data: {
+                            /** @description Status, or the ID of the terminal, shipping line, or port. Null for containers without a value. */
+                            key: string | null;
+                            /** @description Display name for the key. */
+                            label: string | null;
+                            count: number;
+                        }[];
+                        meta: {
+                            /** @description Containers matching the filters. */
+                            total: number;
+                            /** @enum {string} */
+                            group_by: "current_status" | "pod_terminal" | "shipping_line" | "port_of_discharge" | "hold_type" | "pickup_lfd_date" | "pod_arrival_date";
+                            /** @description True when more than 200 groups exist; only the first 200 are returned. */
+                            truncated: boolean;
+                            /** @description Requested filter keys that were not applied. Omitted when all filters are recognized; the response remains HTTP 200 for compatibility. */
+                            ignored_filters?: string[];
+                        };
                     };
                 };
+            };
+            /** @description Unknown group_by, or an invalid filter. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -5326,10 +7346,62 @@ export interface operations {
                 content: {
                     "application/json": {
                         data?: components["schemas"]["container"];
-                        included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"])[];
+                        included?: (components["schemas"]["shipment"] | components["schemas"]["terminal"] | components["schemas"]["transport_event"] | components["schemas"]["raw_event"])[];
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    "patch-containers-id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    data?: {
+                        /** Format: uuid */
+                        id?: string;
+                        /** @enum {string} */
+                        type: "container";
+                        attributes: {
+                            ref_numbers?: string[];
+                            /** @example SEAL1234567 */
+                            seal_number?: string | null;
+                            /** @enum {string} */
+                            equipment_type?: "dry" | "flat_rack" | "open_top" | "reefer" | "tank" | "pallet_wide" | "hard_top";
+                            /** @enum {integer} */
+                            equipment_length?: 20 | 24 | 40 | 45 | 48 | 53;
+                            /** @enum {string} */
+                            equipment_height?: "standard" | "high_cube" | "flexible";
+                            weight_in_lbs?: number | null;
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["container"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-containers-id-raw_events": {
@@ -5354,6 +7426,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-containers-id-transport_events": {
@@ -5384,6 +7457,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-containers-id-map-geojson": {
@@ -5459,6 +7533,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-containers-id-refresh": {
@@ -5484,6 +7559,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Forbidden - This API endpoint is not enabled for your account. Please contact support@terminal49.com */
             403: {
                 headers: {
@@ -5502,6 +7578,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
             /** @description Too Many Requests - You've hit the refresh limit. Please try again in a minute. */
             429: {
                 headers: {
@@ -5569,6 +7646,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-metro-area-id": {
@@ -5582,14 +7660,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description OK. An unknown id or UN/LOCODE returns `data: null` with status 200, not 404. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data?: components["schemas"]["metro_area"];
+                        data?: components["schemas"]["metro_area"] | (never | null);
                     };
                 };
             };
@@ -5617,6 +7695,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-id": {
@@ -5646,7 +7725,8 @@ export interface operations {
                     };
                 };
             };
-            /** @description Forbidden - Feature not enabled */
+            401: components["responses"]["Unauthorized"];
+            /** @description Forbidden - Routing data feature is not enabled for this account */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5665,6 +7745,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-imo": {
@@ -5694,7 +7775,8 @@ export interface operations {
                     };
                 };
             };
-            /** @description Forbidden - Feature not enabled */
+            401: components["responses"]["Unauthorized"];
+            /** @description Forbidden - Routing data feature is not enabled for this account */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5713,6 +7795,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-id-future-positions": {
@@ -5746,6 +7829,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Forbidden - Routing data feature is not enabled for this account */
             403: {
                 headers: {
@@ -5764,6 +7848,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-vessels-id-future-positions-with-coordinates": {
@@ -5801,6 +7886,7 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Forbidden - Routing data feature is not enabled for this account */
             403: {
                 headers: {
@@ -5819,6 +7905,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-terminal-id": {
@@ -5843,6 +7930,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "list-parties": {
@@ -5883,6 +7971,8 @@ export interface operations {
             content: {
                 "application/json": {
                     data?: {
+                        /** @enum {string} */
+                        type: "party";
                         attributes: {
                             /**
                              * @description The name of the company
@@ -5923,10 +8013,8 @@ export interface operations {
     "get-custom-field-definitions": {
         parameters: {
             query?: {
-                "page[number]"?: number;
-                "page[size]"?: number;
-                /** @description Filter by entity type (Shipment or Container) */
-                "filter[entity_type]"?: string;
+                /** @description Filter by entity type. `Cargo` means containers. */
+                "filter[entity_type]"?: "Shipment" | "Cargo";
                 /** @description Filter by data type */
                 "filter[data_type]"?: string;
                 /** @description Filter by display name (prefix match) */
@@ -5947,7 +8035,6 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["custom_field_definition"][];
                         links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
                     };
                 };
             };
@@ -5967,8 +8054,11 @@ export interface operations {
                         /** @enum {string} */
                         type: "custom_field_definition";
                         attributes: {
-                            /** @enum {string} */
-                            entity_type: "Shipment" | "Container";
+                            /**
+                             * @description `Cargo` means containers.
+                             * @enum {string}
+                             */
+                            entity_type: "Shipment" | "Cargo";
                             api_slug: string;
                             display_name: string;
                             description?: string | null;
@@ -5980,6 +8070,21 @@ export interface operations {
                             } | null;
                             default_format?: string | null;
                             default_value?: components["schemas"]["custom_field_value"];
+                            /**
+                             * @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching.
+                             * @default false
+                             */
+                            reference_number?: boolean;
+                            /**
+                             * @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views.
+                             * @default false
+                             */
+                            sensitive?: boolean;
+                            /**
+                             * @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app.
+                             * @default false
+                             */
+                            inline_option_creation?: boolean;
                         };
                     };
                 };
@@ -5998,6 +8103,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-field-definitions-id": {
@@ -6024,6 +8131,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-custom-field-definitions-id": {
@@ -6038,13 +8146,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "patch-custom-field-definitions-id": {
@@ -6063,14 +8174,17 @@ export interface operations {
                     data?: {
                         /** @enum {string} */
                         type: "custom_field_definition";
+                        /** @description The attributes the API updates. It ignores any other attribute, such as `data_type`, `validation` or `default_value`, and still returns 200. */
                         attributes: {
                             display_name?: string;
                             description?: string | null;
-                            validation?: {
-                                [key: string]: unknown;
-                            } | null;
                             default_format?: string | null;
-                            default_value?: components["schemas"]["custom_field_value"];
+                            /** @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching. */
+                            reference_number?: boolean;
+                            /** @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views. */
+                            sensitive?: boolean;
+                            /** @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app. */
+                            inline_option_creation?: boolean;
                         };
                     };
                 };
@@ -6089,6 +8203,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-field-options": {
@@ -6112,10 +8229,10 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["custom_field_option"][];
                         links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "post-custom-field-options": {
@@ -6156,6 +8273,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-field-options-id": {
@@ -6184,6 +8304,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-custom-field-options-id": {
@@ -6200,13 +8322,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-custom-field-options-id": {
@@ -6248,15 +8372,16 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-fields": {
         parameters: {
             query?: {
-                "page[number]"?: number;
-                "page[size]"?: number;
-                /** @description Filter by entity type (Shipment or Container) */
-                "filter[entity_type]"?: string;
+                /** @description Filter by entity type. The value must match exactly: `Shipment`, `Cargo` (containers) or `TrackingRequest`. */
+                "filter[entity_type]"?: "Shipment" | "Cargo" | "TrackingRequest";
                 /** @description Filter by entity ID */
                 "filter[entity_id]"?: string;
                 /** @description Filter by custom field definition ID */
@@ -6277,7 +8402,6 @@ export interface operations {
                     "application/json": {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
-                        meta?: components["schemas"]["meta"];
                     };
                 };
             };
@@ -6323,7 +8447,7 @@ export interface operations {
                             entity?: {
                                 data?: {
                                     /** @enum {string} */
-                                    type: "shipment" | "container";
+                                    type: "shipment" | "container" | "tracking_request";
                                     /** Format: uuid */
                                     id: string;
                                 };
@@ -6346,6 +8470,8 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-custom-fields-id": {
@@ -6372,6 +8498,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["NotFound"];
         };
     };
     "delete-custom-fields-id": {
@@ -6386,13 +8513,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-custom-fields-id": {
@@ -6431,11 +8560,17 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-shipments-custom-fields": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Comma-separated relationships to include: `definition`, `entity`, `updated_by`. */
+                include?: string;
+            };
             header?: never;
             path: {
                 /** @description Shipment ID */
@@ -6455,9 +8590,12 @@ export interface operations {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
+                        included?: (components["schemas"]["custom_field_definition"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["tracking_request"] | components["schemas"]["user"])[];
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "post-shipments-custom-fields": {
@@ -6508,6 +8646,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "delete-shipments-custom-fields-api-slug": {
@@ -6531,6 +8672,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-shipments-custom-fields-api-slug": {
@@ -6571,6 +8714,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-shipments-party-roles": {
@@ -6610,13 +8756,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "post-shipments-party-roles": {
@@ -6702,13 +8842,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -6754,18 +8888,15 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-containers-custom-fields": {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Comma-separated relationships to include: `definition`, `entity`, `updated_by`. */
+                include?: string;
+            };
             header?: never;
             path: {
                 /** @description Container ID */
@@ -6785,9 +8916,12 @@ export interface operations {
                         data?: components["schemas"]["custom_field"][];
                         links?: components["schemas"]["links"];
                         meta?: components["schemas"]["meta"];
+                        included?: (components["schemas"]["custom_field_definition"] | components["schemas"]["shipment"] | components["schemas"]["container"] | components["schemas"]["tracking_request"] | components["schemas"]["user"])[];
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "post-containers-custom-fields": {
@@ -6838,6 +8972,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "delete-containers-custom-fields-api-slug": {
@@ -6861,6 +8998,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "patch-containers-custom-fields-api-slug": {
@@ -6901,6 +9040,9 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-containers-party-roles": {
@@ -6940,13 +9082,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "post-containers-party-roles": {
@@ -7032,13 +9168,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -7084,13 +9214,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            404: components["responses"]["NotFound"];
         };
     };
     "get-parties-id": {
@@ -7116,6 +9240,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "edit-party": {
@@ -7131,6 +9257,8 @@ export interface operations {
             content: {
                 "application/json": {
                     data?: {
+                        /** @enum {string} */
+                        type: "party";
                         attributes: {
                             /**
                              * @description The name of the company
@@ -7155,6 +9283,8 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             /** @description Unprocessable Entity */
             422: {
                 headers: {
@@ -7482,8 +9612,10 @@ export interface operations {
                         /** @enum {string} */
                         type: "document";
                         attributes: {
-                            /** @description Manually override the document type. */
-                            document_type_manual?: string;
+                            /** @description Document type code. Must be one of the codes from `GET /documents/types`. Setting it marks `document_type_source` as `customer`. The API does not validate unknown codes as a 422; it currently returns 500 for them. */
+                            document_type?: string;
+                            /** @description Notes about how the document was classified. */
+                            classification_notes?: string | null;
                             /** @description Manually provide extracted key/value data. Set to null to clear manual values. */
                             extracted_data_manual?: {
                                 [key: string]: unknown;
@@ -7518,6 +9650,7 @@ export interface operations {
                     };
                 };
             };
+            422: components["responses"]["UnprocessableEntity"];
         };
     };
     "get-documents-id-download_url": {
@@ -7903,7 +10036,7 @@ export interface operations {
                      *       "data": [
                      *         {
                      *           "id": "abc12345-6789-40ef-9012-3456789abcde",
-                     *           "type": "shipment",
+                     *           "type": "search_result",
                      *           "attributes": {
                      *             "entity_type": "shipment",
                      *             "number": "MEDUA1234567",
@@ -7925,7 +10058,7 @@ export interface operations {
                      *         },
                      *         {
                      *           "id": "def45678-9012-43ab-9cde-f0123456789a",
-                     *           "type": "cargo",
+                     *           "type": "search_result",
                      *           "attributes": {
                      *             "entity_type": "cargo",
                      *             "number": "MSCU1234567",
@@ -7951,13 +10084,16 @@ export interface operations {
                             /** @description Unique identifier of the matched resource */
                             id?: string;
                             /**
-                             * @description Resource type
+                             * @description Always `search_result`. The matched resource kind is in `attributes.entity_type`.
                              * @enum {string}
                              */
-                            type?: "shipment" | "cargo" | "tracking_request";
+                            type?: "search_result";
                             attributes?: {
-                                /** @description Type of the matched entity: `shipment`, `cargo`, or `tracking_request` */
-                                entity_type?: string;
+                                /**
+                                 * @description Type of the matched entity: `shipment`, `cargo` (a container), or `tracking_request`
+                                 * @enum {string}
+                                 */
+                                entity_type?: "shipment" | "cargo" | "tracking_request";
                                 /** @description BL number (shipments), container number (cargos), or request number (tracking requests) */
                                 number?: string;
                                 /** @description Associated shipment ID (for cargos and tracking requests only) */
@@ -8028,6 +10164,912 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    "patch-tracking-request-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tracking Request ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelled. The response body is an empty JSON object. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /** @example {} */
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Unauthorized. The API token is missing or invalid, or the account may not use the API. Ownership never causes a 401 here: another account's tracking request returns 422. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "errors": [
+                     *         {
+                     *           "detail": "invalid API token"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            /** @description The tracking request is not in a cancellable status, or it belongs to another account. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "errors": "Can't cancel tracking request in created state.  Must be in pending or awaiting_manifest state."
+                     *     }
+                     */
+                    "application/json": {
+                        errors?: string;
+                    };
+                };
+            };
+            /** @description Server error. An unknown tracking request ID currently returns 500 instead of 404. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "get-account-custom-field-definitions": {
+        parameters: {
+            query?: {
+                /** @description Filter by entity type. `Cargo` means containers. */
+                "filter[entity_type]"?: "Shipment" | "Cargo";
+                /** @description Filter by data type */
+                "filter[data_type]"?: string;
+                /** @description Filter by display name (prefix match) */
+                "filter[display_name]"?: string;
+            };
+            header?: never;
+            path: {
+                /** @description Your account ID. The API always uses the account of the authenticated user. */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["custom_field_definition"][];
+                        links?: components["schemas"]["links"];
+                    };
+                };
+            };
+        };
+    };
+    "post-account-custom-field-definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Your account ID. The API always uses the account of the authenticated user. */
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    data?: {
+                        /** @enum {string} */
+                        type: "custom_field_definition";
+                        /** @description Send `template_id`, or all of `entity_type`, `api_slug`, `display_name` and `data_type`. With `template_id`, the template supplies any of those four you leave out. */
+                        attributes: {
+                            /**
+                             * @description `Cargo` means containers.
+                             * @enum {string}
+                             */
+                            entity_type?: "Shipment" | "Cargo";
+                            api_slug?: string;
+                            display_name?: string;
+                            description?: string | null;
+                            /** @enum {string} */
+                            data_type?: "short_text" | "number" | "date" | "datetime" | "boolean" | "enum" | "enum_multi" | "reference";
+                            reference_type?: string | null;
+                            validation?: {
+                                [key: string]: unknown;
+                            } | null;
+                            default_format?: string | null;
+                            default_value?: components["schemas"]["custom_field_value"];
+                            /**
+                             * Format: uuid
+                             * @description ID of a Terminal49 template definition to copy.
+                             */
+                            template_id?: string;
+                            /**
+                             * @description Whether values are reference numbers. Terminal49 indexes reference-number values on account definitions for global search and document matching.
+                             * @default false
+                             */
+                            reference_number?: boolean;
+                            /**
+                             * @description Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views.
+                             * @default false
+                             */
+                            sensitive?: boolean;
+                            /**
+                             * @description Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app.
+                             * @default false
+                             */
+                            inline_option_creation?: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["custom_field_definition"];
+                        links?: components["schemas"]["link-self"];
+                    };
+                };
+            };
+            /** @description `template_id` does not match a Terminal49 template. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "errors": [
+                     *         {
+                     *           "status": "404",
+                     *           "title": "Not Found"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    "get-me": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select an account accessible to the signed-in user. Defaults to the user's primary account. API keys remain scoped to their own account. */
+                "x-account-id"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["credential"];
+                        /** @description Includes the current account, the linked user when present, and every account in that user's accounts relationship. Linked resources are always included. */
+                        included: (components["schemas"]["credential_account"] | components["schemas"]["credential_user"])[];
+                    };
+                };
+            };
+            /** @description Unauthorized. The credential is missing, invalid, disabled, or names an account it cannot access. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        errors?: components["schemas"]["error"][];
+                    };
+                };
+            };
+        };
+    };
+    "get-trade-intel-meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "since_month": "2025-10-01",
+                     *       "until_month_exclusive": "2026-10-01",
+                     *       "months": 12,
+                     *       "min_containers": 5,
+                     *       "companies": 250000,
+                     *       "hs_codes": 1200,
+                     *       "facts_since_month": "2022-01-01",
+                     *       "facts_until_exclusive": "2026-10-09",
+                     *       "partial_month": "2026-10-01",
+                     *       "mode": "incremental",
+                     *       "facts_hash": "3f9c1a7e",
+                     *       "refreshed_since": "2026-07-01",
+                     *       "fact_rows": {
+                     *         "lane_month": 1200000,
+                     *         "company_month": 9800000,
+                     *         "commodity_month": 6400000,
+                     *         "hs_lane_month": 15000000
+                     *       },
+                     *       "volume_measure": "physical containers: distinct (container_number, imported_on)",
+                     *       "built_at": "2026-10-08T06:12:44Z"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelMeta"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-companies-search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelCompanySearchRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "index": {
+                     *         "since_month": "2025-10-01",
+                     *         "until_month_exclusive": "2026-10-01",
+                     *         "months": 12,
+                     *         "min_containers": 5,
+                     *         "companies": 250000,
+                     *         "hs_codes": 1200,
+                     *         "facts_since_month": "2022-01-01",
+                     *         "facts_until_exclusive": "2026-10-09",
+                     *         "partial_month": "2026-10-01",
+                     *         "mode": "incremental",
+                     *         "facts_hash": "3f9c1a7e",
+                     *         "refreshed_since": "2026-07-01",
+                     *         "fact_rows": {
+                     *           "lane_month": 1200000,
+                     *           "company_month": 9800000,
+                     *           "commodity_month": 6400000,
+                     *           "hs_lane_month": 15000000
+                     *         },
+                     *         "volume_measure": "physical containers: distinct (container_number, imported_on)",
+                     *         "built_at": "2026-10-08T06:12:44Z"
+                     *       },
+                     *       "results": [
+                     *         {
+                     *           "company_name": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "company_state": "GA",
+                     *           "containers": 1240,
+                     *           "containers_as_consignee": 1180,
+                     *           "containers_as_notify_party": 60,
+                     *           "teus": 2310.5,
+                     *           "estimated_value": 48200000,
+                     *           "reefer_share": 0,
+                     *           "first_month": "2025-10-01",
+                     *           "last_month": "2026-09-01",
+                     *           "top_ports": [
+                     *             {
+                     *               "name": "SAVANNAH",
+                     *               "containers": 900
+                     *             }
+                     *           ],
+                     *           "top_origins": [
+                     *             {
+                     *               "name": "VIETNAM",
+                     *               "containers": 700
+                     *             }
+                     *           ],
+                     *           "top_carriers": [
+                     *             {
+                     *               "name": "MAERSK LINE",
+                     *               "containers": 500
+                     *             }
+                     *           ],
+                     *           "top_commodities": [
+                     *             {
+                     *               "hs4": "9401",
+                     *               "description": "Seats (other than barber, dental, etc), and part",
+                     *               "estimated_value": 31000000,
+                     *               "containers": 800
+                     *             }
+                     *           ],
+                     *           "score": 0.97
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelCompanySearchResponse"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-companies-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelCompanyProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "company_name": "EXAMPLE OUTDOOR SUPPLY",
+                     *       "company_state": null,
+                     *       "since": "2025-10",
+                     *       "until": "2026-09",
+                     *       "found": true,
+                     *       "totals": {
+                     *         "containers": 1240,
+                     *         "containers_as_consignee": 1180,
+                     *         "containers_as_notify_party": 60,
+                     *         "teus": 2310.5,
+                     *         "states": [
+                     *           "GA",
+                     *           "CA"
+                     *         ]
+                     *       },
+                     *       "monthly": [
+                     *         {
+                     *           "month": "2025-10",
+                     *           "containers": 95,
+                     *           "teus": 180
+                     *         },
+                     *         {
+                     *           "month": "2025-11",
+                     *           "containers": 110,
+                     *           "teus": 205.5
+                     *         }
+                     *       ],
+                     *       "ports_of_discharge": [
+                     *         {
+                     *           "name": "SAVANNAH",
+                     *           "containers": 900,
+                     *           "teus": 1700
+                     *         }
+                     *       ],
+                     *       "origin_countries": [
+                     *         {
+                     *           "name": "VIETNAM",
+                     *           "containers": 700,
+                     *           "teus": 1300
+                     *         }
+                     *       ],
+                     *       "carriers": [
+                     *         {
+                     *           "name": "MAERSK LINE",
+                     *           "containers": 500,
+                     *           "teus": 950
+                     *         }
+                     *       ],
+                     *       "destination_states": [
+                     *         {
+                     *           "name": "GA",
+                     *           "containers": 900,
+                     *           "teus": 1700
+                     *         }
+                     *       ],
+                     *       "commodities_hs4": [
+                     *         {
+                     *           "hs4": "9401",
+                     *           "description": "Seats (other than barber, dental, etc), and part",
+                     *           "containers": 800,
+                     *           "estimated_value": 31000000
+                     *         }
+                     *       ],
+                     *       "notes": [
+                     *         "volume is physical containers, each counted once even when it appears on several bills",
+                     *         "the period covers full calendar months ending last month"
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelCompanyProfile"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-commodities-search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelCommoditySearchRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "results": [
+                     *         {
+                     *           "hs4": "9401",
+                     *           "description": "Seats (other than barber, dental, etc), and part",
+                     *           "estimated_value": 9800000000,
+                     *           "companies": 4200,
+                     *           "common_goods": [
+                     *             "office chairs",
+                     *             "sofas",
+                     *             "car seats"
+                     *           ],
+                     *           "score": 0.91
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelCommoditySearchResponse"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-importers-top": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelTopImportersRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "since": "2025-10",
+                     *       "until": "2026-09",
+                     *       "ranked_by": "containers",
+                     *       "filters": {
+                     *         "hs4": "9401"
+                     *       },
+                     *       "notes": [
+                     *         "volume is physical containers, each counted once"
+                     *       ],
+                     *       "importers": [
+                     *         {
+                     *           "company_name": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "states": [
+                     *             "GA",
+                     *             "CA"
+                     *           ],
+                     *           "containers": 800,
+                     *           "teus": 1500,
+                     *           "estimated_value": 31000000
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelTopImporters"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelTrendsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "measure": "containers",
+                     *       "interval": "quarter",
+                     *       "since": "2026-01",
+                     *       "until": "2026-06",
+                     *       "group_by": [
+                     *         "origin_country"
+                     *       ],
+                     *       "filters": {
+                     *         "hs4": "9401"
+                     *       },
+                     *       "fact": "hs_lane_month",
+                     *       "notes": [
+                     *         "volume is physical containers, each counted once"
+                     *       ],
+                     *       "series": [
+                     *         {
+                     *           "period": "2026-01",
+                     *           "origin_country": "VIETNAM",
+                     *           "value": 12000
+                     *         },
+                     *         {
+                     *           "period": "2026-01",
+                     *           "origin_country": "PEOPLES REP OF CHINA",
+                     *           "value": 11000
+                     *         },
+                     *         {
+                     *           "period": "2026-04",
+                     *           "origin_country": "VIETNAM",
+                     *           "value": 12500
+                     *         },
+                     *         {
+                     *           "period": "2026-04",
+                     *           "origin_country": "PEOPLES REP OF CHINA",
+                     *           "value": 10800
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelTrends"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelBreakdownRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "measure": "containers",
+                     *       "dims": [
+                     *         "pod_coast",
+                     *         "pod"
+                     *       ],
+                     *       "filters": {
+                     *         "hs4": "9401"
+                     *       },
+                     *       "since": "2026-01",
+                     *       "until": "2026-06",
+                     *       "fact": "hs_lane_month",
+                     *       "notes": [
+                     *         "volume is physical containers, each counted once"
+                     *       ],
+                     *       "rows": [
+                     *         {
+                     *           "level": 0,
+                     *           "value": 60000
+                     *         },
+                     *         {
+                     *           "level": 1,
+                     *           "pod_coast": "WEST",
+                     *           "value": 32000
+                     *         },
+                     *         {
+                     *           "level": 2,
+                     *           "pod_coast": "WEST",
+                     *           "pod": "LOS ANGELES",
+                     *           "value": 18000
+                     *         },
+                     *         {
+                     *           "level": 2,
+                     *           "pod_coast": "WEST",
+                     *           "pod": "LONG BEACH",
+                     *           "value": 14000
+                     *         },
+                     *         {
+                     *           "level": 1,
+                     *           "pod_coast": "EAST",
+                     *           "value": 28000
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelBreakdown"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-containers-lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelContainerLookupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "container_number": "MSCU1234567",
+                     *       "found": true,
+                     *       "latest_import": {
+                     *         "container_number": "MSCU1234567",
+                     *         "imported_on": "2026-08-14",
+                     *         "scac": "MSCU",
+                     *         "vessel_name": "EXAMPLE VESSEL",
+                     *         "port_of_discharge_name": "LOS ANGELES"
+                     *       },
+                     *       "bills_of_lading": [
+                     *         {
+                     *           "imported_on": "2026-08-14",
+                     *           "master_bill_of_lading_number": "MEDUW9559867",
+                     *           "house_bill_of_lading_number": null,
+                     *           "scac": "MSCU",
+                     *           "scac_name": "MEDITERRANEAN SHIPPING COMPANY",
+                     *           "vessel_name": "EXAMPLE VESSEL",
+                     *           "voyage_number": "026N",
+                     *           "port_of_lading_name": "NINGBO",
+                     *           "port_of_lading_country": "PEOPLES REP OF CHINA",
+                     *           "port_of_discharge_name": "LOS ANGELES",
+                     *           "destination_city": "ONTARIO",
+                     *           "destination_state": "CA",
+                     *           "ultimate_origin_country": "PEOPLES REP OF CHINA",
+                     *           "container_type_short_description": "40 HC",
+                     *           "container_teu": 2,
+                     *           "container_reefer_flag": false
+                     *         }
+                     *       ],
+                     *       "commodities": [
+                     *         {
+                     *           "imported_on": "2026-08-14",
+                     *           "master_bill_of_lading_number": "MEDUW9559867",
+                     *           "house_bill_of_lading_number": null,
+                     *           "consignee": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "consignee_city": "ONTARIO",
+                     *           "consignee_state": "CA",
+                     *           "notify_party": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "shipper": "EXAMPLE FURNITURE CO LTD",
+                     *           "shipper_country": "PEOPLES REP OF CHINA",
+                     *           "commodity_short_description": "OFFICE CHAIRS",
+                     *           "commodity_hs_code_6": "940130",
+                     *           "commodity_hs_code_6_description": "Swivel seats with variable height adjustment",
+                     *           "commodity_quantity": 420,
+                     *           "commodity_quantity_uom": "CTN",
+                     *           "commodity_estimated_value": 38000,
+                     *           "bol_metric_tons": 8.2,
+                     *           "bol_teus": 2,
+                     *           "nvocc_scac": null,
+                     *           "nvocc_scac_description": null
+                     *         }
+                     *       ],
+                     *       "commodities_truncated": false,
+                     *       "note": "only the most recent US import of this container is on record; earlier imports are not included"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelContainerLookup"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
+        };
+    };
+    "post-trade-intel-bills-of-lading-lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradeIntelBillOfLadingLookupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "bol_number": "MEDUW9559867",
+                     *       "found": true,
+                     *       "searched_since": "2025-10-01",
+                     *       "bills_matched": 1,
+                     *       "bills_truncated": false,
+                     *       "containers": [
+                     *         {
+                     *           "container_number": "MSCU1234567",
+                     *           "imported_on": "2026-08-14",
+                     *           "scac": "MSCU",
+                     *           "vessel_name": "EXAMPLE VESSEL",
+                     *           "voyage_number": "026N",
+                     *           "port_of_lading_name": "NINGBO",
+                     *           "port_of_discharge_name": "LOS ANGELES",
+                     *           "destination_city": "ONTARIO",
+                     *           "destination_state": "CA",
+                     *           "container_type_short_description": "40 HC",
+                     *           "container_teu": 2
+                     *         }
+                     *       ],
+                     *       "containers_truncated": false,
+                     *       "commodities": [
+                     *         {
+                     *           "imported_on": "2026-08-14",
+                     *           "master_bill_of_lading_number": "MEDUW9559867",
+                     *           "house_bill_of_lading_number": null,
+                     *           "consignee": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "consignee_city": "ONTARIO",
+                     *           "consignee_state": "CA",
+                     *           "notify_party": "EXAMPLE OUTDOOR SUPPLY",
+                     *           "shipper": "EXAMPLE FURNITURE CO LTD",
+                     *           "shipper_country": "PEOPLES REP OF CHINA",
+                     *           "commodity_short_description": "OFFICE CHAIRS",
+                     *           "commodity_hs_code_6": "940130",
+                     *           "commodity_hs_code_6_description": "Swivel seats with variable height adjustment",
+                     *           "commodity_quantity": 420,
+                     *           "commodity_quantity_uom": "CTN",
+                     *           "commodity_estimated_value": 38000,
+                     *           "bol_metric_tons": 8.2,
+                     *           "bol_teus": 2,
+                     *           "nvocc_scac": null,
+                     *           "nvocc_scac_description": null
+                     *         }
+                     *       ],
+                     *       "commodities_truncated": false
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TradeIntelBillOfLadingLookup"];
+                };
+            };
+            400: components["responses"]["TradeIntelBadRequest"];
+            401: components["responses"]["TradeIntelUnauthorized"];
+            403: components["responses"]["TradeIntelNotEnabled"];
+            422: components["responses"]["TradeIntelValidationFailed"];
+            429: components["responses"]["TradeIntelRateLimited"];
+            502: components["responses"]["TradeIntelUnavailable"];
+            504: components["responses"]["TradeIntelUnavailable"];
         };
     };
 }

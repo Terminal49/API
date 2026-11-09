@@ -1,0 +1,29 @@
+---
+title: Create an account custom field definition
+description: "Create a custom field definition on your Terminal49 account to attach structured metadata, like reference codes or enums, to shipments and containers."
+og:title: Create an Account Custom Field Definition | Terminal49 API Documentation
+og:description: Create a custom field definition on your Terminal49 account for shipments or containers. Define the display name, data type, and api_slug, or copy a template.
+openapi: post /accounts/{account_id}/custom_field_definitions
+---
+
+Creates a custom field definition on your account. The API always creates the definition on the authenticated user's account, whatever `account_id` you pass.
+
+## Request body
+
+Send `template_id`, or all of `entity_type`, `api_slug`, `display_name` and `data_type`.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `entity_type` | Without `template_id` | The entity type this field applies to: `Shipment` or `Cargo` (containers). Other values return `422`. |
+| `api_slug` | Without `template_id` | Unique identifier for the field |
+| `display_name` | Without `template_id` | Human-readable name for the field |
+| `data_type` | Without `template_id` | Data type for values (for example: `short_text`, `number`, `date`, `reference`) |
+| `template_id` | No | ID of a Terminal49 template definition to copy. The template supplies `entity_type`, `api_slug`, `display_name`, `data_type` and the other attributes. Attributes you send override the template's values. An unknown `template_id` returns `404`. |
+| `description` | No | Optional description of the field's purpose |
+| `validation` | No | Validation rules (for example: `required`, `pattern`, `max_length`) |
+| `default_format` | No | Default format string for numbers or dates |
+| `default_value` | No | Default value for new custom fields |
+| `reference_type` | No | Required when `data_type` is `reference` |
+| `reference_number` | No | Whether values are reference numbers. Terminal49 indexes reference-number values for global search and document matching. Defaults to `false`. |
+| `sensitive` | No | Whether the field is sensitive. Sensitive fields are hidden from recipients of externally shared container views. Defaults to `false`. |
+| `inline_option_creation` | No | Whether users can add a new option while entering an `enum` or `enum_multi` value in the Terminal49 app. Defaults to `false`. |

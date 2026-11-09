@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "Terminal49",
     "subtitle": "Track shipping containers",
-    "description": "Terminal49 helps users find and monitor ocean shipments and containers, filter and count their container worklists (by status, terminal, carrier, holds, last free day, arrival, or company), inspect routes and transport events, check supported shipping lines, and create new tracking requests through ChatGPT.",
+    "description": "Terminal49 helps users get live visibility into every ocean shipment and container. Track by container, bill of lading, or booking across all major carriers; find what needs attention, from ETA delays to holds, fees, and last free days; filter and count container worklists; create new tracking requests; and update shipment records. Direct connections to North American ports, terminals, and rail make it the most complete import data available. Where trade intelligence is enabled, it also researches US ocean import markets: importers, products, origins, ports, and carriers.",
     "category": "BUSINESS"
   },
   "tools": {
@@ -162,6 +162,222 @@
         "read_only_justification": "Looks up companies on the account's shipments by name without modifying them.",
         "open_world_justification": "Does not publish content or change public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "whoami": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads the caller's own credential, account, and feature availability without modifying data.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_tracking_request": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads one tracking request's status and result without modifying it.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "identify_tracking_number": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Predicts a number's type and carrier and checks existing tracking without creating a tracking request.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_location": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads a port, terminal, or metro area's details without modifying them.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_vessel": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads a vessel's position and projected track without modifying any data.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "list_custom_field_definitions": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads the account's custom field definitions and options without modifying them.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "list_documents": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Lists document metadata on the account without modifying any document.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_document": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads one document's metadata and, on request, its extracted data, source email and a short-lived download link, without modifying the document.",
+        "open_world_justification": "Reads the connected Terminal49 account only and does not change any external system.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "search_importers": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Searches US import market data for importers by name or product without modifying records.",
+        "open_world_justification": "Reads Terminal49's own trade intelligence data; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_importer_profile": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads one importer's US import history from market data without modifying records.",
+        "open_world_justification": "Reads Terminal49's own trade intelligence data; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "search_commodities": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Looks up product codes in US import market data without modifying records.",
+        "open_world_justification": "Reads Terminal49's own trade intelligence data; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "rank_importers": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Ranks importers in US import market data without modifying records.",
+        "open_world_justification": "Reads Terminal49's own trade intelligence data; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_trade_trends": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads US import volume time series without modifying records.",
+        "open_world_justification": "Reads Terminal49's own trade intelligence data; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_trade_breakdown": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads US import volume totals by dimension without modifying records.",
+        "open_world_justification": "Reads Terminal49's own trade intelligence data; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "get_trade_data_coverage": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Reads the coverage dates of the US import market data without modifying records.",
+        "open_world_justification": "Reads Terminal49's own trade intelligence data; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
+      }
+    },
+    "set_party_role": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Attaches, replaces, or detaches a party, such as the drayage carrier, on the user's own containers or shipments when the user asks; it changes those records.",
+        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Replacing or detaching a party removes that party's assignment from the record. A call that would detach a party never changes anything on its first call: it builds a preview of every record that changes, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. A call that only attaches a party runs at once. The party, container, and shipment are not deleted."
+      }
+    },
+    "set_custom_field": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Sets or clears one of the account's own custom fields on the user's containers or shipments when the user asks; it changes those records.",
+        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Setting a field overwrites its previous value, and null clears it. A call that would overwrite or clear a value never changes anything on its first call: it builds a preview of every record that changes, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. A call that only fills empty fields runs at once. The container or shipment is not deleted."
+      }
+    },
+    "update_record": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": true
+      },
+      "justifications": {
+        "read_only_justification": "Adds or removes reference numbers on the user's containers, shipments, or tracking requests, and tags on shipments, when the user asks; it changes those records.",
+        "open_world_justification": "Changes only records in the user's own Terminal49 account; does not publish content or change public or third-party systems.",
+        "destructive_justification": "Removing a reference number or tag takes it off the record, so searches, filters, and integrations that use it stop finding the record. A call that removes anything never changes anything on its first call: it builds a preview of the lists now and after, and the user approves it before the change is made, either in a confirmation dialog the client shows (MCP form elicitation) or by approving the preview in the chat so the client can call again with the confirmation token from that preview. A call that only adds runs at once and keeps every value already there. The record is not deleted."
       }
     }
   },

@@ -5,4 +5,6 @@ description: "TrackingRequestInclude type alias in the Terminal49 TypeScript SDK
 
 # Type Alias: TrackingRequestInclude
 
-> **TrackingRequestInclude** = `"shipment"` \| `"container"`
+> **TrackingRequestInclude** = `"tracked_object"` \| `"customer"` \| `"user"`
+
+Relationships the API serializes on a tracking request. Any other include returns 400.

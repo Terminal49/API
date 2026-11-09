@@ -1,0 +1,54 @@
+{
+  "data": {
+    "type": "credential",
+    "id": "credential-1",
+    "attributes": {
+      "kind": "api_key",
+      "channel": "api",
+      "name": "Example fixture key",
+      "features": {
+        "data_out_api": {
+          "status": "requires_paid_plan"
+        },
+        "custom_fields": {
+          "status": "requires_user_credential"
+        }
+      }
+    },
+    "relationships": {
+      "account": {
+        "data": {
+          "type": "account",
+          "id": "account-1"
+        }
+      },
+      "user": {
+        "data": null
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "account",
+      "id": "account-1",
+      "attributes": {
+        "company_name": "Example Fixture Shipper",
+        "company_type": "shipper",
+        "scac": null,
+        "abbr_name": "Example",
+        "city": "Example City",
+        "state_abbr": "EX",
+        "country": "ZZ",
+        "plan": "free_plan",
+        "tracking_slots": {
+          "limit": 10,
+          "used": 4,
+          "active_containers": 3,
+          "pending_tracking_requests": 1,
+          "remaining": 6
+        }
+      },
+      "relationships": {}
+    }
+  ]
+}

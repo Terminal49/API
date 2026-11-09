@@ -15,6 +15,7 @@ const allowedFields = {
     'smdgCode',
     'firmsCode',
     'features',
+    'notes',
   ],
   shippingLines: [
     'name',
@@ -43,7 +44,7 @@ const read = (name) => readFile(path.join(root, name), 'utf8');
 const exportValue = (source, name) =>
   JSON.parse(
     source.match(
-      new RegExp('export const ' + name + ' = ([\\s\\S]*?);'),
+      new RegExp('export const ' + name + ' = ([\\s\\S]*?);(?:\\n|$)'),
     )?.[1] ?? 'null',
   );
 const camelCase = (label) =>
@@ -64,6 +65,8 @@ const statusLabel = (status) =>
     unknown: 'Unknown',
     signed_in_only: 'Carrier credentials required',
   })[status];
+const updatedOnFor = (data, type) =>
+  data.updatedOnByType?.[type] ?? data.updatedOn;
 const terminalDefinitions = [
   ['importMilestones', 'Import milestones', 'Container milestones'],
   ['availableForPickup', 'Available for pickup', 'Pickup & availability'],
@@ -104,6 +107,90 @@ function validateTerminalIdentifiers({ locode, smdgCode, firmsCode }) {
     throw new Error('Invalid FIRMS code for ' + locode);
 }
 
+export function validateTerminalCapabilities(capabilities) {
+  const featureKeys = new Set(terminalDefinitions.map(([key]) => key));
+  if (
+    !capabilities ||
+    typeof capabilities !== 'object' ||
+    Array.isArray(capabilities)
+  )
+    throw new Error('Invalid terminal capability mapping');
+  for (const [key, declaration] of Object.entries(capabilities)) {
+    if (
+      !/^[A-Z]{2}[A-Z0-9]{3}:[A-Z0-9]{3,6}$/.test(key) ||
+      !declaration ||
+      typeof declaration !== 'object' ||
+      Array.isArray(declaration) ||
+      Object.keys(declaration).length !== 1 ||
+      !declaration.features ||
+      typeof declaration.features !== 'object' ||
+      Array.isArray(declaration.features) ||
+      Object.keys(declaration.features).length === 0 ||
+      Object.entries(declaration.features).some(
+        ([feature, status]) =>
+          !featureKeys.has(feature) || !statuses.has(status),
+      )
+    )
+      throw new Error('Invalid terminal capability mapping for ' + key);
+  }
+}
+
+export function validateShippingLineOverrides(overrides, registry) {
+  if (!overrides || typeof overrides !== 'object' || Array.isArray(overrides))
+    throw new Error('Invalid shipping line overrides');
+  const primaryScacs = new Set(registry.map(({ scac }) => scac));
+  for (const [scac, override] of Object.entries(overrides)) {
+    if (
+      !primaryScacs.has(scac) ||
+      !override ||
+      typeof override !== 'object' ||
+      Array.isArray(override) ||
+      Object.keys(override).length === 0 ||
+      Object.keys(override).some(
+        (key) => !['enabled', 'access', 'trackingIdentifiers'].includes(key),
+      ) ||
+      ('enabled' in override && typeof override.enabled !== 'boolean') ||
+      ('access' in override && !['public', 'account'].includes(override.access))
+    )
+      throw new Error('Invalid shipping line override for ' + scac);
+    if ('trackingIdentifiers' in override) {
+      const identifiers = override.trackingIdentifiers;
+      if (
+        !identifiers ||
+        typeof identifiers !== 'object' ||
+        Array.isArray(identifiers) ||
+        Object.keys(identifiers).length === 0 ||
+        Object.entries(identifiers).some(
+          ([key, value]) =>
+            !['billOfLading', 'bookingNumber', 'containerNumber'].includes(
+              key,
+            ) || typeof value !== 'boolean',
+        )
+      )
+        throw new Error('Invalid shipping line tracking override for ' + scac);
+    }
+  }
+}
+
+export function applyShippingLineOverrides(registry, overrides) {
+  validateShippingLineOverrides(overrides, registry);
+  return registry
+    .filter(
+      ({ scac }) =>
+        !Object.hasOwn(overrides, scac) || overrides[scac].enabled !== false,
+    )
+    .map((carrier) => {
+      const override = Object.hasOwn(overrides, carrier.scac)
+        ? overrides[carrier.scac]
+        : undefined;
+      return {
+        ...carrier,
+        ...(override?.access ? { access: override.access } : {}),
+        ...override?.trackingIdentifiers,
+      };
+    });
+}
+
 async function importHex(filename) {
   const hex = JSON.parse(await readFile(filename, 'utf8'));
   const identity = await read('docs/snippets/data-sources/coverage-data.mdx');
@@ -129,6 +216,10 @@ async function importHex(filename) {
       throw new Error('Invalid terminal identifier mapping for ' + key);
     validateTerminalIdentifiers({ locode: key.slice(0, 5), ...codes });
   }
+  const terminalCapabilities = JSON.parse(
+    await read('tools/data/terminal-capabilities.json'),
+  );
+  validateTerminalCapabilities(terminalCapabilities);
   const terminalProfiles = new Map(
     hex.terminals.map((row) => [
       row.port_locode + ':' + (row.firms_code || row.terminal),
@@ -206,38 +297,53 @@ async function importHex(filename) {
   const terminals = exportValue(identity, 'terminals').map(
     ({ firmsCode: terminalCode, ...terminal }) => {
       const key = terminal.locode + ':' + (terminalCode || terminal.name);
+      const identifiers = terminalIdentifiers[key] ?? {
+        smdgCode: '',
+        firmsCode: '',
+      };
+      const declaredFeatures = identifiers.smdgCode
+        ? terminalCapabilities[terminal.locode + ':' + identifiers.smdgCode]
+            ?.features
+        : undefined;
       return {
         ...terminal,
         terminalCode,
-        ...(terminalIdentifiers[key] ?? { smdgCode: '', firmsCode: '' }),
-        features: Object.fromEntries(
-          catalog.terminals.map(({ key: featureKey }) => [
-            featureKey,
-            featureKey === 'importMilestones'
-              ? 'supported'
-              : normalizeStatus(
-                  terminalProfiles.get(key)?.features[
-                    terminalLabels[featureKey]
-                  ],
-                ),
-          ]),
-        ),
+        ...identifiers,
+        features: {
+          ...Object.fromEntries(
+            catalog.terminals.map(({ key: featureKey }) => [
+              featureKey,
+              featureKey === 'importMilestones'
+                ? 'supported'
+                : normalizeStatus(
+                    terminalProfiles.get(key)?.features[
+                      terminalLabels[featureKey]
+                    ],
+                  ),
+            ]),
+          ),
+          ...declaredFeatures,
+        },
       };
     },
   );
-  const shippingLines = exportValue(identity, 'carriers').map(
-    ({ billOfLading, bookingNumber, containerNumber, ...carrier }) => ({
-      ...carrier,
-      features: {
-        ...features(sourceShipping.get(carrier.scac), catalog.shippingLines),
-        ...Object.fromEntries(
-          Object.entries({ billOfLading, bookingNumber, containerNumber }).map(
-            ([key, value]) => [key, value ? 'supported' : 'unsupported'],
-          ),
-        ),
-      },
-    }),
+  const shippingOverrides = JSON.parse(
+    await read('tools/data/shipping-line-overrides.json'),
   );
+  const shippingLines = applyShippingLineOverrides(
+    exportValue(identity, 'carriers'),
+    shippingOverrides,
+  ).map(({ billOfLading, bookingNumber, containerNumber, ...carrier }) => ({
+    ...carrier,
+    features: {
+      ...features(sourceShipping.get(carrier.scac), catalog.shippingLines),
+      ...Object.fromEntries(
+        Object.entries({ billOfLading, bookingNumber, containerNumber }).map(
+          ([key, value]) => [key, value ? 'supported' : 'unsupported'],
+        ),
+      ),
+    },
+  }));
   const railCarriers = hex.rail_carriers.map((row) => ({
     name: row.carrier,
     scac: row.scac,
@@ -262,6 +368,7 @@ export function validateCoverage(data) {
       (key) =>
         ![
           'updatedOn',
+          'updatedOnByType',
           'featureCatalog',
           ...types.map(([type]) => type),
         ].includes(key),
@@ -275,6 +382,15 @@ export function validateCoverage(data) {
       data.updatedOn
   )
     throw new Error('Invalid coverage update date');
+  for (const [type, date] of Object.entries(data.updatedOnByType ?? {})) {
+    if (
+      !types.some(([key]) => key === type) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+      !Number.isFinite(Date.parse(date + 'T00:00:00Z')) ||
+      new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) !== date
+    )
+      throw new Error('Invalid coverage update date for ' + type);
+  }
   for (const [type] of types) {
     const catalog = data.featureCatalog[type];
     if (
@@ -304,6 +420,8 @@ export function validateCoverage(data) {
       )
         throw new Error('Invalid shipping line access');
       if (type === 'terminals') {
+        if (entity.notes !== undefined && typeof entity.notes !== 'string')
+          throw new Error('Invalid terminal notes');
         if (typeof entity.terminalCode !== 'string')
           throw new Error('Invalid terminal source code');
         validateTerminalIdentifiers(entity);
@@ -346,9 +464,11 @@ function staticReference(data, type, slug, title) {
     'description: "Complete feature coverage with explicit statuses and public integration identifiers."',
     '---',
     '',
-    'Last updated ' + data.updatedOn + '.',
+    'Last updated ' + updatedOnFor(data, type) + '.',
     '',
-    '[Download JSON](/data/coverage/' + slug + '.json).',
+    '[Download JSON](https://raw.githubusercontent.com/Terminal49/API/main/docs/data/coverage/' +
+      slug +
+      '.json).',
     '',
     'Supported means the source returns the feature when applicable. Partial means it returns the feature in some cases. Not supported means this source does not return the feature. Unknown means no feature assessment is available. Carrier credentials required means the feature requires credentials for the carrier integration.',
     '',
@@ -398,6 +518,7 @@ function staticReference(data, type, slug, title) {
           (entity.group ? ' ' + entity.group + '.' : ''),
         '',
       );
+    if (entity.notes) lines.push(escapeMarkdown(entity.notes), '');
     lines.push('| Section | Feature | Coverage |', '| --- | --- | --- |');
     for (const feature of definitions)
       lines.push(
@@ -421,7 +542,7 @@ export function generateFiles(data) {
     files.set(
       'docs/data/coverage/' + slug + '.json',
       json({
-        updatedOn: data.updatedOn,
+        updatedOn: updatedOnFor(data, type),
         featureCatalog: data.featureCatalog[type],
         [type]: data[type],
       }),
@@ -443,6 +564,7 @@ export function generateFiles(data) {
         'section',
         'status',
         'updatedOn',
+        ...(type === 'terminals' ? ['notes'] : []),
       ],
     ];
     for (const entity of data[type])
@@ -464,7 +586,8 @@ export function generateFiles(data) {
           feature.label,
           feature.group,
           entity.features[feature.key],
-          data.updatedOn,
+          updatedOnFor(data, type),
+          ...(type === 'terminals' ? [entity.notes] : []),
         ]);
     files.set(
       'docs/data/coverage/' + slug + '.csv',
@@ -505,7 +628,7 @@ export function generateFiles(data) {
     terminalCoverageEntities: data.terminals.map(
       ({ features: _features, ...identity }) => identity,
     ),
-    terminalFeatureSnapshot: { capturedOn: data.updatedOn },
+    terminalFeatureSnapshot: { capturedOn: updatedOnFor(data, 'terminals') },
     terminalFeatureCoverage: Object.fromEntries(
       data.terminals.map((row) => [
         row.locode + ':' + (row.terminalCode || row.name),

@@ -111,7 +111,9 @@ These events fire when container attributes change.
 | `container.pickup_lfd_line.changed` | The shipping line's Last Free Day (`import_deadlines.pickup_lfd_line`) changed. |
 | `container.pickup_lfd_terminal.changed` | The terminal-reported Last Free Day (`import_deadlines.pickup_lfd_terminal`) at the destination terminal changed. |
 | `container.pickup_lfd_rail.changed` | The rail-carrier-reported Last Free Day (`import_deadlines.pickup_lfd_rail`) at the inland rail destination changed. Rail Plan only — see [Entitlements](/api-docs/useful-info/entitlements). |
+| `container.detention_lfd_line.changed` | The shipping line's detention Last Free Day changed. |
 | `container.pickup_appointment.changed` | The pickup appointment changed. |
+| `container.delivery_appointment.changed` | The delivery appointment changed. |
 
 <Note>
 There are no field-specific events for holds, fees, or availability, such as `container.holds_at_pod_terminal.changed`. Changes to `holds_at_pod_terminal`, `fees_at_pod_terminal`, and `available_for_pickup` are delivered through `container.updated`. Read the `changeset` in the payload to detect which fields changed. See [Container Holds, Fees, and Release Readiness](/api-docs/in-depth-guides/holds-and-fees).
@@ -136,6 +138,8 @@ These events fire when document extraction completes for accounts using document
 |-------|-------------|
 | `document.extracted` | Document classification and extraction completed successfully. |
 | `document.extraction_failed` | Document extraction did not complete successfully. |
+| `shipment.routing.filled` | A document filled a blank routing field (port of lading, port of discharge, or destination) on the shipment. |
+| `link.created` | A document was linked to a shipment or container. |
 
 See [Document Processing Workflows](/api-docs/in-depth-guides/document-processing-workflows) for payload structure and related document resources.
 

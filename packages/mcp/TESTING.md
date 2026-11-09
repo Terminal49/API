@@ -29,7 +29,7 @@ export T49_API_TOKEN='your_token_here'
 ```
 
 **What it tests:**
-- ✅ All 10 tools, 3 prompts, and resources
+- ✅ All tools, 3 prompts, and resources
 - ✅ All 3 prompts (track-shipment, analyze-delays, etc.)
 - ✅ Resources (container status, milestone glossary)
 - ✅ SCAC completions
@@ -94,25 +94,28 @@ Test with the actual Claude Desktop application.
 
 **Setup:**
 
-1. **Build the server:**
+1. **Build the server** from a clone, on Node.js 24.22.1 or a newer Node 24 release:
+
    ```bash
-   cd packages/mcp
-   npm install
-   npm run build
+   git clone https://github.com/Terminal49/API.git
+   cd API
+   npm ci
+   npm run build --workspace @terminal49/sdk
+   npm run build --workspace @terminal49/mcp
    ```
 
 2. **Configure Claude Desktop:**
 
-   Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+   Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS), `%APPDATA%\Claude\claude_desktop_config.json` (Windows), or `~/.config/Claude/claude_desktop_config.json` (Linux):
 
    ```json
    {
      "mcpServers": {
        "terminal49-local": {
          "command": "node",
-         "args": ["/Users/dodeja/dev/t49/API/packages/mcp/dist/index.js"],
+         "args": ["/absolute/path/to/API/packages/mcp/dist/index.js"],
          "env": {
-           "T49_API_TOKEN": "your_token_here"
+           "T49_API_TOKEN": "YOUR_API_KEY"
          }
        }
      }
@@ -327,13 +330,6 @@ jobs:
         env:
           T49_API_TOKEN: ${{ secrets.T49_API_TOKEN }}
 ```
-
----
-
-## 📝 Test Results Documentation
-
-Current test results are documented in:
-- **packages/mcp/TEST_RESULTS_V2.md** - Latest comprehensive test results
 
 ---
 

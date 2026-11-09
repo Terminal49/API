@@ -1,17 +1,17 @@
 ---
-title: List custom field definitions
-description: "List every custom field definition configured for your Terminal49 account, including data type, slug, and the target resource each definition applies to."
-og:title: List Custom Field Definitions | Terminal49 API Documentation
-og:description: List all custom field definitions configured for shipments and containers in the Terminal49 API. Returns field names, types, api_slugs, and resource scopes.
+title: List custom field definition templates
+description: "List the Terminal49 custom field definition templates. To list the definitions configured for your account, use the account-scoped route."
+og:title: List Custom Field Definition Templates | Terminal49 API Documentation
+og:description: List the Terminal49 custom field definition templates. Copy a template into your account with the template_id attribute of the account create route.
 openapi: get /custom_field_definitions
 ---
 
-List all custom field definitions available to your account.
+Lists the Terminal49 template definitions. It does not return the definitions configured for your account. To list those, use [List account custom field definitions](/api-docs/api-reference/custom-fields/list-account-custom-field-definitions).
 
 ## Query filters
 
 | Filter | Description |
 |--------|-------------|
-| `filter[entity_type]` | Filter by entity type (`Shipment` or `Container`) |
+| `filter[entity_type]` | Filter by entity type: `Shipment` or `Cargo` (containers) |
 | `filter[data_type]` | Filter by data type |
 | `filter[display_name]` | Filter by display name (prefix match) |

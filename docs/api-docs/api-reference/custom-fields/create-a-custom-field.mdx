@@ -15,8 +15,8 @@ Use this endpoint to create a custom field value on a shipment or container when
 | `data.type` | Yes | Must be `custom_field` |
 | `data.attributes.api_slug` | Yes | The slug of the custom field definition |
 | `data.attributes.value` | Yes | The field value (must match the definition's data type) |
-| `data.relationships.entity.data.type` | Yes | `shipment` or `container` |
-| `data.relationships.entity.data.id` | Yes | The shipment or container ID |
+| `data.relationships.entity.data.type` | Yes | `shipment`, `container`, or `tracking_request` |
+| `data.relationships.entity.data.id` | Yes | The shipment, container, or tracking request ID |
 
 ## Value formats by data type
 
@@ -36,7 +36,7 @@ Use this endpoint to create a custom field value on a shipment or container when
 - Values are validated against the definition's data type
 - Enum values must match one of the definition's configured options
 - Reference values must match the definition's configured `reference_type`
-- The `api_slug` must reference a definition belonging to your account or a Terminal49 template
+- The `api_slug` must reference a definition belonging to your account; otherwise the request returns `404`
 
 ## Example request
 

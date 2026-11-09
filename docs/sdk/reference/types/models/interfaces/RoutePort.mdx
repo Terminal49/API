@@ -1,0 +1,24 @@
+---
+title: "Interface: RoutePort"
+---
+
+# Interface: RoutePort
+
+One port on a container route, from a `port` feature of `GET /containers/{id}/map_geojson`.
+
+## Properties
+
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| <a id="property-coordinates"></a> `coordinates` | [`RouteCoordinates`](/sdk/reference/types/models/interfaces/RouteCoordinates) \| `null` | - |
+| <a id="property-countrycode"></a> `countryCode` | `string` \| `null` | - |
+| <a id="property-inbound"></a> `inbound` | `object` | - |
+| `inbound.ata` | `string` \| `null` | - |
+| `inbound.eta` | `string` \| `null` | - |
+| <a id="property-label"></a> `label` | `string` \| `null` | `POL`, `POD`, or `TS1`, `TS2`, and so on for transshipment ports. |
+| <a id="property-locationid"></a> `locationId` | `string` \| `null` | - |
+| <a id="property-name"></a> `name` | `string` \| `null` | - |
+| <a id="property-outbound"></a> `outbound` | `object` | - |
+| `outbound.atd` | `string` \| `null` | - |
+| `outbound.etd` | `string` \| `null` | - |
+| <a id="property-sequence"></a> `sequence` | `number` \| `null` | Position in the route: 1 is the POL, the last is the POD. |

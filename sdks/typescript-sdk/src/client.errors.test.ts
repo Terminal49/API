@@ -51,10 +51,17 @@ describe('Terminal49Client error handling', () => {
     );
   });
 
-  it('maps 401 to AuthenticationError', async () => {
+  it('maps 401 to AuthenticationError and keeps the server detail', async () => {
     const { fetchImpl } = createMockFetch({
+      '/shipments/s-1/resume_tracking': () =>
+        jsonResponse(
+          {
+            errors: [{ detail: 'You are not allowed to perform this action' }],
+          },
+          401,
+        ),
       '/containers/abc?include=shipment,pod_terminal,pickup_facility': () =>
-        jsonResponse({ errors: [{ detail: 'invalid token' }] }, 401),
+        new Response(null, { status: 401 }),
     });
 
     const client = new Terminal49Client({
@@ -62,9 +69,14 @@ describe('Terminal49Client error handling', () => {
       apiBaseUrl: baseUrl,
       fetchImpl,
     });
-    await expect(client.getContainer('abc')).rejects.toBeInstanceOf(
-      AuthenticationError,
-    );
+
+    const denied = await client.shipments.resumeTracking('s-1').catch((e) => e);
+    expect(denied).toBeInstanceOf(AuthenticationError);
+    expect(denied.message).toBe('You are not allowed to perform this action');
+
+    const unauthenticated = await client.getContainer('abc').catch((e) => e);
+    expect(unauthenticated).toBeInstanceOf(AuthenticationError);
+    expect(unauthenticated.message).toBe('Invalid or missing API token');
   });
 
   it('maps 403 with feature message to FeatureNotEnabledError', async () => {

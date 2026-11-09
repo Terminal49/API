@@ -26,6 +26,7 @@ import {
   ValidationError,
 } from '@terminal49/sdk';
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
+import { encodeTerminalText } from './output/terminal-text.js';
 import { isOutputTTY } from './util/tty.js';
 
 export type CliExitCode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -50,6 +51,11 @@ function resolveContext(context: ErrorContext): {
     json: Boolean((opts as { json?: boolean }).json),
     compact: Boolean((opts as { compact?: boolean }).compact),
   };
+}
+
+/** True when errors go to stderr as JSON: `--json` was parsed, or stderr is not a terminal. */
+export function writesJsonErrors(command: Command | null): boolean {
+  return resolveContext({ command }).json || !isOutputTTY('stderr');
 }
 
 export function getExitCode(error: unknown): CliExitCode {
@@ -129,7 +135,7 @@ export function printError(
   error: unknown,
   context: ErrorContext = { command: null },
 ): void {
-  const { json, compact } = resolveContext(context);
+  const { compact } = resolveContext(context);
   const code = getErrorCode(error);
   const payload = {
     ok: false as const,
@@ -143,14 +149,17 @@ export function printError(
     },
   };
 
-  if (json || !isOutputTTY('stderr')) {
+  if (writesJsonErrors(context.command)) {
     process.stderr.write(
       `${compact ? JSON.stringify(payload) : JSON.stringify(payload, null, 2)}\n`,
     );
     return;
   }
 
-  process.stderr.write(`${payload.error.code}: ${payload.error.message}\n`);
+  const hint = code === 'USAGE_ERROR' ? '(run --help for usage)\n' : '';
+  process.stderr.write(
+    `${encodeTerminalText(payload.error.code)}: ${encodeTerminalText(payload.error.message)}\n${hint}`,
+  );
 }
 
 export function withErrorHandling<TArgs extends unknown[]>(
@@ -177,7 +186,8 @@ export function withErrorHandling<TArgs extends unknown[]>(
       const { command } = getCommandContext(args);
       const exitCode = getExitCode(error);
       printError(error, { command });
-      process.exit(exitCode);
+      // exitCode, not exit(), so piped stdout and stderr flush first.
+      process.exitCode = exitCode;
     }
   };
 }

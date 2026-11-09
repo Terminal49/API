@@ -1,10 +1,21 @@
+import type { paths } from '../generated/terminal49.js';
 import type {
   Container,
+  ContainerRoute,
   CustomField,
-  Route,
+  RouteCoordinates,
+  RoutePort,
+  RouteVessel,
   Shipment,
   ShippingLine,
   TrackingRequest,
+  CurrentAccount,
+  CurrentCredential,
+  TrackingSlots,
+  CurrentUser,
+  Vessel,
+  VesselPosition,
+  VesselWithFuturePositions,
 } from '../types/models.js';
 import { JsonApiDocument, omitKeys } from './jsonapi.js';
 
@@ -74,71 +85,147 @@ export function mapTransportEvents(doc: any) {
   });
 }
 
-export function mapRoute(doc: any): Route {
-  const apiDoc = new JsonApiDocument(doc);
-  const route = apiDoc.getAttributes(apiDoc.data, false);
-  const routeLocations =
-    apiDoc.getRelationship(apiDoc.data, 'route_locations') || [];
+type ContainerMapGeojson =
+  paths['/containers/{id}/map_geojson']['get']['responses'][200]['content']['application/json'];
+type RouteFeature = ContainerMapGeojson['features'][number];
+type RouteFeatureProperties = RouteFeature['properties'];
+type FeatureProperties<K extends RouteFeatureProperties['feature_type']> =
+  Extract<RouteFeatureProperties, { feature_type: K }>;
 
-  const locations = (
-    Array.isArray(routeLocations) ? routeLocations : [routeLocations]
-  )
-    .map((location: any) => {
-      if (!location) return null;
+function pointCoordinates(
+  geometry: RouteFeature['geometry'],
+): RouteCoordinates | null {
+  if (geometry.type !== 'Point' || geometry.coordinates.length < 2) {
+    return null;
+  }
+  const [longitude, latitude] = geometry.coordinates;
+  return { longitude, latitude };
+}
 
-      const attrs = location.attributes || {};
-      // A route leg's port lives under the `location` relationship
-      // (type port|terminal); there is no `port` relationship.
-      const port = apiDoc.getRelationship(location, 'location');
-      const inboundVessel = apiDoc.getRelationship(location, 'inbound_vessel');
-      const outboundVessel = apiDoc.getRelationship(
-        location,
-        'outbound_vessel',
-      );
-
-      return {
-        port: port
-          ? {
-              code: port.attributes?.code,
-              name: port.attributes?.name,
-              city: port.attributes?.city,
-              countryCode: port.attributes?.country_code,
-            }
-          : null,
-        inbound: {
-          mode: attrs.inbound_mode,
-          carrierScac: attrs.inbound_scac,
-          eta: attrs.inbound_eta_at,
-          ata: attrs.inbound_ata_at,
-          vessel: inboundVessel
-            ? {
-                name: inboundVessel.attributes?.name,
-                imo: inboundVessel.attributes?.imo,
-              }
-            : null,
-        },
-        outbound: {
-          mode: attrs.outbound_mode,
-          carrierScac: attrs.outbound_scac,
-          etd: attrs.outbound_etd_at,
-          atd: attrs.outbound_atd_at,
-          vessel: outboundVessel
-            ? {
-                name: outboundVessel.attributes?.name,
-                imo: outboundVessel.attributes?.imo,
-              }
-            : null,
-        },
-      };
-    })
-    .filter((loc: any) => loc !== null);
-
+function mapRoutePort(
+  props: FeatureProperties<'port'>,
+  geometry: RouteFeature['geometry'],
+): RoutePort {
   return {
-    id: apiDoc.data?.id,
-    totalLegs: locations.length,
-    locations: locations as any,
-    createdAt: route.created_at,
-    updatedAt: route.updated_at,
+    locationId: props.location_id ?? null,
+    name: props.name ?? null,
+    countryCode: props.country_code ?? null,
+    label: props.label ?? null,
+    sequence: props.ports_sequence ?? null,
+    coordinates: pointCoordinates(geometry),
+    inbound: {
+      eta: props.inbound_eta_at ?? null,
+      ata: props.inbound_ata_at ?? null,
+    },
+    outbound: {
+      etd: props.outbound_etd_at ?? null,
+      atd: props.outbound_atd_at ?? null,
+    },
+  };
+}
+
+function mapRouteVessel(
+  props: FeatureProperties<'current_vessel'>,
+  geometry: RouteFeature['geometry'],
+): RouteVessel {
+  return {
+    name: props.vessel_name ?? null,
+    imo: props.vessel_imo ?? null,
+    voyage: props.voyage_number ?? null,
+    coordinates: pointCoordinates(geometry),
+    heading: props.vessel_location_heading ?? null,
+    speed: props.vessel_location_speed ?? null,
+    positionAt: props.vessel_location_timestamp ?? null,
+    departurePort: {
+      locationId: props.departure_port_id ?? null,
+      name: props.departure_port_name ?? null,
+      label: props.departure_port_label ?? null,
+    },
+    arrivalPort: {
+      locationId: props.arrival_port_id ?? null,
+      name: props.arrival_port_name ?? null,
+      label: props.arrival_port_label ?? null,
+    },
+  };
+}
+
+/** Map a `map_geojson` FeatureCollection to ports in route order plus the current vessel. */
+export function mapContainerRoute(doc: ContainerMapGeojson): ContainerRoute {
+  const ports: RoutePort[] = [];
+  let currentVessel: RouteVessel | null = null;
+
+  for (const feature of doc.features) {
+    const props = feature.properties;
+    switch (props.feature_type) {
+      case 'port':
+        ports.push(mapRoutePort(props, feature.geometry));
+        break;
+      case 'current_vessel':
+        currentVessel = mapRouteVessel(props, feature.geometry);
+        break;
+      case 'past_vessel_locations':
+      case 'estimated_full_legs':
+      case 'estimated_partial_leg':
+        break;
+      default: {
+        const _exhaustive: never = props;
+        void _exhaustive;
+      }
+    }
+  }
+
+  ports.sort(
+    (a, b) =>
+      (a.sequence ?? Number.MAX_SAFE_INTEGER) -
+      (b.sequence ?? Number.MAX_SAFE_INTEGER),
+  );
+
+  return { ports, currentVessel, totalPorts: ports.length };
+}
+
+type VesselDocument =
+  paths['/vessels/{id}']['get']['responses'][200]['content']['application/json'];
+type VesselFuturePositionsDocument =
+  paths['/vessels/{id}/future_positions']['get']['responses'][200]['content']['application/json'];
+type VesselData = NonNullable<
+  VesselDocument['data'] | VesselFuturePositionsDocument['data']
+>;
+
+function mapVesselData(data: VesselData | undefined): Vessel {
+  const attrs = data?.attributes;
+  return {
+    id: data?.id ?? '',
+    name: attrs?.name ?? null,
+    imo: attrs?.imo ?? null,
+    mmsi: attrs?.mmsi ?? null,
+    latitude: attrs?.latitude ?? null,
+    longitude: attrs?.longitude ?? null,
+    speedKnots: attrs?.nautical_speed_knots ?? null,
+    headingDegrees: attrs?.navigational_heading_degrees ?? null,
+    positionAt: attrs?.position_timestamp ?? null,
+  };
+}
+
+/** Map `GET /vessels/{id}` or `GET /vessels/{imo}` to a `Vessel`. */
+export function mapVessel(doc: VesselDocument): Vessel {
+  return mapVesselData(doc.data);
+}
+
+/** Map a vessel future-positions document to the vessel and its estimated positions. */
+export function mapVesselFuturePositions(
+  doc: VesselFuturePositionsDocument,
+): VesselWithFuturePositions {
+  return {
+    ...mapVesselData(doc.data),
+    positions: (doc.data?.attributes.positions ?? []).map(
+      (position): VesselPosition => ({
+        latitude: position.latitude,
+        longitude: position.longitude,
+        heading: position.heading ?? null,
+        timestamp: position.timestamp,
+        estimated: position.estimated,
+      }),
+    ),
   };
 }
 
@@ -302,22 +389,16 @@ export function mapShipment(doc: any): Shipment {
     ...attrCamel,
   };
 
-  const containerRelationships = apiDoc.getRelationship(data, 'containers');
-  const containers = Array.isArray(containerRelationships)
-    ? containerRelationships
-    : containerRelationships
-      ? [containerRelationships]
-      : [];
-
-  shipment.containers = containers
-    .map((c: any) => {
-      if (!c) return null;
-      return {
-        id: c.id,
-        number: c.attributes?.number || c.attributes?.container_number,
-      };
-    })
-    .filter(Boolean) as Array<{ id: string; number?: string }>;
+  const containerRefs = data?.relationships?.containers?.data;
+  shipment.containers = (Array.isArray(containerRefs) ? containerRefs : []).map(
+    (ref: { id: string; type: string }) => {
+      const container = apiDoc.getIncluded(ref.type, ref.id);
+      const number =
+        container?.attributes?.number ||
+        container?.attributes?.container_number;
+      return number ? { id: ref.id, number } : { id: ref.id };
+    },
+  );
 
   shipment.refNumbers = attrs.ref_numbers;
   shipment.tags = attrs.tags;
@@ -406,9 +487,6 @@ export function mapTrackingRequest(doc: any): TrackingRequest {
   const data = apiDoc.data;
   const attrs = data?.attributes || {};
 
-  const shipment = apiDoc.getRelationship(data, 'shipment');
-  const container = apiDoc.getRelationship(data, 'container');
-
   return {
     id: data?.id,
     requestType: attrs.request_type,
@@ -416,26 +494,24 @@ export function mapTrackingRequest(doc: any): TrackingRequest {
     status: attrs.status,
     scac: attrs.scac,
     refNumbers: attrs.ref_numbers,
-    shipment: shipment
-      ? {
-          id: shipment.id,
-          billOfLading:
-            shipment.attributes?.bill_of_lading_number ||
-            shipment.attributes?.bill_of_lading ||
-            shipment.attributes?.bl_number,
-          shippingLineScac: shipment.attributes?.shipping_line_scac,
-        }
-      : null,
-    container: container
-      ? {
-          id: container.id,
-          number:
-            container.attributes?.number ||
-            container.attributes?.container_number,
-          status: container.attributes?.status,
-        }
-      : null,
+    shipment: mapTrackedShipment(apiDoc, data),
     ...apiDoc.getAttributes(data),
+  };
+}
+
+/** The API serializes a tracking request's shipment as the polymorphic `tracked_object`. */
+function mapTrackedShipment(apiDoc: JsonApiDocument, data: any) {
+  const ref = data?.relationships?.tracked_object?.data;
+  if (ref?.type !== 'shipment') return null;
+  const shipment = apiDoc.getIncluded(ref.type, ref.id);
+  if (!shipment) return { id: ref.id };
+  return {
+    id: shipment.id,
+    billOfLading:
+      shipment.attributes?.bill_of_lading_number ||
+      shipment.attributes?.bill_of_lading ||
+      shipment.attributes?.bl_number,
+    shippingLineScac: shipment.attributes?.shipping_line_scac,
   };
 }
 
@@ -470,4 +546,105 @@ export function mapCustomFields(doc: any): CustomField[] {
       updatedAt: attrs.updated_at ?? null,
     };
   });
+}
+
+function mapCurrentAccount(
+  resource: any,
+  trackingSlots: boolean,
+): CurrentAccount {
+  if (
+    typeof resource?.id !== 'string' ||
+    typeof resource?.attributes?.company_name !== 'string'
+  ) {
+    throw new Error(
+      'Invalid /me response: linked account must be included with its company name',
+    );
+  }
+  const attrs = resource.attributes;
+  const account: CurrentAccount = {
+    id: resource.id,
+    companyName: attrs.company_name,
+    companyType: attrs.company_type ?? undefined,
+    scac: attrs.scac ?? undefined,
+    abbrName: attrs.abbr_name ?? undefined,
+    city: attrs.city ?? undefined,
+    stateAbbr: attrs.state_abbr ?? undefined,
+    country: attrs.country ?? undefined,
+    plan: attrs.plan ?? undefined,
+  };
+  if (trackingSlots && 'tracking_slots' in attrs) {
+    account.trackingSlots = mapTrackingSlots(attrs.tracking_slots);
+  }
+  return account;
+}
+
+// Map the known fields only. The backend adds fields to this object over time, and
+// consumers with strict output schemas (the MCP whoami tool) must not see them leak through.
+// Slot usage is informational, so a malformed object maps to null instead of failing `me()`.
+function mapTrackingSlots(raw: any): TrackingSlots | null {
+  if (raw == null) return null;
+  const { limit, used, remaining } = raw;
+  if (![limit, used, remaining].every((n) => typeof n === 'number'))
+    return null;
+  const slots: TrackingSlots = { limit, used, remaining };
+  if (typeof raw.active_containers === 'number') {
+    slots.activeContainers = raw.active_containers;
+  }
+  if (typeof raw.pending_tracking_requests === 'number') {
+    slots.pendingTrackingRequests = raw.pending_tracking_requests;
+  }
+  return slots;
+}
+
+/** Map a `GET /me` document to a {@link CurrentCredential}. */
+export function mapCurrentCredential(doc: any): CurrentCredential {
+  const data = doc?.data || {};
+  const attrs = data.attributes || {};
+  const included: any[] = Array.isArray(doc?.included) ? doc.included : [];
+  const find = (type: string, id: string | undefined) =>
+    included.find((item) => item?.type === type && item?.id === id);
+
+  const accountRef = data.relationships?.account?.data;
+  const accountResource = find('account', accountRef?.id);
+  const account = mapCurrentAccount(accountResource, true);
+
+  const userRef = data.relationships?.user?.data;
+  let user: CurrentUser | null = null;
+  if (userRef?.id) {
+    const userResource = find('user', userRef.id);
+    if (typeof userResource?.attributes?.email !== 'string') {
+      throw new Error(
+        'Invalid /me response: linked user must be included with its email',
+      );
+    }
+    const userAttrs = userResource.attributes;
+    const accountRefs = userResource.relationships?.accounts?.data;
+    if (!Array.isArray(accountRefs)) {
+      throw new Error(
+        'Invalid /me response: linked user must include account-list linkage',
+      );
+    }
+    user = {
+      id: userResource.id,
+      email: userAttrs.email,
+      name: userAttrs.name ?? undefined,
+      role: userAttrs.role ?? undefined,
+      jobRole: userAttrs.job_role ?? undefined,
+      jobTitle: userAttrs.job_title ?? undefined,
+      admin: userAttrs.admin === true,
+      accounts: accountRefs.map((ref) =>
+        mapCurrentAccount(find('account', ref.id), ref.id === account.id),
+      ),
+    };
+  }
+
+  return {
+    id: data.id,
+    kind: attrs.kind,
+    channel: attrs.channel,
+    name: attrs.name ?? undefined,
+    features: attrs.features || {},
+    account,
+    user,
+  };
 }

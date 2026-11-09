@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { Terminal49Client } from '@terminal49/sdk';
+import { fakeApiClient } from '../test/fake-api.js';
 import { executeListParties, PARTY_ROLES } from './list-parties.js';
+
+const PARTY_ID = 'ba4cb904-827f-4038-8e31-1e92b3356218';
 
 const party = (id: string, company_name: string) => ({
   id,
@@ -66,12 +69,16 @@ describe('list_parties', () => {
     expect(result.total_matched).toBe(3);
   });
 
-  it('explains how to use the id with the container party filter', async () => {
+  it('routes customer ids to customer_id, which accepts both id kinds /parties returns', async () => {
     const { client } = fakeClient([[]]);
     const result = await executeListParties({}, client);
     expect(PARTY_ROLES).toContain('customer');
     expect(PARTY_ROLES).toContain('pickup_dray_carrier');
-    expect(result.usage).toContain('advanced_filters.parties');
+    expect(result.usage).toBe(
+      'Filter by a customer with advanced_filters.customer_id: "<id>" on list_containers, summarize_containers, or list_shipments. ' +
+        'For other roles use advanced_filters.parties on list_containers or summarize_containers, keyed by role: { "<role>": "<party id>" }. ' +
+        'Roles: shipper, consignee, notify_party, customs_broker, freight_forwarder, pickup_dray_carrier. Use @exists for "has any".',
+    );
   });
 
   it('reports truncation when the account has more parties than it loads', async () => {
@@ -107,5 +114,105 @@ describe('list_parties', () => {
     ]);
     const result = await executeListParties({ search: '上海物流' }, client);
     expect(result.parties.map((p) => p.id)).toEqual(['2']);
+  });
+
+  it('looks up one party by id without listing every party', async () => {
+    const { client, requests } = fakeApiClient({
+      [`GET /parties/${PARTY_ID}`]: {
+        body: { data: party(PARTY_ID, ' ACME LOGISTICS ') },
+      },
+    });
+
+    const result = await executeListParties(
+      { id: PARTY_ID, search: 'ignored' },
+      client,
+    );
+
+    expect(requests.map((request) => request.path)).toEqual([
+      `/parties/${PARTY_ID}`,
+    ]);
+    expect(result).toMatchObject({
+      total_matched: 1,
+      parties: [{ id: PARTY_ID, name: 'ACME LOGISTICS' }],
+      truncated: false,
+    });
+    expect(result.usage).toContain('advanced_filters.parties');
+  });
+
+  it('returns a party that has no company name by its nickname or id', async () => {
+    const OTHER_ID = '9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a';
+    const { client } = fakeApiClient({
+      [`GET /parties/${PARTY_ID}`]: {
+        body: {
+          data: {
+            id: PARTY_ID,
+            type: 'party',
+            attributes: { company_name: null, nickname: 'ACME' },
+          },
+        },
+      },
+      [`GET /parties/${OTHER_ID}`]: {
+        body: {
+          data: {
+            id: OTHER_ID,
+            type: 'party',
+            attributes: { company_name: ' ', nickname: null },
+          },
+        },
+      },
+    });
+
+    expect(await executeListParties({ id: PARTY_ID }, client)).toMatchObject({
+      total_matched: 1,
+      parties: [{ id: PARTY_ID, name: 'ACME' }],
+    });
+    expect(await executeListParties({ id: OTHER_ID }, client)).toMatchObject({
+      total_matched: 1,
+      parties: [{ id: OTHER_ID, name: OTHER_ID }],
+    });
+  });
+
+  it.each([
+    ['no data', { links: { next: null } }],
+    ['data that is not a list', { data: { id: PARTY_ID } }],
+    ['a next link that is not a string', { data: [], links: { next: 2 } }],
+  ])(
+    'fails instead of reporting no parties for a page with %s',
+    async (_case, body) => {
+      const { client } = fakeApiClient({ 'GET /parties': { body } });
+
+      await expect(executeListParties({}, client)).rejects.toThrow();
+    },
+  );
+
+  it('fails instead of naming a party by its id when its attributes are not an object', async () => {
+    const { client } = fakeApiClient({
+      [`GET /parties/${PARTY_ID}`]: { body: { data: { id: PARTY_ID } } },
+    });
+
+    await expect(
+      executeListParties({ id: PARTY_ID }, client),
+    ).rejects.toThrow();
+  });
+
+  it('keeps the requested id when /parties answers with a customer account id', async () => {
+    const CUSTOMER_ACCOUNT_ID = '5e0c2a7d-91b3-4f6a-8d2e-7c4b1a9f3e60';
+    const { client } = fakeApiClient({
+      [`GET /parties/${PARTY_ID}`]: {
+        body: { data: party(CUSTOMER_ACCOUNT_ID, 'Acme Logistics') },
+      },
+    });
+
+    const result = await executeListParties({ id: PARTY_ID }, client);
+
+    expect(result.parties).toEqual([{ id: PARTY_ID, name: 'Acme Logistics' }]);
+  });
+
+  it('matches nothing for an unknown party id', async () => {
+    const { client } = fakeApiClient({});
+
+    const result = await executeListParties({ id: PARTY_ID }, client);
+
+    expect(result).toMatchObject({ total_matched: 0, parties: [] });
   });
 });

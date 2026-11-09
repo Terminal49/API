@@ -1,3 +1,5 @@
+import type { components } from '../generated/terminal49.js';
+
 /** Simplified shipping line returned by mapped SDK responses. */
 export interface ShippingLine {
   scac: string;
@@ -136,34 +138,88 @@ export interface Shipment {
   [key: string]: any;
 }
 
-/** Simplified container route model returned by mapped SDK responses. */
-export interface Route {
-  id?: string;
-  totalLegs: number;
-  locations: Array<{
-    port?: {
-      code?: string | null;
-      name?: string | null;
-      city?: string | null;
-      countryCode?: string | null;
-    } | null;
-    inbound: {
-      mode?: string | null;
-      carrierScac?: string | null;
-      eta?: string | null;
-      ata?: string | null;
-      vessel?: { name?: string | null; imo?: string | null } | null;
-    };
-    outbound: {
-      mode?: string | null;
-      carrierScac?: string | null;
-      etd?: string | null;
-      atd?: string | null;
-      vessel?: { name?: string | null; imo?: string | null } | null;
-    };
-  }>;
-  createdAt?: string | null;
-  updatedAt?: string | null;
+/** A `[longitude, latitude]` GeoJSON point, named so the axis order cannot be swapped. */
+export interface RouteCoordinates {
+  longitude: number;
+  latitude: number;
+}
+
+/** One port on a container route, from a `port` feature of `GET /containers/{id}/map_geojson`. */
+export interface RoutePort {
+  locationId: string | null;
+  name: string | null;
+  countryCode: string | null;
+  /** `POL`, `POD`, or `TS1`, `TS2`, and so on for transshipment ports. */
+  label: string | null;
+  /** Position in the route: 1 is the POL, the last is the POD. */
+  sequence: number | null;
+  coordinates: RouteCoordinates | null;
+  inbound: { eta: string | null; ata: string | null };
+  outbound: { etd: string | null; atd: string | null };
+}
+
+/** A port the current vessel left or is heading to, as the `current_vessel` feature names it. */
+export interface RouteVesselPort {
+  /** Matches {@link RoutePort.locationId} of the same port. */
+  locationId: string | null;
+  name: string | null;
+  /** `POL`, `POD`, or `TS1`, `TS2`, and so on for transshipment ports. */
+  label: string | null;
+}
+
+/** The vessel carrying the container right now. Present only while it is at sea. */
+export interface RouteVessel {
+  name: string | null;
+  imo: string | null;
+  voyage: string | null;
+  coordinates: RouteCoordinates | null;
+  /** Degrees, 0-360. */
+  heading: number | null;
+  /** Knots. */
+  speed: number | null;
+  /** When the vessel reported `coordinates`, `heading`, and `speed` (ISO 8601). */
+  positionAt: string | null;
+  departurePort: RouteVesselPort;
+  arrivalPort: RouteVesselPort;
+}
+
+/** Mapped container route: ports in route order plus the current vessel. */
+export interface ContainerRoute {
+  ports: RoutePort[];
+  currentVessel: RouteVessel | null;
+  totalPorts: number;
+}
+
+/** One estimated future position of a vessel. */
+export interface VesselPosition {
+  latitude: number;
+  longitude: number;
+  /** Degrees clockwise from north. */
+  heading: number | null;
+  timestamp: string;
+  estimated: boolean;
+}
+
+/** Simplified vessel model returned by mapped vessel methods. */
+export interface Vessel {
+  id: string;
+  name: string | null;
+  imo: string | null;
+  mmsi: string | null;
+  /** Last reported latitude. */
+  latitude: number | null;
+  /** Last reported longitude. */
+  longitude: number | null;
+  speedKnots: number | null;
+  /** Degrees clockwise from north. */
+  headingDegrees: number | null;
+  /** When the last position was reported. */
+  positionAt: string | null;
+}
+
+/** A vessel with its estimated future positions, returned by the mapped future-position methods. */
+export interface VesselWithFuturePositions extends Vessel {
+  positions: VesselPosition[];
 }
 
 /** Simplified tracking request model returned by mapped SDK responses. */
@@ -174,10 +230,13 @@ export interface TrackingRequest {
   status?: string;
   scac?: string;
   refNumbers?: string[];
+  /** The tracked shipment, from the `tracked_object` relationship. */
   shipment?: Shipment | null;
-  container?: Container | null;
   [key: string]: any;
 }
+
+/** Value accepted when setting a custom field; its shape depends on the field's data type. */
+export type CustomFieldValue = components['schemas']['custom_field_value'];
 
 /** Account-defined custom field value on a container, shipment, or tracking request. */
 export interface CustomField {
@@ -188,4 +247,72 @@ export interface CustomField {
   displayValue?: string | null;
   dataType?: string;
   updatedAt?: string | null;
+}
+
+/** Availability of one gated feature for the current credential on the current account. */
+export interface FeatureAvailability {
+  status:
+    | 'available'
+    | 'requires_paid_plan'
+    | 'requires_user_credential'
+    | 'not_enabled';
+}
+
+/** Tracking-slot usage on free and trial plans. */
+export interface TrackingSlots {
+  /** Slots the plan allows. */
+  limit: number;
+  /** Slots in use: active containers plus pending requests, deduplicated by container number. */
+  used: number;
+  /** Slots held by containers currently being tracked. */
+  activeContainers?: number;
+  /** Slots reserved by tracking requests that have not resolved yet. */
+  pendingTrackingRequests?: number;
+  /** Slots still available, never below zero. */
+  remaining: number;
+}
+
+/** An account as `GET /me` describes it. */
+export interface CurrentAccount {
+  id: string;
+  companyName: string;
+  companyType?: string;
+  scac?: string;
+  abbrName?: string;
+  city?: string;
+  stateAbbr?: string;
+  country?: string;
+  /** Billing lifecycle state: free_plan, in_trial, customer, locked, or churned. */
+  plan?: string;
+  /** Present only on the account the credential is scoped to; `null` when not slot-limited. */
+  trackingSlots?: TrackingSlots | null;
+}
+
+/** The signed-in user as `GET /me` describes them. */
+export interface CurrentUser {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+  jobRole?: string;
+  jobTitle?: string;
+  /** `true` only for Terminal49 staff. */
+  admin: boolean;
+  /** Every open account this user can select with `x-account-id`. */
+  accounts: CurrentAccount[];
+}
+
+/** Mapped `GET /me` response: the credential behind the current request. */
+export interface CurrentCredential {
+  /** The API key id or the user id, depending on `kind`. */
+  id: string;
+  kind: 'api_key' | 'user';
+  /** api, dashboard, mcp, or askt49. */
+  channel: string;
+  /** API key label; undefined for user tokens. */
+  name?: string;
+  features: Record<string, FeatureAvailability>;
+  account: CurrentAccount;
+  /** `null` for an API key that is not acting as a user. */
+  user: CurrentUser | null;
 }

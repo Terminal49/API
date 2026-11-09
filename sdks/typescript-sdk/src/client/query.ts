@@ -91,7 +91,7 @@ export function applyPagination(
 }
 
 /** Query objects that carry numeric JSON:API pagination keys. */
-type PaginatedQuery = {
+export type PaginatedQuery = {
   'page[number]'?: number;
   'page[size]'?: number;
 };

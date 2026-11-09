@@ -1,5 +1,5 @@
 ---
-title: "Terminal49 MCP Server"
+title: "Terminal49 MCP server"
 sidebarTitle: "MCP Overview"
 description: "Connect Claude, ChatGPT, Cursor, or any MCP client to the Terminal49 MCP server to query live shipment tracking data with OAuth sign-in and no API key."
 keywords:
@@ -10,11 +10,13 @@ keywords:
   - "ChatGPT"
   - "Cursor"
   - "Microsoft Copilot"
+  - "Gemini"
+  - "Antigravity"
   - "OAuth"
   - "MCP config"
   - "shipment data assistant"
 ---
-Use the Terminal49 MCP server to let Claude, ChatGPT, Cursor, Microsoft Copilot, or any MCP client answer questions with live container and shipment data—without writing custom glue code.
+Use the Terminal49 MCP server to let Claude, ChatGPT, Cursor, Microsoft Copilot, Gemini, or any MCP client answer questions with live container and shipment data—without writing custom glue code.
 
 ## TL;DR – get started in 5 minutes
 
@@ -28,6 +30,8 @@ Use the Terminal49 MCP server to let Claude, ChatGPT, Cursor, Microsoft Copilot,
     - [Cursor](/mcp/setup/cursor)
     - [Microsoft Copilot](/mcp/setup/microsoft-copilot) (Copilot Studio)
     - [VS Code](/mcp/setup/vs-code) (GitHub Copilot)
+    - [Gemini](/mcp/setup/gemini) (personal Google accounts)
+    - [Antigravity](/mcp/setup/antigravity)
     - [Agent plugins](/mcp/setup/agent-plugins) (Claude Code, Cursor, Codex, GitHub Copilot CLI)
     - [Other MCP clients](/mcp/setup/other-clients)
   </Step>
@@ -89,6 +93,12 @@ Connector URL: `https://mcp.terminal49.com`. It is the canonical OAuth resource 
   <Card title="VS Code" href="/mcp/setup/vs-code">
     GitHub Copilot agent mode
   </Card>
+  <Card title="Gemini" href="/mcp/setup/gemini">
+    Gemini app custom apps (personal accounts)
+  </Card>
+  <Card title="Antigravity" href="/mcp/setup/antigravity">
+    Google Antigravity agent
+  </Card>
   <Card title="Agent plugins" href="/mcp/setup/agent-plugins">
     Terminal49 plugin for Claude Code, Cursor, Codex, and Copilot CLI
   </Card>
@@ -122,6 +132,35 @@ See [Other MCP clients](/mcp/setup/other-clients) for details on OAuth discovery
 
 The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
 
+### Limit the tools
+
+Two optional request headers reduce the tools your client sees. They can only remove tools.
+
+- `X-T49-MCP-Read-Only: true` lists only read-only tools. It removes `track_container` and every write tool.
+- `X-T49-MCP-Toolsets` takes a comma-separated list of toolsets.
+
+The toolset names are:
+
+- `core`: every tool except the document reads, the write tools below, and the trade intelligence tools. `whoami` reports the toolsets a session serves.
+- `documents`: `list_documents` and `get_document`.
+- `operations`: `set_party_role`, `set_custom_field` and `update_record`. It is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
+- `tracking_lifecycle`: `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
+- `documents_write`: no tools yet.
+- `developer`: no tools yet.
+- `trade`: the [trade intelligence tools](#trade-intelligence-tools).
+
+```json
+{
+  "url": "https://mcp.terminal49.com",
+  "headers": {
+    "Authorization": "Token YOUR_API_KEY",
+    "X-T49-MCP-Read-Only": "true"
+  }
+}
+```
+
+The read-only header accepts `true`, `false`, `1` or `0`, in any case. Any other read-only value, an unknown toolset name, or a toolsets value made only of commas returns `400 Bad Request`.
+
 ---
 
 ## Monitoring
@@ -132,12 +171,16 @@ Self-hosted deployments can enable [Sentry MCP Monitoring](https://docs.sentry.i
 Input and output recording is disabled by default. Leave `SENTRY_MCP_RECORD_INPUTS=false` and `SENTRY_MCP_RECORD_OUTPUTS=false` unless your Sentry project is approved to store shipment identifiers, references, and customer data.
 </Warning>
 
+Signed URLs, such as a document download link, are replaced with `[REDACTED_URL]` in logs, Sentry, and PostHog, even when output recording is on. Confirmation tokens are replaced with `[REDACTED_CONFIRMATION_TOKEN]` in the same places.
+
+Each call to a write tool, `track_container` included, logs one `mcp.write.audit` event, adds a Sentry breadcrumb, and sends a PostHog event when the account is known. The event names the tool, its tier, the phase, the outcome, the record type and ID, the account ID, and the credential type. It never carries values, reference numbers, party names, URLs, or tokens.
+
 ---
 
 ## Tools reference
 
 <Note>
-Every tool is read-only except `track_container`, which creates a tracking request. If a container for the number is already in your account, `track_container` returns it instead of creating a new request; otherwise it creates a tracking request, so repeated calls before a container links can create additional requests.
+In the default toolsets, every tool is read-only except `track_container` and the write tools in the `operations` toolset, which are described under [Write tools](#write-tools). `track_container` creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
 </Note>
 
 ### `search_container`
@@ -156,7 +199,7 @@ Find containers by container number, BL, booking, or your own reference. This is
   "params": {
     "name": "search_container",
     "arguments": {
-      "query": "CAIU1234567"
+      "query": "MSKU4330011"
     }
   }
 }
@@ -169,17 +212,32 @@ Find containers by container number, BL, booking, or your own reference. This is
   "containers": [
     {
       "id": "abc-123-uuid",
-      "containerNumber": "CAIU1234567",
-      "status": "in_transit",
-      "shippingLine": "Maersk",
-      "podTerminal": "APM Terminals",
-      "destination": "Los Angeles"
+      "container_number": "MSKU4330011",
+      "status": "unknown",
+      "shipping_line": "MAEU"
     }
   ],
   "shipments": [],
-  "totalResults": 1
+  "tracking_requests": [
+    {
+      "id": "def-456-uuid",
+      "request_number": "MSKU4330011",
+      "status": "pending",
+      "scac": "MAEU"
+    },
+    {
+      "id": "jkl-012-uuid",
+      "request_number": "MSKU4330011",
+      "status": "failed",
+      "failed_reason": "not_found",
+      "scac": "HLCU"
+    }
+  ],
+  "total_results": 3
 }
 ```
+
+`total_results` counts containers, shipments, and tracking requests. The search API returns no status for a container hit, so `status` is `unknown`. Use `get_container` for the current status. `pod_terminal`, `pol_terminal`, and `destination` appear only when the search API returns them. Only a request whose tracking was stopped (status `tracking_stopped`) has `shipment_id`. A failed request has `failed_reason`. `not_found` and `invalid_number` mean the carrier rejected the number, so check the number and carrier before you track it again. `retries_exhausted` and `expired` can succeed on a later request with the same values. `duplicate` means the shipment already exists. See [failed reasons](/api-docs/in-depth-guides/tracking-request-lifecycle#permanent-reasons) for the full list. Requests that succeeded (status `created`) never appear in `tracking_requests`. Search returns the tracked container under `containers`, or the tracked shipment under `shipments` for a bill of lading or booking number. A tracking request whose number matches a returned shipment's number is left out.
 </Accordion>
 
 **Good for**
@@ -192,12 +250,22 @@ Find containers by container number, BL, booking, or your own reference. This is
 
 ### `track_container`
 
-Start tracking a new container. Creates a tracking request and returns container details.
+Start tracking a container, bill of lading, or booking number. The tool first searches your account for the number:
+
+- If a tracking request for it is still in progress, with status `pending` or `awaiting_manifest`, the tool returns that request and its status. When you pass `scac`, only an in-progress request under the same SCAC counts.
+- If a container with exactly that number is still being tracked, the tool returns that container's details in the same shape as `get_container`, plus `tracking_request_created` and `infer_result`. A container whose shipment has stopped tracking does not count, because container numbers are reused on later voyages.
+- Otherwise the tool creates a tracking request. If the API reports that the number is already tracked, the tool returns `source: "duplicate"`, the existing `tracking_request.id`, and `shipment_id` when the request has a shipment. `message` holds the API's explanation, which can name a different number that the existing request is stored under.
+
+Check `tracking_request_created` in the result. It is `false` when the tool returned an existing container, an in-progress request, or a duplicate. Container numbers are checked against the ISO 6346 check digit before the tool calls the API.
+
+<Tip>
+**When an agent should call `track_container`.** A new tracking request is added to your account, so call `track_container` only when the user asks to track or add a number. The tool is marked `readOnlyHint: false`, so clients that honor tool annotations can ask you to approve the call. If your client doesn't ask, confirm with the user first. To look a number up, use `search_container`, which only reads your account. If the number isn't found, say so and offer to track it.
+</Tip>
 
 **Parameters**
 - `number` *(string, required)* – container number, BL, or booking number
 - `numberType` *(string, optional)* – override inference (`container`, `bill_of_lading`, `booking_number`)
-- `scac` *(string, optional)* – shipping line code, e.g., `MAEU` for Maersk
+- `scac` *(string, optional)* – shipping line code, e.g., `MAEU` for Maersk. Required when Terminal49 cannot infer the carrier. A container prefix such as `MSKU` names the equipment owner, not the carrier, so the tool never uses it as the SCAC.
 - `refNumbers` *(string[], optional)* – your reference numbers
 
 <Accordion title="Example MCP request">
@@ -209,7 +277,7 @@ Start tracking a new container. Creates a tracking request and returns container
   "params": {
     "name": "track_container",
     "arguments": {
-      "number": "CAIU1234567",
+      "number": "MSKU4330011",
       "scac": "MAEU"
     }
   }
@@ -218,7 +286,7 @@ Start tracking a new container. Creates a tracking request and returns container
 </Accordion>
 
 **Good for**
-- "Track container CAIU1234567 with Maersk"
+- "Track container MSKU4330011 with Maersk"
 - "Start tracking this new shipment"
 
 **REST equivalent**: [POST /tracking_requests](/api-docs/api-reference/tracking-requests/create-a-tracking-request)
@@ -236,6 +304,7 @@ Get detailed container information with flexible data loading. Choose what to in
   - `pod_terminal` – terminal name, location (lightweight)
   - `transport_events` – adds `events.count`, `events.rail_events_count`, and `events.latest_event`; use `get_container_transport_events` for the full timeline
   - `custom_fields` – account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)
+  - `party_roles` – companies assigned to the container by role, such as `customer` or `pickup_dray_carrier`. Each row has the party role `id`, `role`, `party_id`, and `party_name`. `party_name` is the company name, else the party's name, else its nickname. If the credential cannot read party roles, `party_roles` is `null` and `party_roles_note` explains why.
 
 The response may also include `_metadata` with factual details such as `includes_loaded`.
 
@@ -256,32 +325,80 @@ The response may also include `_metadata` with factual details such as `includes
 ```
 </Accordion>
 
-<Accordion title="Example response (mapped)">
+<Accordion title="Example response">
 ```json
 {
   "id": "abc-123-uuid",
-  "number": "CAIU1234567",
-  "status": "available_for_pickup",
+  "container_number": "CAIU1234567",
+  "status": "available",
+  "status_source": "current_status",
   "equipment": {
-    "type": "40HC",
-    "length": "40",
-    "height": "high_cube"
+    "type": "dry",
+    "length": 40,
+    "height": "high_cube",
+    "weight_lbs": 52000
   },
   "location": {
-    "currentLocation": "APM Terminals",
-    "availableForPickup": true,
-    "podArrivedAt": "2025-01-15T08:30:00Z",
-    "podDischargedAt": "2025-01-16T14:20:00Z"
+    "current_location": "Yard",
+    "available_for_pickup": true,
+    "availability_known": true,
+    "pod_arrived_at": "2026-10-12T08:30:00Z",
+    "pod_arrived_at_local": "10/12/2026, 01:30 AM PDT",
+    "pod_discharged_at": "2026-10-13T14:20:00Z",
+    "pod_discharged_at_local": "10/13/2026, 07:20 AM PDT",
+    "pod_timezone": "America/Los_Angeles"
   },
   "demurrage": {
-    "pickupLfd": "2025-01-22",
-    "holds": [],
-    "fees": []
+    "pickup_lfd": "2026-10-20T07:00:00Z",
+    "pickup_lfd_local": "10/20/2026, 12:00 AM PDT",
+    "last_free_days": {
+      "terminal": "2026-10-20T07:00:00Z",
+      "rail": null,
+      "line": null
+    },
+    "pickup_appointment_at": null,
+    "fees_at_pod_terminal": [],
+    "fees_total_amount": 0,
+    "fees_currency_code": null,
+    "holds_at_pod_terminal": [],
+    "urgency": "none",
+    "urgency_suppressed": false,
+    "urgency_reason": null,
+    "days_until_lfd": 4
+  },
+  "rail": {
+    "pod_rail_carrier": null,
+    "pod_rail_loaded_at": null,
+    "destination_eta": null,
+    "destination_ata": null
   },
   "shipment": {
     "id": "shipment-uuid",
-    "billOfLading": "MAEU123456789",
-    "shippingLineScac": "MAEU"
+    "ref_numbers": [
+      "PO-1234"
+    ],
+    "line": "MAEU",
+    "shipping_line_name": "Maersk",
+    "port_of_lading_name": "Shanghai",
+    "port_of_discharge_name": "Los Angeles",
+    "destination_name": null,
+    "line_tracking_stopped_at": null
+  },
+  "pod_terminal": {
+    "id": "terminal-uuid",
+    "name": "APM Terminals Pier 400",
+    "firms_code": "W185"
+  },
+  "custom_fields": null,
+  "created_at": "2026-09-01T12:00:00Z",
+  "_metadata": {
+    "container_state": "available_for_pickup",
+    "status_is_authoritative": true,
+    "derived_lifecycle": "available_for_pickup",
+    "includes_loaded": [
+      "shipment",
+      "pod_terminal"
+    ]
   }
 }
 ```
@@ -298,7 +415,7 @@ The response may also include `_metadata` with factual details such as `includes
 
 ### `get_container_transport_events`
 
-Get the full event timeline for a container's journey.
+Get the full event timeline for a container's journey. Each event has a `vessel_id`, or `null`, that you can pass to `get_vessel`.
 
 **Parameters**
 - `id` *(uuid, required)* – Terminal49 container UUID
@@ -306,25 +423,70 @@ Get the full event timeline for a container's journey.
 <Accordion title="Example response">
 ```json
 {
-  "totalEvents": 47,
-  "eventCategories": {
-    "vesselEvents": 8,
-    "railEvents": 12,
-    "terminalEvents": 18
-  },
-  "milestones": {
-    "vesselLoadedAt": "2024-12-08T10:30:00Z",
-    "vesselDepartedAt": "2024-12-09T14:00:00Z",
-    "vesselArrivedAt": "2024-12-22T08:30:00Z",
-    "dischargedAt": "2024-12-23T11:15:00Z"
+  "total_events": 4,
+  "event_categories": {
+    "vessel_events": 4,
+    "rail_events": 0,
+    "truck_events": 0,
+    "terminal_events": 0,
+    "other_events": 0
   },
   "timeline": [
     {
       "event": "container.transport.vessel_loaded",
-      "timestamp": "2024-12-08T10:30:00Z",
-      "location": { "name": "Shanghai", "locode": "CNSHA" }
+      "timestamp": "2024-12-08T10:30:00.000Z",
+      "timezone": "Asia/Shanghai",
+      "voyage_number": "451E",
+      "location": {
+        "name": "Shanghai",
+        "code": "CNSHA",
+        "type": "port"
+      }
+    },
+    {
+      "event": "container.transport.vessel_departed",
+      "timestamp": "2024-12-09T14:00:00.000Z",
+      "timezone": "Asia/Shanghai",
+      "voyage_number": "451E",
+      "location": {
+        "name": "Shanghai",
+        "code": "CNSHA",
+        "type": "port"
+      }
+    },
+    {
+      "event": "container.transport.vessel_arrived",
+      "timestamp": "2024-12-22T08:30:00.000Z",
+      "timezone": "America/Los_Angeles",
+      "voyage_number": "451E",
+      "location": {
+        "name": "Los Angeles",
+        "code": "USLAX",
+        "type": "port"
+      }
+    },
+    {
+      "event": "container.transport.vessel_discharged",
+      "timestamp": "2024-12-23T11:15:00.000Z",
+      "timezone": "America/Los_Angeles",
+      "voyage_number": "451E",
+      "location": {
+        "name": "Los Angeles",
+        "code": "USLAX",
+        "type": "port"
+      }
     }
-  ]
+  ],
+  "milestones": {
+    "vessel_loaded_at": "2024-12-08T10:30:00.000Z",
+    "vessel_departed_at": "2024-12-09T14:00:00.000Z",
+    "vessel_arrived_at": "2024-12-22T08:30:00.000Z",
+    "discharged_at": "2024-12-23T11:15:00.000Z"
+  },
+  "_metadata": {
+    "source": "transport_events_subresource",
+    "container_found": true
+  }
 }
 ```
 </Accordion>
@@ -346,6 +508,7 @@ Get shipment-level information including routing, BOL, and all containers.
 - `id` *(uuid, required)* – Terminal49 shipment UUID
 - `include_containers` *(boolean, optional)* – include container list (default: true)
 - `include_custom_fields` *(boolean, optional)* – include account-defined custom fields such as PO number or project manager (default: false; needs a signed-in user, not an API key)
+- `include_party_roles` *(boolean, optional)* – include the companies assigned to the shipment by role, in the same shape as `get_container` (default: false)
 
 **Good for**
 - "Tell me about this shipment"
@@ -373,10 +536,17 @@ List carriers supported by Terminal49 with their SCAC codes.
 
 ### `get_container_route`
 
-Get detailed multi-leg routing with vessel itinerary.
+Get a container's route: the ports in order with their arrival and departure times, and the vessel carrying the container while it is at sea.
+
+The tool returns:
+- `ports`: each port's sequence, label (`POL`, `TS1`, `POD`), name, country code, `inbound` ETA and ATA, and `outbound` ETD and ATD.
+- `current_vessel`: name, IMO, voyage, position, heading, speed in knots, and the departure and arrival ports. It is `null` when the container is not at sea.
+- `total_ports`: the number of ports on the route.
+
+If Terminal49 has no route data for the container yet, the tool returns a `NoRouteData` result with a suggested alternative instead of an error.
 
 <Warning>
-This is a **paid feature**. If not enabled for your account, use `get_container_transport_events` for historical movement data instead.
+This is a **paid feature**. If it is not enabled for your account, the tool returns a `FeatureNotEnabled` result. Use `get_container_transport_events` for historical movement data instead.
 
 See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for the related Routing Data entitlement.
 </Warning>
@@ -387,9 +557,9 @@ See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for the
 **Good for**
 - "What's the routing for this container?"
 - "Which transshipment ports?"
-- "What vessel is it on?"
+- "What vessel is it on, and where is it now?"
 
-**REST equivalent**: [GET /containers/{id}](/api-docs/api-reference/containers/get-a-container) (route data is included with the container)
+**REST equivalent**: [GET /containers/{id}/map_geojson](/api-docs/api-reference/containers/get-container-map-geojson)
 
 ---
 
@@ -420,7 +590,7 @@ Use the typed `advanced_filters` object for the full shipment filter catalog. Us
 **Good for**
 
 - "Show actively tracked shipments arriving at Los Angeles this week."
-- "Find shipments by an exact Bill of Lading number."
+- "Find shipments by an exact bill of lading number."
 
 [Filter usage, values, and pagination](/mcp/filtering-worklists) explains the inputs and result metadata.
 
@@ -474,8 +644,9 @@ Count containers grouped by one dimension, using the same filters as `list_conta
 **Parameters**
 
 - The filters accepted by `list_containers` (including `advanced_filters` and `include_stopped_tracking`).
-- `group_by` *(string, required)* - `pod_terminal`, `current_status`, `shipping_line`, `hold_type`, `pickup_lfd_date` or `pod_arrival_date`.
-- `max_rows` *(number, optional)* - most containers to count. Default 3000, maximum 6000; `truncated` is true when the set is larger.
+- `group_by` *(string, required)* - `pod_terminal`, `current_status`, `shipping_line`, `port_of_discharge`, `hold_type`, `pickup_lfd_date` or `pod_arrival_date`.
+
+Counts come from `GET /v2/containers/summary` in one request. `hold_type` counts each distinct current POD hold name, including pending holds, so a container with two holds counts twice; dates follow dashboard display timezones, falling back to UTC when missing or invalid. Groups are ordered by count and capped at 200; `truncated` is true when there are more.
 
 **Good for**
 
@@ -486,19 +657,78 @@ Count containers grouped by one dimension, using the same filters as `list_conta
 
 ### `list_parties`
 
-Find the companies on the account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. Pass an ID to `list_containers` or `summarize_containers` through `advanced_filters.parties`, keyed by role, such as `{ "customer": "<id>" }`.
+Find the companies on the account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. Filter a customer with `advanced_filters.customer_id` on `list_containers`, `summarize_containers`, or `list_shipments`. Filter other roles with `advanced_filters.parties` on `list_containers` or `summarize_containers`, keyed by role, such as `{ "pickup_dray_carrier": "<id>" }`. A customer created before party roles is listed under its customer account ID, which `customer_id` accepts and `advanced_filters.parties` does not.
 
 **Parameters**
 
+- `id` *(uuid, optional)* - one party to read, such as `party_id` from a party role. When you pass `id`, the tool ignores `search` and `limit` and returns the party under the ID you passed. An unknown ID returns no parties. A party with no company name comes back with its name, else its nickname, else its ID, as `name`.
 - `search` *(string, optional)* - company name or part of one; case and punctuation are ignored.
 - `limit` *(number, optional)* - most parties to return. Default 25, maximum 50.
 
 **Good for**
 
-- "How many containers does Acme have at the terminal?" (find Acme, then filter by `customer`)
+- "How many containers does Acme have at the terminal?" (find Acme, then filter by `customer_id`)
 - "Which containers is Ray Drayage picking up?" (find the carrier, then filter by `pickup_dray_carrier`)
 
 ---
+
+### `set_party_role`
+
+Attach a party to containers or shipments in a role, replace the party in that role, or detach it. For a party already on a record, use the `party_id` shown in that record's party roles (`get_container` with `party_roles`, or `get_shipment_details` with `include_party_roles`). `list_parties` can list a customer under an account ID that party roles do not accept. Use `list_parties` only for a party that is on no record yet.
+
+`add`, and a `replace` that detaches nobody, run at once. `remove`, and a `replace` that detaches another party, ask you to approve a preview of every record that changes, as described under [Write tools](#write-tools). One approval covers the whole call.
+
+**Parameters**
+
+- `container_ids` or `shipment_ids` *(array of IDs)* - 1 to 50 records; pass one, not both.
+- `role` *(string)* - containers support `pickup_dray_carrier`; shipments also support `shipper`, `consignee`, `notify_party`, `customs_broker`, `customer`, and `freight_forwarder`.
+- `party_id` *(string)* - the party's ID, as shown in a record's party roles.
+- `action` *(string)* - `add`, `replace`, or `remove`. `add` attaches the party beside any others in the role. A record holds one `pickup_dray_carrier` and one `customer`, so `add` fails on a record where a different party already holds one of those; use `replace` to swap it. `replace` makes the party the only one in the role and detaches the rest. It does not replace a shipment's `customer`: remove the current customer, then add the new one. `remove` detaches the party.
+- `confirmation_token` *(string, optional)* - only on a client that cannot ask you directly, after you approve the preview.
+
+A preview lists each record that changes with the parties in the role now (`current`) and after the change (`proposed`), counts the records that already match, and names records that cannot be changed with the reason. When Terminal49 has no party with `party_id`, the call returns `party_not_found` before it reads any record. A `remove` whose `party_id` matches no role on a record that holds another party in that role fails that record and says which party it has.
+
+Returns the records that changed, those that already matched, and any that failed. A call stops after about 20 seconds; on the hosted server that time starts when the request arrives, so checking your credentials counts toward it. Records it had not started saving by then are listed in `not_attempted`, unchanged, so you can call again with them. A record that was still being saved when time ran out is listed in `failed`, and so is a save that failed without a clear answer from Terminal49, such as a dropped connection. The change may have been applied to these records, so check them before you call again.
+
+**Good for**
+
+- "Set the drayage carrier to Ray Drayage on these containers." (`replace`)
+
+---
+
+### `set_custom_field`
+
+Set or clear one of your account's custom fields on containers or shipments. Filling fields that are empty runs at once. Overwriting or clearing a value on any record in the call asks you to approve a preview of every record that changes, as described under [Write tools](#write-tools). One approval covers the whole call.
+
+**Parameters**
+
+- `entity` *(string)* - `container` or `shipment`.
+- `ids` *(array of IDs)* - 1 to 50 records.
+- `api_slug` *(string)* - the custom field's API slug.
+- `value` *(string, number, boolean, array of strings, or null)* - the new value; pass an array of option values for a multi-select field, and `null` to clear the field.
+- `confirmation_token` *(string, optional)* - only on a client that cannot ask you directly, after you approve the preview.
+
+A preview lists each record that changes with its `current` and `proposed` value and counts the records that already match.
+
+Returns the records that changed, those that already matched, and any that failed. A call stops after about 20 seconds; on the hosted server that time starts when the request arrives, so checking your credentials counts toward it. Records it had not started saving by then are listed in `not_attempted`, unchanged, so you can call again with them. A record that was still being saved when time ran out is listed in `failed`, and so is a save that failed without a clear answer from Terminal49, such as a dropped connection. The change may have been applied to these records, so check them before you call again.
+
+**Good for**
+
+- "Set Sales Rep to Sofia Cortina on these containers."
+
+---
+
+
+### `update_record`
+
+Add or remove reference numbers, such as PO or job numbers, on a container, shipment, or tracking request, and tags on a shipment. Adding runs at once and keeps everything already there. Removing any value asks you to approve a preview first, because searches, filters, and integrations that use it stop finding the record.
+
+**Parameters**
+
+- `entity_type`: `container`, `shipment`, or `tracking_request`.
+- `entity_id`: the record's Terminal49 ID.
+- `ref_numbers`: `{ add, remove }`, up to 20 values each.
+- `tags`: `{ add, remove }`, shipments only.
 
 ### `list_tracking_requests`
 
@@ -506,7 +736,7 @@ List tracking requests with optional filters and pagination.
 
 **Parameters**
 - `request_number` *(string, optional)* – tracking request identifier
-- `status` *(string, optional)* – `created`, `pending`, `succeeded`, or `failed`
+- `status` *(string, optional)* – `pending`, `created`, `failed`, or `cancelled`. `created` matches requests that succeeded and are still tracking. This filter cannot select two statuses: `awaiting_manifest`, a request that is still being processed while the carrier manifest is pending, and `tracking_stopped`, a succeeded request whose tracking was stopped. To find requests in those statuses, pass `request_number` without `status`.
 - `scac` *(string, optional)* – four-letter shipping line SCAC
 - `page` *(number, optional)* – page number, starting at 1
 - `page_size` *(number, optional)* – results per page (default: 25; maximum: 25)
@@ -519,6 +749,441 @@ List tracking requests with optional filters and pagination.
 
 ---
 
+### `get_tracking_request`
+
+Get one tracking request: its number, carrier SCAC, status, failure reason, retry state, and the shipment it created.
+
+**Parameters**
+- `id` *(uuid, required)* – tracking request UUID, such as the `id` from `list_tracking_requests`
+- `include_custom_fields` *(boolean, optional)* – include account-defined custom fields set on the request (default: false; needs a signed-in user, not an API key)
+
+**Returns**
+- `request_number`, `request_type`, `scac`, `status`, `failed_reason`, `ref_numbers`, `tags`, `is_retrying`, and `retry_count`
+- `shipment_id` once the request has succeeded (status `created`), otherwise `null`
+
+**Good for**
+- "Did my tracking request go through?"
+- "Why did tracking fail for this number?"
+
+**REST equivalent**: [GET /tracking_requests/{id}](/api-docs/api-reference/tracking-requests/get-a-single-tracking-request)
+
+---
+
+### `identify_tracking_number`
+
+Identify a container, bill of lading, or booking number without tracking it. The tool creates nothing and adds no tracking volume.
+
+**Parameters**
+- `number` *(string, required)* – one number, 4 to 64 characters
+
+**Returns**
+- `number_type` (`container`, `bill_of_lading`, or `booking_number`), `is_valid`, `check_digit_passed`, and `invalid_reason`
+- `carrier` – the `decision` (`auto_select`, `needs_confirmation`, or `no_prediction`), the `selected` carrier, and the `candidates`, each with `scac`, `name`, and `confidence`
+- `already_tracked` – the account's `containers` and `shipments` with exactly this number, and any `in_progress_request`. It is `null` when none is found.
+- `already_tracked_note` – set when the check could not run. Then `already_tracked` is `null`, but that does not mean the number is untracked.
+
+Carrier prediction is in beta. If Terminal49 limits the request rate, the tool returns `error: "rate_limited"` with a message instead of failing.
+
+**Good for**
+- "Which carrier is MAEU123456789?"
+- "Are we already tracking CAIU2885402?"
+
+**REST equivalent**: [POST /tracking_requests/infer_number](/api-docs/api-reference/tracking-requests/auto-detect-carrier)
+
+---
+
+### `get_location`
+
+Get a port, terminal, or metro area.
+
+**Parameters**
+- `kind` *(string, required)* – `port`, `terminal`, or `metro_area`
+- `id` *(string, required)* – the Terminal49 UUID. A port or metro area also accepts its UN/LOCODE, such as `USLAX`. A terminal needs its UUID.
+
+**Returns**
+- Every kind: `name` and `time_zone`
+- A port or metro area: `code` (UN/LOCODE), `state_abbr`, `country_code`, `latitude`, and `longitude`
+- A terminal: `nickname`, `firms_code`, `smdg_code`, `bic_facility_code`, `address`, and its `port`. The terminal's `time_zone` is its port's time zone.
+
+**Good for**
+- "What is the FIRMS code for this terminal?"
+- "Which time zone is the last free day in?"
+
+**REST equivalent**: [GET /ports/{id}](/api-docs/api-reference/ports/get-a-port-using-the-locode-or-the-id), [GET /terminals/{id}](/api-docs/api-reference/terminals/get-a-terminal-using-the-id), [GET /metro_areas/{id}](/api-docs/api-reference/metro-areas/get-a-metro-area-using-the-unlocode-or-the-id)
+
+---
+
+### `get_vessel`
+
+Get a vessel's name, IMO, MMSI, and last reported position. Optionally project its track to a port and estimate when it arrives.
+
+**Parameters**
+- `id` *(uuid, required)* – vessel UUID, such as `vessel_id` from `get_container_transport_events`
+- `eta_to` *(object, optional)* – project the track to a port:
+  - `port_id` *(uuid, required)* – the port the vessel is heading to
+  - `previous_port_id` *(uuid, required)* – the port it left before that
+  - `latitude` and `longitude` *(numbers, optional)* – start from these coordinates instead of the last reported position. Give both or neither.
+
+**Returns**
+- `position` – `latitude`, `longitude`, `speed_knots`, `heading_degrees`, and `reported_at`, or `null`
+- `eta` – with `eta_to`: `estimated_arrival_at`, `total_positions`, and up to 120 evenly spaced `positions`
+
+The tool always returns `position`.
+
+The projection needs Routing Data, a paid feature. Without it, `eta` is `null` and `eta_note` explains why. If the API cannot project the port pair, `eta` is also `null` and `eta_note` asks you to check `port_id` and `previous_port_id`.
+
+If the account does not have vessel data, the tool returns `error: "FeatureNotEnabled"` with a message and an `alternative` instead of the vessel.
+
+**Good for**
+- "Where is the vessel now?"
+- "When will the vessel reach Los Angeles?"
+
+**REST equivalent**: [GET /vessels/{id}](/api-docs/api-reference/vessels/get-a-vessel-using-the-id), [GET /vessels/{id}/future_positions](/api-docs/api-reference/vessels/get-vessel-future-positions), [GET /vessels/{id}/future_positions_with_coordinates](/api-docs/api-reference/vessels/get-vessel-future-positions-with-coordinates)
+
+---
+
+### `list_custom_field_definitions`
+
+List the account's custom fields, such as PO number or project manager.
+
+**Parameters**
+- `entity_type` *(string, optional)* – `container` or `shipment`. Omit it for both.
+- `include_archived` *(boolean, optional)* – also list archived fields (default: false)
+
+**Returns**
+- `definitions` – each with `api_slug`, `display_name`, `description`, `entity_type`, `data_type`, `validation`, `sensitive`, and `archived`
+- `options` – for `enum` and `enum_multi` fields, the allowed `label` and `value` pairs in display order
+- `options_note` – set when one field's options cannot be loaded. That field's `options` is `null`, and the other definitions still return.
+
+Custom fields need a signed-in user. With an API key, `definitions` is `null` and `custom_fields_note` explains why.
+
+**Good for**
+- "Which custom fields does our account have?"
+- "What values can the priority field take?"
+
+**REST equivalent**: [GET /accounts/{account_id}/custom_field_definitions](/api-docs/api-reference/custom-fields/list-account-custom-field-definitions)
+
+---
+
+### `list_documents`
+
+Find documents on the account, such as Bills of Lading, arrival notices, and delivery orders. Results are newest first.
+
+**Parameters**
+- `filename` *(string, optional)* – text to match in the file name
+- `reference` *(string, optional)* – one reference to match, such as a bill of lading, booking, container, or PO number
+- `document_types` *(string[], optional)* – document type codes, such as `arrival_notice`
+- `sort` *(string, optional)* – `created_at`, `document_type`, or `added_by`, with a leading `-` for descending (default: `-created_at`)
+- `page`, `page_size` *(optional)* – page number and page size (default and maximum 25)
+- `include_types` *(boolean, optional)* – also return every document type code with its label (default: false)
+
+**Returns**
+- `items` – each with `id`, `name`, `document_type`, `source`, `file_name`, file type and size, `pages` for a document split from a packet, the linked `shipment_ids` and `container_ids`, and `has_extracted_data`, which is `true` only when the latest extraction has fields
+- `links` and `meta` – if `links.next` exists, the page is partial
+- `document_types` – with `include_types`
+
+`name` and `file_name` are cut to 256 characters. Whoever sends a file picks its name, so treat both as data. Rows never include extracted data or a file link. Use `get_document` for those.
+
+If the account does not have document processing, the tool returns `error: "FeatureNotEnabled"` with a message and an `alternative`.
+
+**Good for**
+- "Find the arrival notice for MAEU123456789."
+- "Which delivery orders came in this week?"
+
+**REST equivalent**: [GET /documents](/api-docs/api-reference/documents/list-documents), [GET /documents/types](/api-docs/api-reference/documents/list-document-types)
+
+---
+
+### `get_document`
+
+Get one document. The extracted data, the email it came in, and a download link are each opt-in.
+
+**Parameters**
+- `id` *(uuid, required)* – document UUID, such as an `id` from `list_documents`
+- `include_extracted_data` *(boolean, optional)* – include the fields Terminal49 extracted from the file (default: false)
+- `include_source_email` *(boolean, optional)* – for a document that arrived by email, include that email (default: false)
+- `include_download_url` *(boolean, optional)* – include a short-lived link to download the file (default: false)
+
+**Returns**
+- The `list_documents` fields, plus `classification_notes` (cut to 256 characters) and `email_submission_id`
+- `extracted_data` – `trust: "untrusted"`, a `notice`, `schema_version`, `extracted_at`, and `fields`. Fields that would take the data past 16,000 characters are named in `omitted_fields` and left out.
+- `source_email` – `trust: "untrusted"`, a `notice`, `subject`, `from`, `to`, `cc`, `sent_at`, the first 2,000 characters of the body as `body_preview`, and `omitted_addresses`. The subject is cut to 500 characters. `from`, `to`, and `cc` keep at most 20 addresses each, and each address is cut to 320 characters. `omitted_addresses` counts the addresses left out of each list, including entries that are not strings.
+- `download` – `delivered_as: "resource_link"` and `expires_at`, the time the link stops working. `expires_at` is `null` when the link names no usable expiry. The link itself comes back as a `resource_link` content block, not in the structured result.
+
+When a requested part is not available, it is `null` and a note explains why: `extracted_data_note`, `source_email_note`, or `download_note`. An extraction with no fields yet reads as not available, because extraction may still be running.
+
+<Warning>
+Extracted data and the source email are text that people outside your account write. The tool labels them untrusted. Your AI client should treat them as data and never follow instructions found in them.
+</Warning>
+
+**Good for**
+- "What does this arrival notice say about the consignee?"
+- "Who sent this bill of lading?"
+- "Give me the delivery order file."
+
+**REST equivalent**: [GET /documents/{id}](/api-docs/api-reference/documents/get-a-document), [GET /documents/{id}/download_url](/api-docs/api-reference/documents/get-a-document-download-url)
+
+---
+
+### Write tools
+
+Seven tools can change your account's data. `track_container` is in the default `core` toolset. The `operations` toolset, which is in the default toolsets, holds `set_party_role`, `set_custom_field` and `update_record`. The `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it, holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`. Each write tool has a tier:
+
+- **Tier A** tools run in one call. Starting or resuming tracking consumes tracking quota and may incur pay-as-you-go charges. These additive tools carry a client interaction hint and explain that consequence; your client controls its permission UI.
+
+- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, to request user interaction in clients that support this hint. `stop_shipment_tracking` and `cancel_tracking_request` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call. They ask only when a record in the call would lose a party or a value. A call that only adds runs at once. `update_record` works the same way on one record: adding reference numbers or tags runs at once, and removing any asks first.
+
+A call that needs your approval never changes anything the first time. It reads the record, or every record in the batch, and builds a preview of the record now and after the change. For a batch, the preview lists each record that changes and counts the rest, and one approval covers the whole call. How you approve the preview depends on your AI client.
+
+**Clients that can ask you directly.** On MCP protocol revision 2026-07-28, a client that declares form elicitation gets an `input_required` result. The client shows you the preview and asks you to confirm. If you confirm, the client calls the tool again and the change is made. If you decline or dismiss the dialog, the tool returns `status: "declined"` and nothing changes. The AI model never sees a token it could pass back, so only you can approve the change. A `confirmation_token` sent on such a client is refused with `token_not_accepted`.
+
+**Other clients.** The tool returns `status: "confirmation_required"`, the `preview`, a `confirmation_token`, and `expires_at`. You approve the preview in the chat, and the client calls the tool again with the same arguments and the token.
+
+Either way, the approval expires after 5 minutes and works only for the same tool, arguments, account, and credential. If the record changed after you saw the preview (for a batch, if any record in the call changed), nothing changes: a client that asks you directly shows you the current state and asks again, and other clients get `stale_preview` with a new preview and token. A wrong, edited, or expired token returns `invalid_confirmation`.
+
+<Note>
+The confirmation step makes sure you see the current state before a destructive change. Terminal49 still decides what your credential can do.
+</Note>
+
+Write tools return these results with `isError: false`, so the AI client can explain them. Each of these results says that nothing was changed.
+
+- `rate_limited` when Terminal49 limits the request rate, with `retry_after_s` when Terminal49 says how long to wait.
+- `not_permitted` when the change needs your approval and the server has no secret to sign approvals with.
+- The codes listed for each tool.
+
+---
+
+### `stop_shipment_tracking`
+
+Stop carrier and terminal updates for a shipment and all its containers. Tier C.
+
+**Parameters**
+- `shipment_id` *(uuid, required)* – shipment UUID
+- `confirmation_token` *(string, optional)* – leave it out to get a preview. Send it only after you approve that preview.
+
+**Returns**
+- Without a token: a `preview` with the shipment's bill of lading, carrier SCAC, number of containers, and tracking state, and a `confirmation_token`
+- `status: "stopped"` with the shipment and `undo: "resume_shipment_tracking"`
+- `status: "already_stopped"` when tracking is already off
+- `status: "noop"` with the shipment when Terminal49 refuses the stop and tracking is still on. Nothing changed.
+- `FeatureNotEnabled` when your account or credential cannot stop tracking. The tool checks this before it reads the shipment.
+
+The token also covers the bill of lading and the number of containers. If a container is added after the preview, you get a new preview.
+
+**Good for**
+- "Stop tracking MAEU123456789, it was delivered."
+
+**REST equivalent**: [PATCH /shipments/{id}/stop_tracking](/api-docs/api-reference/shipments/stop-tracking-shipment)
+
+---
+
+### `resume_shipment_tracking`
+
+Start tracking a stopped shipment again. Tier A.
+
+**Parameters**
+- `shipment_id` *(uuid, required)* – shipment UUID
+
+**Returns**
+- `status: "resumed"` with the shipment and `undo: "stop_shipment_tracking"`. Updates that the carrier published while tracking was stopped may be missing. A resumed shipment can count against your tracking limits.
+- `status: "already_tracking"` when tracking was never stopped. Nothing is sent.
+- `status: "noop"` with the shipment when Terminal49 refuses the resume and tracking is still off. Nothing changed.
+- `FeatureNotEnabled` when your account or credential cannot resume tracking. Nothing changed.
+
+**Good for**
+- "Start tracking that shipment again."
+
+**REST equivalent**: [PATCH /shipments/{id}/resume_tracking](/api-docs/api-reference/shipments/resume-tracking-shipment)
+
+---
+
+### `cancel_tracking_request`
+
+Cancel a tracking request that Terminal49 is still working on, such as one with a typo or the wrong carrier. Tier C. A cancel cannot be undone.
+
+**Parameters**
+- `tracking_request_id` *(uuid, required)* – tracking request UUID, such as the `id` from `list_tracking_requests`
+- `confirmation_token` *(string, optional)* – leave it out to get a preview. Send it only after you approve that preview.
+
+**Returns**
+- Without a token: a `preview` with the request number, type, carrier SCAC, and status, and a `confirmation_token`
+- `status: "cancelled"` with the request, read again after the cancel. If that read fails, the request shows the previewed fields with status `cancelled`.
+- `status: "noop"` with the request when Terminal49 refuses the cancel and the request is still `pending` or `awaiting_manifest`. Nothing changed.
+- `not_cancellable` with the request's current status when it is not `pending` or `awaiting_manifest`. No token is issued.
+
+**Good for**
+- "Cancel the tracking request I made with the wrong carrier."
+
+**REST equivalent**: [PATCH /tracking_requests/{id}/cancel](/api-docs/api-reference/tracking-requests/cancel-a-tracking-request)
+
+---
+
+### `search_docs`
+
+Search the public Terminal49 documentation: API guides, webhooks, container statuses, holds and Last Free Day rules, DataSync, the SDK, and this MCP server. It returns matching sections with a title, link, and excerpt. It does not read account data.
+
+**Parameters**
+
+- `query` *(string, required)* - a short documentation search query, such as `webhook retries`.
+- `limit` *(number, optional)* - most results to return, from 1 to 10. Default 5.
+
+**Good for**
+
+- "How do I verify webhook signatures?"
+- "What does the last free day mean?"
+
+---
+
+### `whoami`
+
+Identify the caller: API key or signed-in user, the account the session is scoped to, and which gated features that credential can use there.
+
+**Parameters**
+- none
+
+**Returns**
+- `kind` (`api_key` or `user`), `channel` (`api`, `dashboard`, `mcp`, `askt49`), and the API key label when there is one
+- `account` – company name, business type (`shipper`, `freight_forwarder`, `customs_broker`, `trucking_company`, …), plan, SCAC, location, and tracking-slot usage on free and trial plans (limit, used, active containers, pending tracking requests, remaining)
+- `user` – email, name, role, job role, and job title for a signed-in user; `null` for an API key
+- `other_accounts` – other accounts the signed-in user can switch to
+- `features` – one status per gated feature: `available`, `requires_paid_plan`, `requires_user_credential`, or `not_enabled`
+- `credential_type` – how this MCP session signed in: `user`, `agent`, `api_key`, or `shared_token`
+- `enabled_toolsets` – the toolsets this session serves
+- `write_tools_available` – `false` when the session serves only read-only tools
+
+**Good for**
+- "Which account am I connected to?"
+- "Why does list_containers return nothing?" (a free-plan API key lacks `data_out_api`)
+- Checking `routing_data`, `custom_fields`, or `stop_tracking` before relying on them
+
+**REST equivalent**: [GET /me](/api-docs/api-reference/account/get-the-current-credential)
+
+---
+
+## Trade intelligence tools
+
+Trade intelligence answers market questions about US ocean imports: who imports a product, what a named company imports and how that is changing, where goods come from, and port, carrier, and lane volumes. It is built from US Customs bill-of-lading records from January 2022 to today, refreshed daily. These tools read market data, not your account's shipments, and all of them are read-only.
+
+<Note>
+Trade intelligence is enabled per account. Without it, each tool replies that trade intelligence isn't enabled for the account. To turn it on, contact support@terminal49.com.
+</Note>
+
+Keep these in mind when you read the answers:
+
+- Volume is physical containers, each counted once. Values are estimates, not declared customs values.
+- `get_trade_trends` and `get_trade_breakdown` include the current month, which is still incomplete, unless you set `until`. Compare full months against the same months a year earlier.
+- A company can appear under several names and once per US state. Some importers keep their names off the records or ship under a forwarder, so low volume for a well-known company is a floor, not its size.
+- Forwarders and customs brokers appear among importers. A high `share_as_notify_party` suggests a logistics provider, but large cargo owners can also be listed mostly as notify party, so weigh the company name and product mix too.
+- Don't add volumes across products or companies. Carriers appear under spelling variants, so merge them before computing shares.
+- Lane fields (`pol`, `pol_country`, `container_type`) can't be combined with importer or product fields (`company`, `company_state`, `hs4`, `hs2`) in one request, and they don't support `estimated_value`. Use containers or TEUs for lane questions.
+
+---
+
+### `search_importers`
+
+Find US importers by company name (typos and partial names are fine), by what they import, or both. Each result covers a 12-month search window, which can end a month or two before the last full month: containers, the consignee and notify-party split, twenty-foot equivalent units (TEUs), estimated value, and top ports, origin countries, carriers, and products. Results are ordered by match quality, not size.
+
+**Parameters**
+
+- `name` *(string, optional)* - company name.
+- `imports` *(string, optional)* - what the company imports, in plain words.
+- `state`, `port_of_discharge`, `origin_country` *(string, optional)* - narrow the search.
+- `min_containers` *(number, optional)* - minimum containers in the search window.
+- `limit` *(number, optional)* - default 10, maximum 25.
+
+**Good for**
+
+- "Who are the importers of frozen shrimp in Florida?"
+- "Find Example Outdoor Supply's importer records."
+
+---
+
+### `get_importer_profile`
+
+One importer's imports over full calendar months ending last month: totals, a monthly series, US ports, origin countries, carriers, destination states, and products with estimated value. Use `months: 24` to compare the latest months with the same months a year earlier.
+
+**Parameters**
+
+- `company_name` *(string, required)* - the exact name from `search_importers`.
+- `company_state` *(string, optional)* - one state; omit to combine all of the company's locations.
+- `months` *(number, optional)* - default 12, maximum 60.
+
+**Good for**
+
+- "What does this competitor import, and is it growing?"
+
+---
+
+### `search_commodities`
+
+Turn a product description or Harmonized System (HS) code prefix into four-digit HS codes, with the goods commonly declared under each code, the number of importers, and 12-month estimated value. Check the common goods before relying on a code.
+
+**Parameters**
+
+- `query` *(string, required)* - such as `office chairs` or `94`.
+- `limit` *(number, optional)* - default 8, maximum 20.
+
+Each code lists up to 15 common goods; `common_goods_not_shown` counts any left out.
+
+---
+
+### `rank_importers`
+
+Rank US importers by containers over full calendar months for a product, a US port, an origin country, or any combination. The ranking includes forwarders and customs brokers.
+
+**Parameters**
+
+- `hs4`, `port_of_discharge`, `origin_country` *(string, optional)* - filters.
+- `months` *(number, optional)* - default 12, maximum 60.
+- `limit` *(number, optional)* - default 20, maximum 50.
+
+**Good for**
+
+- "Who are the top importers of office chairs through Savannah?"
+
+---
+
+### `get_trade_trends`
+
+A time series of containers, TEUs, or estimated value by month, quarter, or year, split by up to two dimensions and filtered by any of them. By default it covers the 24 months ending with the current, incomplete month. History goes back to January 2022.
+
+**Parameters**
+
+- `measure` *(string, optional)* - `containers` (default), `teus`, or `estimated_value`. `estimated_value` is not available by lane: a request that also groups or filters by `pol`, `pol_country`, or `container_type` is rejected.
+- `group_by` *(array, optional)* - up to two dimensions, such as `origin_country` or `pod`.
+- `filters` *(object, optional)* - product, importer, origin, port, coast, carrier, state, and equipment filters. The `company` filter matches every name containing the text.
+- `interval` *(string, optional)* - `month` (default), `quarter`, or `year`.
+- `since`, `until` *(string, optional)* - `YYYY-MM`, inclusive.
+- `top` *(number, optional)* - largest groups to keep, default 10, maximum 25.
+
+**Good for**
+
+- "Has Vietnam overtaken China for furniture imports?"
+
+---
+
+### `get_trade_breakdown`
+
+Nested totals over one to three dimensions, such as region, country, and US port, with a grand total and subtotals at every level. By default it covers the 12 months ending with the current, incomplete month, so it is not 12 full months. For an annual total, set `since` and `until` to 12 full months.
+
+**Parameters**
+
+- `dims` *(array, required)* - one to three dimensions, outermost first.
+- `measure`, `filters`, `since`, `until` - as for `get_trade_trends`. `estimated_value` is not available by lane: a request that also breaks down or filters by `pol`, `pol_country`, or `container_type` is rejected.
+- `top` *(number, optional)* - largest children under each parent, default 10, maximum 20.
+
+**Good for**
+
+- "What share of seafood imports lands on each coast?"
+
+---
+
+### `get_trade_data_coverage`
+
+What the data covers right now: where history starts, the latest month and whether it is incomplete, the last full month, and when the data was last built. No parameters.
+
+---
+
 ## Prompts reference
 
 Prompts are pre-built workflows that guide the AI through multi-step analysis.
@@ -528,11 +1193,11 @@ Prompts are pre-built workflows that guide the AI through multi-step analysis.
 Quick container tracking with optional carrier specification.
 
 **Arguments**
-- `container_number` *(string, required)* – e.g., `CAIU1234567`
+- `container_number` *(string, required)* – e.g., `MSKU4330011`
 - `carrier` *(string, optional)* – SCAC code, e.g., `MAEU`
 
 **Try this in Claude:**
-> "Using Terminal49, track container CAIU1234567 and show me its current status, location, and ETA."
+> "Using Terminal49, track container MSKU4330011 and show me its current status, location, and ETA."
 
 ---
 
@@ -568,6 +1233,8 @@ Resources provide static or dynamic data that AI clients can read.
 |--------------|-------------|
 | `terminal49://container/{id}` | Container data in markdown format |
 | `terminal49://docs/milestone-glossary` | Event/milestone reference documentation |
+| `terminal49://docs/mcp-query-guidance` | Playbooks that map common container questions to tools and output shape |
+| `terminal49://docs/list-display-columns` | Column catalog for `list_containers`, `list_shipments`, and `list_tracking_requests` results. The list tools point to it through `column_catalog_resource`. |
 
 <Accordion title="Example resources/read request">
 ```json
@@ -586,19 +1253,17 @@ Resources provide static or dynamic data that AI clients can read.
 
 ## Not yet supported
 
-These Terminal49 API capabilities are available via the [SDK](/api-docs/in-depth-guides/mcp#sdk-usage) but not yet exposed as MCP tools:
+These Terminal49 API capabilities are available through the [SDK](/api-docs/in-depth-guides/mcp#sdk-usage) and the REST API, but not as MCP tools:
 
 | API | Description | Workaround |
 |-----|-------------|------------|
 | `update_shipment` | Update shipment ref numbers/tags | Use [REST API](/api-docs/api-reference/shipments/edit-a-shipment) |
-| `stop_tracking` | Stop tracking a shipment | Use [REST API](/api-docs/api-reference/shipments/stop-tracking-shipment) |
-| `resume_tracking` | Resume tracking a shipment | Use [REST API](/api-docs/api-reference/shipments/resume-tracking-shipment) |
 | `raw_events` | Get raw EDI event data | Use [REST API](/api-docs/api-reference/containers/get-a-containers-raw-events) |
-| `refresh_container` | Force refresh container data | Use [REST API](/api-docs/api-reference/containers/refresh-container) |
+| Container refresh | Ask the carrier and terminal for fresh container data | Use [REST API](/api-docs/api-reference/containers/refresh-container) |
 | Webhooks | Real-time event notifications | Configure via the [webhooks guide](/api-docs/in-depth-guides/webhooks) |
 
 <Info>
-Shipment/container list operations are available via MCP. Update/stop/resume tracking operations still require REST API or direct SDK usage.
+Stopping and resuming shipment tracking, and cancelling a tracking request, are MCP tools in the `tracking_lifecycle` toolset. The hosted server does not serve that toolset yet. Editing a shipment still needs the REST API or the SDK.
 </Info>
 
 ---

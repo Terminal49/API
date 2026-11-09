@@ -3,14 +3,35 @@
  * List tracking requests with filters + pagination
  */
 
-import { Terminal49Client } from '@terminal49/sdk';
+import type { paths, Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 
 const MAX_PAGE_SIZE = 25;
 
+type TrackingRequestStatusFilter = NonNullable<
+  NonNullable<
+    paths['/tracking_requests']['get']['parameters']['query']
+  >['filter[status]']
+>;
+
+/** The `filter[status]` values the API honors; anything else is treated as `pending`. */
+export const TRACKING_REQUEST_STATUS_FILTERS = [
+  'pending',
+  'created',
+  'failed',
+  'cancelled',
+] as const satisfies readonly TrackingRequestStatusFilter[];
+
+const _everyStatusFilterListed: Exclude<
+  TrackingRequestStatusFilter,
+  (typeof TRACKING_REQUEST_STATUS_FILTERS)[number]
+> extends never
+  ? true
+  : never = true;
+
 export interface ListTrackingRequestsArgs {
   request_number?: string;
-  status?: string;
+  status?: TrackingRequestStatusFilter;
   scac?: string;
   page?: number;
   page_size?: number;

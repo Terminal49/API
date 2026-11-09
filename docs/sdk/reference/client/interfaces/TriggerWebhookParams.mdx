@@ -1,0 +1,16 @@
+---
+title: "Interface: TriggerWebhookParams"
+---
+
+# Interface: TriggerWebhookParams
+
+Parameters for [Terminal49Client.triggerWebhook](/sdk/reference/client/classes/Terminal49Client#triggerwebhook).
+
+## Properties
+
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| <a id="property-documenttype"></a> `documentType?` | `string` | Document type for `document_representation.*` example payloads. |
+| <a id="property-event"></a> `event` | `string` | Webhook event name used to generate the example payload, e.g. `tracking_request.succeeded`. |
+| <a id="property-secret"></a> `secret?` | `string` | Optional secret used to sign the request in `X-T49-Webhook-Signature`. |
+| <a id="property-url"></a> `url` | `string` | HTTPS destination URL for the test delivery. |

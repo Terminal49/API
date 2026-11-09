@@ -34,7 +34,7 @@ see the SDK quickstart in the docs site: `docs/api-docs/getting-started/sdk-quic
 ### Methods
 - `search(query)`
 - `getContainer(id, include?)`
-- `trackContainer({ containerNumber?, bookingNumber?, scac?, refNumbers? })`
+- `trackContainer({ containerNumber?, bookingNumber?, billOfLading?, scac?, refNumbers? })`: sends `request_type` `container`, `booking_number`, or `bill_of_lading` to match the number you pass
 - `createTrackingRequest({ requestType, requestNumber, scac?, refNumbers?, shipmentTags? })`
 - `inferTrackingNumber(number)`
 - `createTrackingRequestFromInfer(number, { scac?, numberType?, refNumbers?, shipmentTags? })`
@@ -43,11 +43,39 @@ see the SDK quickstart in the docs site: `docs/api-docs/getting-started/sdk-quic
 - `listContainers(filters?, options?)`
 - `listTrackingRequests(filters?, options?)` / `listTrackRequests(filters?, options?)`
 - `getContainerTransportEvents(id)`
-- `getContainerRoute(id)`
+- `getContainerRoute(id, options?)`: the route from `GET /containers/{id}/map_geojson` (Routing Data feature). By default (`format: 'raw'`) it returns the GeoJSON FeatureCollection. With `{ format: 'mapped' }` it returns `{ ports, currentVessel, totalPorts }`, with ports in route order.
+- `getVesselFuturePositions(id, { portId, previousPortId })`
+- `getVesselFuturePositionsWithCoords(id, { portId, previousPortId, latitude, longitude })`
 - `listShippingLines(search?)`
+- `listWebhooks(options?)`, `getWebhook(id)`, `createWebhook(payload)`, `updateWebhook(id, payload)`, `deleteWebhook(id)`, `getWebhookIps()`
+- `listWebhookEvents()`: the event names a webhook can subscribe to
+- `triggerWebhook({ url, event, secret?, documentType? })`: sends a test delivery with an example payload
+- `listWebhookNotifications(options?)`, `getWebhookNotification(id, options?)`, `getWebhookNotificationExamples(event)`
+- `getVessel(id)`, `getVesselByImo(imo)`, `getPort(id)`, `getTerminal(id)`, `getMetroArea(id)`
+- `listParties(options?)`, `getParty(id)`, `createParty(attributes)`, `updateParty(id, attributes)`
+- `listCustomFieldDefinitions(options?)`, `getCustomFieldDefinition(id)`, `createCustomFieldDefinition(payload)`, `updateCustomFieldDefinition(id, payload)`, `deleteCustomFieldDefinition(id)`
+- `listCustomFieldOptions(definitionId, options?)`, `getCustomFieldOption(definitionId, optionId)`, `createCustomFieldOption(definitionId, payload)`, `updateCustomFieldOption(definitionId, optionId, payload)`, `deleteCustomFieldOption(definitionId, optionId)`
+- `listCustomFields(options?)`, `getCustomField(id)`, `createCustomField(payload)`, `updateCustomField(id, payload)`, `deleteCustomField(id)`
 - `getDemurrage(containerId)` (helper)
 - `getRailMilestones(containerId)` (helper)
 - `deserialize<T>(document)` → JSONA-based plain objects
+
+Some methods exist only on a resource namespace, for example `containers.update(id, attrs)`, `shippingLines.get(id)`, the per-entity custom field methods (`containers`, `shipments`, `trackingRequests`), the party role methods (`containers`, `shipments`), and the `documents`, `emailSubmissions`, and `documentSchemas` methods. See `docs/sdk/methods.mdx` for the full list.
+
+### Trade intelligence
+
+`client.tradeIntel` covers US import bill-of-lading records (US Customs manifests), January 2022 onward.
+Methods return the API's plain JSON body and throw `FeatureNotEnabledError` when the account lacks the feature.
+
+- `tradeIntel.meta()`
+- `tradeIntel.searchCompanies({ name?, imports?, state?, port_of_discharge?, origin_country?, min_containers?, limit? })`
+- `tradeIntel.companyProfile({ company_name, company_state?, months? })`
+- `tradeIntel.searchCommodities({ query, limit? })`
+- `tradeIntel.topImporters({ hs4?, port_of_discharge?, origin_country?, months?, limit? })`
+- `tradeIntel.trends({ measure?, group_by?, filters?, interval?, since?, until?, top? })`
+- `tradeIntel.breakdown({ dims, measure?, filters?, since?, until?, top? })`
+- `tradeIntel.lookupContainer(containerNumber)`
+- `tradeIntel.lookupBillOfLading(bolNumber, { months? })`
 
 ### Examples
 
@@ -111,19 +139,20 @@ npm run smoke
 
 ## Fixtures
 
-Generate sanitized, production-based fixtures for tests:
+Generate deterministic, synthetic fixtures for tests without an API key or network access:
+
 ```bash
 cd sdks/typescript-sdk
-export T49_API_TOKEN=your_token
-export T49_API_BASE_URL=https://api.terminal49.com/v2
 npm run fixtures:generate
 ```
 
-This writes JSON:API fixtures to `src/fixtures/` with redacted IDs and numbers.
-Numeric identifiers keep their original prefix while the last few characters are
-obfuscated to preserve shape without exposing real values.
-List endpoints are captured without `include` for performance guidance. Single-resource
-fixtures include both base and `include` variants where supported.
+The generator authors JSON:API resources in `scripts/generate-fixtures.mjs` and
+writes them to `src/fixtures/`. All shipment identifiers, aliases, names, references,
+and URLs are invented. Edit the synthetic source, then regenerate the fixtures.
+Do not capture customer responses into public test files.
+
+Base and included variants cover relationship resolution. Separate fixtures cover
+pickup facilities, route ports and vessels, credentials, and trade intelligence.
 
 ## Documentation generation
 
@@ -165,9 +194,10 @@ If you need to release without release-please:
    cd sdks/typescript-sdk
    npm version patch   # or minor / major
    ```
+   From a workspace directory, `npm version` updates the root `package-lock.json` and does not create a commit or tag.
 2. Commit and push:
    ```bash
-   git add package.json package-lock.json CHANGELOG.md
+   git add package.json ../../package-lock.json CHANGELOG.md
    git commit -m "chore: release @terminal49/sdk v$(node -p "require('./package.json').version")"
    git push
    ```

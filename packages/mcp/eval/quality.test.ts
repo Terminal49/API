@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import type { ToolResult } from './client.js';
-import { scoreResult } from './quality.js';
+import { scoreFeatureNotEnabled, scoreResult } from './quality.js';
 
 function resultWithJson(json: unknown): ToolResult {
   const text = JSON.stringify(json);
@@ -50,5 +50,37 @@ describe('scoreResult', () => {
     expect(check?.detail).toBe(
       '_agent_steering, _response_contract, presentation_guidance, suggested_follow_ups, suggested_tools',
     );
+  });
+});
+
+describe('scoreFeatureNotEnabled', () => {
+  const textResult = (text: string, isError = false): ToolResult => ({
+    http: 200,
+    isError,
+    latencyMs: 10,
+    bytes: text.length,
+    blocks: [{ index: 0, text, json: undefined }],
+    payload: undefined,
+    errorMessage: undefined,
+    rawText: text,
+  });
+
+  it('passes a plain not-enabled reply that says how to get access', () => {
+    const score = scoreFeatureNotEnabled(
+      textResult(
+        "Trade intelligence isn't enabled for this Terminal49 account. To turn it on, contact support@terminal49.com.",
+      ),
+    );
+    expect(score.contractPass).toBe(true);
+  });
+
+  it('fails a tool error or a reply without the support contact', () => {
+    expect(
+      scoreFeatureNotEnabled(textResult("isn't enabled", true)).contractPass,
+    ).toBe(false);
+    expect(
+      scoreFeatureNotEnabled(textResult("isn't enabled for this account"))
+        .contractPass,
+    ).toBe(false);
   });
 });

@@ -34,9 +34,9 @@ function configOnce(): Promise<CliConfig> {
 
 export async function createClient(
   opts: CliGlobalOptions = {},
-): Promise<Terminal49Client> {
+): Promise<{ client: Terminal49Client; format: ResponseFormat }> {
   const cfg = await configOnce();
-  const format = opts.format ?? cfg.defaultFormat ?? 'mapped';
+  const format: ResponseFormat = opts.format ?? cfg.defaultFormat ?? 'mapped';
   const token = opts.token ?? process.env.T49_API_TOKEN ?? cfg.token;
   const baseUrl = opts.baseUrl ?? process.env.T49_API_BASE_URL ?? cfg.baseUrl;
   const maxRetries = opts.maxRetries ?? cfg.maxRetries;
@@ -50,12 +50,13 @@ export async function createClient(
     );
   }
 
-  return new Terminal49Client({
+  const client = new Terminal49Client({
     apiToken: token,
     apiBaseUrl: baseUrl,
     maxRetries,
     accountId,
     timeoutMs,
-    defaultFormat: format as ResponseFormat,
+    defaultFormat: format,
   });
+  return { client, format };
 }

@@ -112,6 +112,7 @@
               "api-docs/api-reference/tracking-requests/create-a-tracking-request",
               "api-docs/api-reference/tracking-requests/get-a-single-tracking-request",
               "api-docs/api-reference/tracking-requests/edit-a-tracking-request",
+              "api-docs/api-reference/tracking-requests/cancel-a-tracking-request",
               "api-docs/api-reference/tracking-requests/auto-detect-carrier",
               "api-docs/api-reference/tracking-requests/list-tracking-request-custom-fields",
               "api-docs/api-reference/tracking-requests/create-tracking-request-custom-field",
@@ -224,6 +225,8 @@
           {
             "group": "Custom Field Definitions",
             "pages": [
+              "api-docs/api-reference/custom-fields/list-account-custom-field-definitions",
+              "api-docs/api-reference/custom-fields/create-account-custom-field-definition",
               "api-docs/api-reference/custom-fields/list-custom-field-definitions",
               "api-docs/api-reference/custom-fields/get-a-custom-field-definition",
               "api-docs/api-reference/custom-fields/create-a-custom-field-definition",
@@ -249,6 +252,28 @@
               "api-docs/api-reference/custom-fields/create-a-custom-field",
               "api-docs/api-reference/custom-fields/update-a-custom-field",
               "api-docs/api-reference/custom-fields/delete-a-custom-field"
+            ]
+          },
+          {
+            "group": "Account",
+            "icon": "id-badge",
+            "pages": [
+              "api-docs/api-reference/account/get-the-current-credential"
+            ]
+          },
+          {
+            "group": "Trade Intelligence",
+            "icon": "chart-line",
+            "pages": [
+              "api-docs/api-reference/trade-intelligence/get-trade-intelligence-coverage",
+              "api-docs/api-reference/trade-intelligence/search-importers",
+              "api-docs/api-reference/trade-intelligence/get-an-importer-profile",
+              "api-docs/api-reference/trade-intelligence/search-commodities",
+              "api-docs/api-reference/trade-intelligence/rank-importers",
+              "api-docs/api-reference/trade-intelligence/get-import-trends",
+              "api-docs/api-reference/trade-intelligence/get-an-import-breakdown",
+              "api-docs/api-reference/trade-intelligence/look-up-a-containers-import-record",
+              "api-docs/api-reference/trade-intelligence/look-up-a-bill-of-lading"
             ]
           },
           {
@@ -406,7 +431,17 @@
                 "pages": [
                   "sdk/reference/client/index",
                   "sdk/reference/client/classes/Terminal49Client",
-                  "sdk/reference/client/interfaces/Terminal49ClientConfig"
+                  "sdk/reference/client/interfaces/Terminal49ClientConfig",
+                  "sdk/reference/client/interfaces/CustomFieldDefinitionListFilters",
+                  "sdk/reference/client/interfaces/CustomFieldDefinitionListOptions",
+                  "sdk/reference/client/interfaces/CustomFieldListFilters",
+                  "sdk/reference/client/interfaces/TriggerWebhookParams",
+                  "sdk/reference/client/interfaces/VesselFuturePositionsParams",
+                  "sdk/reference/client/interfaces/VesselFuturePositionsWithCoordsParams",
+                  "sdk/reference/client/interfaces/WebhookNotificationGetOptions",
+                  "sdk/reference/client/interfaces/WebhookNotificationListOptions",
+                  "sdk/reference/client/type-aliases/PartyAttributes",
+                  "sdk/reference/client/type-aliases/WebhookEvent"
                 ]
               },
               {
@@ -415,12 +450,45 @@
                   "sdk/reference/client/managers/index",
                   "sdk/reference/client/managers/classes/BaseManager",
                   "sdk/reference/client/managers/classes/ContainerManager",
+                  "sdk/reference/client/managers/classes/DocumentManager",
+                  "sdk/reference/client/managers/classes/DocumentSchemaManager",
+                  "sdk/reference/client/managers/classes/EmailSubmissionManager",
                   "sdk/reference/client/managers/classes/ShipmentManager",
                   "sdk/reference/client/managers/classes/ShippingLineManager",
                   "sdk/reference/client/managers/classes/TrackingRequestManager",
+                  "sdk/reference/client/managers/classes/TradeIntelManager",
+                  "sdk/reference/client/managers/interfaces/ContainerAddPartyRoleParams",
+                  "sdk/reference/client/managers/interfaces/CreateDocumentParams",
                   "sdk/reference/client/managers/interfaces/CreateTrackingRequestFromInferOptions",
+                  "sdk/reference/client/managers/interfaces/DocumentListFilters",
+                  "sdk/reference/client/managers/interfaces/ShipmentAddPartyRoleParams",
                   "sdk/reference/client/managers/interfaces/TrackingRequestListFilters",
-                  "sdk/reference/client/managers/type-aliases/TrackingRequestType"
+                  "sdk/reference/client/managers/interfaces/UpdateDocumentParams",
+                  "sdk/reference/client/managers/interfaces/TradeIntelBillOfLadingLookupOptions",
+                  "sdk/reference/client/managers/type-aliases/ContainerUpdateAttributes",
+                  "sdk/reference/client/managers/type-aliases/DocumentRotation",
+                  "sdk/reference/client/managers/type-aliases/ShipmentUpdateAttributes",
+                  "sdk/reference/client/managers/type-aliases/TrackingRequestType",
+                  "sdk/reference/client/managers/type-aliases/TrackingRequestUpdateAttributes",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelBillOfLadingLookup",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelBreakdown",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelBreakdownRequest",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCommoditySearchRequest",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCommoditySearchResponse",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCompanyProfile",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCompanyProfileRequest",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCompanySearchRequest",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCompanySearchResponse",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelCompanySearchResult",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelContainerLookup",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelDimension",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelFilters",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelMeasure",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelMeta",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelTopImporters",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelTopImportersRequest",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelTrends",
+                  "sdk/reference/client/managers/type-aliases/TradeIntelTrendsRequest"
                 ]
               },
               {
@@ -460,12 +528,25 @@
                 "pages": [
                   "sdk/reference/types/models/index",
                   "sdk/reference/types/models/interfaces/Container",
+                  "sdk/reference/types/models/interfaces/ContainerRoute",
+                  "sdk/reference/types/models/interfaces/CurrentAccount",
+                  "sdk/reference/types/models/interfaces/CurrentCredential",
+                  "sdk/reference/types/models/interfaces/CurrentUser",
+                  "sdk/reference/types/models/interfaces/FeatureAvailability",
                   "sdk/reference/types/models/interfaces/PaginatedResult",
                   "sdk/reference/types/models/interfaces/PaginationLinks",
-                  "sdk/reference/types/models/interfaces/Route",
+                  "sdk/reference/types/models/interfaces/RouteCoordinates",
+                  "sdk/reference/types/models/interfaces/RoutePort",
+                  "sdk/reference/types/models/interfaces/RouteVessel",
+                  "sdk/reference/types/models/interfaces/RouteVesselPort",
                   "sdk/reference/types/models/interfaces/Shipment",
                   "sdk/reference/types/models/interfaces/ShippingLine",
-                  "sdk/reference/types/models/interfaces/TrackingRequest"
+                  "sdk/reference/types/models/interfaces/TrackingRequest",
+                  "sdk/reference/types/models/interfaces/TrackingSlots",
+                  "sdk/reference/types/models/interfaces/Vessel",
+                  "sdk/reference/types/models/interfaces/VesselPosition",
+                  "sdk/reference/types/models/interfaces/VesselWithFuturePositions",
+                  "sdk/reference/types/models/type-aliases/CustomFieldValue"
                 ]
               },
               {
@@ -479,7 +560,8 @@
                   "sdk/reference/types/options/type-aliases/IncludeParam",
                   "sdk/reference/types/options/type-aliases/ResponseFormat",
                   "sdk/reference/types/options/type-aliases/ShipmentInclude",
-                  "sdk/reference/types/options/type-aliases/TrackingRequestInclude"
+                  "sdk/reference/types/options/type-aliases/TrackingRequestInclude",
+                  "sdk/reference/types/options/type-aliases/WebhookNotificationInclude"
                 ]
               }
             ]
@@ -507,6 +589,8 @@
               "mcp/setup/cursor",
               "mcp/setup/microsoft-copilot",
               "mcp/setup/vs-code",
+              "mcp/setup/gemini",
+              "mcp/setup/antigravity",
               "mcp/setup/agent-plugins",
               "mcp/setup/other-clients"
             ]
@@ -642,6 +726,10 @@
     {
       "source": "/api-docs/getting-started/migrate-from-searates",
       "destination": "/migrate/searates"
+    },
+    {
+      "source": "/sdk/reference/types/models/interfaces/Route",
+      "destination": "/sdk/reference/types/models/interfaces/ContainerRoute"
     }
   ],
   "contextual": {

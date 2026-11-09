@@ -1,0 +1,73 @@
+{
+  "data": {
+    "type": "credential",
+    "id": "user-1",
+    "attributes": {
+      "kind": "user",
+      "channel": "mcp",
+      "name": null,
+      "features": {
+        "data_out_api": {
+          "status": "requires_paid_plan"
+        },
+        "custom_fields": {
+          "status": "requires_user_credential"
+        }
+      }
+    },
+    "relationships": {
+      "account": {
+        "data": {
+          "type": "account",
+          "id": "account-1"
+        }
+      },
+      "user": {
+        "data": {
+          "type": "user",
+          "id": "user-1"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "account",
+      "id": "account-1",
+      "attributes": {
+        "company_name": "Example Fixture Shipper",
+        "company_type": "freight_forwarder",
+        "scac": "SYNU",
+        "abbr_name": "Example",
+        "city": "Example City",
+        "state_abbr": "EX",
+        "country": "ZZ",
+        "plan": "customer",
+        "tracking_slots": null
+      },
+      "relationships": {}
+    },
+    {
+      "type": "user",
+      "id": "user-1",
+      "attributes": {
+        "email": "fixture@example.test",
+        "name": "Example Operator",
+        "role": "account_manager",
+        "job_role": "forwarder",
+        "job_title": "Operations lead",
+        "admin": false
+      },
+      "relationships": {
+        "accounts": {
+          "data": [
+            {
+              "type": "account",
+              "id": "account-1"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

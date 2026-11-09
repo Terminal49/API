@@ -3,7 +3,7 @@
  *
  * Runs automatically after TypeDoc via `npm run docs`. Transforms:
  *  1. Rewrites relative `.mdx` links to absolute Mintlify routes.
- *  2. Prepends YAML frontmatter with a `title` (required by docs/AGENTS.md).
+ *  2. Prepends YAML frontmatter with a `title` (required by the docs rules in AGENTS.md).
  *  3. Cleans up module page titles (e.g. "client" → "Client Module").
  */
 import fs from 'node:fs';

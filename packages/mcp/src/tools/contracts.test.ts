@@ -1,9 +1,12 @@
 import {
   FeatureNotEnabledError,
+  mapContainerRoute,
   NotFoundError,
   type Terminal49Client,
 } from '@terminal49/sdk';
-import { describe, expect, it, vi } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { executeCancelTrackingRequest } from './cancel-tracking-request.js';
+import { auditEvents, tokenOf, writeContext } from '../test/write-context.js';
 import { executeGetContainer } from './get-container.js';
 import { executeGetContainerRoute } from './get-container-route.js';
 import { executeGetContainerTransportEvents } from './get-container-transport-events.js';
@@ -11,9 +14,12 @@ import { executeGetShipmentDetails } from './get-shipment-details.js';
 import { executeListContainers } from './list-containers.js';
 import { executeListShipments } from './list-shipments.js';
 import { executeListTrackingRequests } from './list-tracking-requests.js';
+import { executeResumeShipmentTracking } from './resume-shipment-tracking.js';
 import { executeSearchContainer } from './search-container.js';
+import { executeStopShipmentTracking } from './stop-shipment-tracking.js';
 import { executeTrackContainer } from './track-container.js';
 import { buildListContract } from '../server.js';
+import { EXPECTED_ROUTE_SUMMARY, routeFixture } from '../test/route-fixture.js';
 
 function asClient(client: unknown): Terminal49Client {
   return client as Terminal49Client;
@@ -223,6 +229,7 @@ describe('MCP tool contracts', () => {
     const result = await executeTrackContainer(
       { number: 'CAIU2885402', scac: 'MAEU' },
       client,
+      writeContext(client),
     );
 
     expect(createFromInfer).toHaveBeenCalledWith('CAIU2885402', {
@@ -270,6 +277,7 @@ describe('MCP tool contracts', () => {
     const result = await executeTrackContainer(
       { number: 'SELU4039824' },
       client,
+      writeContext(client),
     );
 
     expect(createFromInfer).not.toHaveBeenCalled();
@@ -309,6 +317,7 @@ describe('MCP tool contracts', () => {
     const result = await executeTrackContainer(
       { number: 'MSCU1234566', numberType: 'container', scac: 'MSCU' },
       client,
+      writeContext(client),
     );
 
     expect(createFromInfer).toHaveBeenCalledTimes(1);
@@ -621,7 +630,90 @@ describe('MCP tool contracts', () => {
       shipping_line: { scac: 'MAEU', name: 'Maersk' },
       containers: { count: 1 },
     });
-    expect(result._mapped).toBeUndefined();
+    expect(result).not.toHaveProperty('_mapped');
+  });
+
+  describe.each(['primary', 'fallback'] as const)(
+    'event values via %s',
+    (path) => {
+      it.each([
+        ['deadline', '2099-01-20T04:00:00Z'],
+        ['null', null],
+        ['absent', undefined],
+        ['zero', 0],
+        ['false', false],
+        ['empty string', ''],
+        ['structured', { amount: 25, currency: 'USD' }],
+        ['array', ['reported', 0]],
+      ])(
+        'preserves %s without interpreting it as the event timestamp',
+        async (_label, value) => {
+          const event = {
+            id: 'event-deadline',
+            type: 'transport_event',
+            attributes: {
+              event: 'container.detention_lfd_line.changed',
+              timestamp: '2099-01-02T00:00:00Z',
+              ...(value === undefined ? {} : { value }),
+              data_source: 'shipping_line',
+              invalidated_at: '2099-01-03T00:00:00Z',
+            },
+          };
+          const events =
+            path === 'primary'
+              ? vi.fn().mockResolvedValue({ raw: { data: [event] } })
+              : vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
+          const get = vi.fn().mockResolvedValue({
+            data: { id: 'container-1', type: 'container' },
+            included: [event],
+          });
+          const result = await executeGetContainerTransportEvents(
+            { id: 'container-1' },
+            asClient({ containers: { events, get } }),
+          );
+          expect(result.timeline[0]).toMatchObject({
+            event: 'container.detention_lfd_line.changed',
+            timestamp: '2099-01-02T00:00:00.000Z',
+            value: value ?? null,
+            data_source: 'shipping_line',
+            invalidated_at: '2099-01-03T00:00:00Z',
+          });
+          expect(result._metadata.source).toBe(
+            path === 'primary'
+              ? 'transport_events_subresource'
+              : 'container_include_fallback',
+          );
+          if (path === 'primary') expect(get).not.toHaveBeenCalled();
+        },
+      );
+    },
+  );
+
+  it('preserves latest-event deadline metadata in the compact container snapshot without replacing pickup LFD', async () => {
+    const raw = buildContainerRaw();
+    const event = {
+      id: 'deadline',
+      type: 'transport_event',
+      attributes: {
+        event: 'container.detention_lfd_line.changed',
+        timestamp: '2099-01-02T00:00:00Z',
+        value: '2099-01-20T04:00:00Z',
+        data_source: 'shipping_line',
+        invalidated_at: null,
+      },
+    };
+    const get = vi
+      .fn()
+      .mockResolvedValue({ ...raw, included: [...raw.included, event] });
+    const result = await executeGetContainer(
+      { id: 'container-1', include: ['transport_events'] },
+      asClient({ containers: { get } }),
+    );
+    expect(result.events?.latest_event).toMatchObject(event.attributes);
+    expect(result.events?.latest_event?.value).toBe(event.attributes.value);
+    expect(result.events?.latest_event?.data_source).toBe('shipping_line');
+    expect(result.events?.latest_event?.invalidated_at).toBeNull();
+    expect(result.demurrage.pickup_lfd).toBe('2099-01-10');
   });
 
   it('get_container_transport_events returns timeline and milestone summary', async () => {
@@ -677,6 +769,9 @@ describe('MCP tool contracts', () => {
     expect(result.total_events).toBe(2);
     expect(result.timeline[0]).toMatchObject({
       event: 'container.transport.vessel_loaded',
+      value: null,
+      data_source: null,
+      invalidated_at: null,
     });
     expect(result.milestones).toMatchObject({
       vessel_loaded_at: '2025-01-01T00:00:00.000Z',
@@ -687,8 +782,8 @@ describe('MCP tool contracts', () => {
     expect(result._metadata.source).toBe('transport_events_subresource');
     expect(result._metadata.container_found).toBe(true);
     // No duplicate mapped payload should be surfaced.
-    expect(result.summary).toBeUndefined();
-    expect(result.mapped).toBeUndefined();
+    expect(result).not.toHaveProperty('summary');
+    expect(result).not.toHaveProperty('mapped');
   });
 
   it('get_container_transport_events falls back to the container include path when the dedicated sub-resource 404s', async () => {
@@ -747,6 +842,9 @@ describe('MCP tool contracts', () => {
     expect(result.total_events).toBe(2);
     expect(result.timeline[0]).toMatchObject({
       event: 'container.transport.vessel_loaded',
+      value: null,
+      data_source: null,
+      invalidated_at: null,
     });
     // The movement location must survive the fallback even though the related
     // port resource is not side-loaded — resolve it from location_locode.
@@ -757,7 +855,7 @@ describe('MCP tool contracts', () => {
     });
     expect(result._metadata.source).toBe('container_include_fallback');
     // It must NOT masquerade a success-shaped empty timeline carrying an error.
-    expect(result._metadata.error).toBeUndefined();
+    expect(result._metadata).not.toHaveProperty('error');
   });
 
   it('get_container_transport_events surfaces a real error for a genuinely missing container', async () => {
@@ -802,7 +900,7 @@ describe('MCP tool contracts', () => {
     expect(result.total_events).toBe(0);
     expect(result.timeline).toEqual([]);
     // Empty-but-valid is distinct from a bad container id: no error metadata.
-    expect(result._metadata.error).toBeUndefined();
+    expect(result._metadata).not.toHaveProperty('error');
     expect(result._metadata.container_found).toBe(true);
   });
 
@@ -879,6 +977,7 @@ describe('MCP tool contracts', () => {
     const result = await executeTrackContainer(
       { number: 'TEMU8347291', scac: 'TEMU' },
       client,
+      writeContext(client),
     );
 
     expect(createFromInfer).toHaveBeenCalledWith('TEMU8347291', {
@@ -896,6 +995,44 @@ describe('MCP tool contracts', () => {
     expect(result._metadata).toBeUndefined();
   });
 
+  it('track_container audits the tracking request it creates', async () => {
+    const REQUEST_ID = '3d2c1b0a-9f8e-4d7c-8b6a-5f4e3d2c1b0a';
+    const lines: string[] = [];
+    const spy = vi
+      .spyOn(console, 'error')
+      .mockImplementation((line: string) => {
+        lines.push(line);
+      });
+    const client = asClient({
+      createTrackingRequestFromInfer: vi.fn().mockResolvedValue({
+        infer: { inferred_type: 'container' },
+        trackingRequest: { data: { type: 'tracking_request', id: REQUEST_ID } },
+      }),
+      containers: { get: vi.fn() },
+    });
+
+    try {
+      await executeTrackContainer(
+        { number: 'TEMU8347291', scac: 'TEMU' },
+        client,
+        writeContext(client),
+      );
+    } finally {
+      spy.mockRestore();
+    }
+
+    expect(auditEvents(lines)).toEqual([
+      expect.objectContaining({
+        tool: 'track_container',
+        tier: 'A',
+        phase: 'execute',
+        outcome: 'created',
+        entity_type: 'tracking_request',
+        entity_id: REQUEST_ID,
+      }),
+    ]);
+  });
+
   it('track_container distinguishes an uncreated request from a hard upstream failure', async () => {
     const client = asClient({
       search: vi.fn().mockResolvedValue({ data: [] }),
@@ -907,6 +1044,7 @@ describe('MCP tool contracts', () => {
     const result = await executeTrackContainer(
       { number: 'CAIU2885402', scac: 'MAEU' },
       client,
+      writeContext(client),
     );
 
     expect(result).toMatchObject({
@@ -924,7 +1062,11 @@ describe('MCP tool contracts', () => {
     });
 
     await expect(
-      executeTrackContainer({ number: 'CAIU1234567', scac: 'MAEU' }, client),
+      executeTrackContainer(
+        { number: 'CAIU1234567', scac: 'MAEU' },
+        client,
+        writeContext(client),
+      ),
     ).rejects.toThrow('fails the ISO 6346 check digit');
     expect(createFromInfer).not.toHaveBeenCalled();
   });
@@ -992,49 +1134,27 @@ describe('MCP tool contracts', () => {
     expect(resultB.shipping_lines[0]?.scac).toBe('MAEU');
   });
 
-  it('get_container_route returns route summary when route data exists', async () => {
-    const route = vi.fn().mockResolvedValue({
-      raw: {
-        data: {
-          id: 'route-1',
-          type: 'route',
-          attributes: {
-            created_at: '2025-01-01T00:00:00Z',
-            updated_at: '2025-01-02T00:00:00Z',
-          },
-          relationships: {
-            route_locations: {
-              data: [{ id: 'rl-1', type: 'route_location' }],
-            },
-          },
-        },
-        included: [
-          {
-            id: 'rl-1',
-            type: 'route_location',
-            attributes: {
-              inbound_mode: 'vessel',
-              outbound_mode: 'vessel',
-            },
-            relationships: {
-              port: { data: { id: 'port-1', type: 'port' } },
-            },
-          },
-          {
-            id: 'port-1',
-            type: 'port',
-            attributes: {
-              code: 'USLAX',
-              name: 'Los Angeles',
-            },
-          },
-        ],
-      },
-      mapped: { id: 'route-1' },
-    });
+  it('get_container_route summarizes ports, ETAs, and the current vessel', async () => {
+    const route = vi.fn().mockResolvedValue(mapContainerRoute(routeFixture));
+    const client = asClient({ containers: { route } });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(route).toHaveBeenCalledWith('container-1', { format: 'mapped' });
+    expect(result).toEqual(EXPECTED_ROUTE_SUMMARY);
+  });
+
+  it('get_container_route returns a NoRouteData soft result for an empty route', async () => {
     const client = asClient({
       containers: {
-        route,
+        route: vi
+          .fn()
+          .mockResolvedValue(
+            mapContainerRoute({ type: 'FeatureCollection', features: [] }),
+          ),
       },
     });
 
@@ -1043,10 +1163,161 @@ describe('MCP tool contracts', () => {
       client,
     );
 
-    expect(result.route_id).toBe('route-1');
-    expect(result.total_legs).toBe(1);
-    expect(result.route_locations[0].port).toMatchObject({ code: 'USLAX' });
-    expect(route).toHaveBeenCalledWith('container-1', { format: 'raw' });
+    expect(result).toMatchObject({
+      error: 'NoRouteData',
+      alternative: expect.stringContaining('get_container_transport_events'),
+    });
+  });
+
+  it('get_container_route returns the ports when no vessel position is known', async () => {
+    const withoutVessel = {
+      ...routeFixture,
+      features: routeFixture.features.filter(
+        (feature: { properties: { feature_type: string } }) =>
+          feature.properties.feature_type !== 'current_vessel',
+      ),
+    };
+    const client = asClient({
+      containers: {
+        route: vi.fn().mockResolvedValue(mapContainerRoute(withoutVessel)),
+      },
+    });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result).toEqual({
+      ...EXPECTED_ROUTE_SUMMARY,
+      current_vessel: null,
+    });
+  });
+
+  it('get_container_route returns the vessel when the route has no ports', async () => {
+    const vesselOnly = {
+      ...routeFixture,
+      features: routeFixture.features.filter(
+        (feature: { properties: { feature_type: string } }) =>
+          feature.properties.feature_type === 'current_vessel',
+      ),
+    };
+    const client = asClient({
+      containers: {
+        route: vi.fn().mockResolvedValue(mapContainerRoute(vesselOnly)),
+      },
+    });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result).toEqual({
+      total_ports: 0,
+      ports: [],
+      current_vessel: EXPECTED_ROUTE_SUMMARY.current_vessel,
+    });
+  });
+
+  it('get_container_route names vessel ports from the port features when the vessel omits them', async () => {
+    const unnamedVesselPorts = {
+      ...routeFixture,
+      features: routeFixture.features.map(
+        (feature: { properties: Record<string, unknown> }) => {
+          if (feature.properties.feature_type !== 'current_vessel') {
+            return feature;
+          }
+          const {
+            departure_port_name: _departureName,
+            departure_port_label: _departureLabel,
+            arrival_port_name: _arrivalName,
+            arrival_port_label: _arrivalLabel,
+            ...properties
+          } = feature.properties;
+          return { ...feature, properties };
+        },
+      ),
+    };
+    const client = asClient({
+      containers: {
+        route: vi.fn().mockResolvedValue(mapContainerRoute(unnamedVesselPorts)),
+      },
+    });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result).toEqual(EXPECTED_ROUTE_SUMMARY);
+  });
+
+  it('get_container_route returns null vessel ports when no port feature matches', async () => {
+    const unresolvableVesselPorts = {
+      ...routeFixture,
+      features: routeFixture.features.map(
+        (feature: { properties: Record<string, unknown> }) => {
+          if (feature.properties.feature_type !== 'current_vessel') {
+            return feature;
+          }
+          const {
+            departure_port_name: _departureName,
+            departure_port_label: _departureLabel,
+            arrival_port_name: _arrivalName,
+            arrival_port_label: _arrivalLabel,
+            ...properties
+          } = feature.properties;
+          return {
+            ...feature,
+            properties: {
+              ...properties,
+              departure_port_id: 'unknown-departure',
+              arrival_port_id: null,
+            },
+          };
+        },
+      ),
+    };
+    const client = asClient({
+      containers: {
+        route: vi
+          .fn()
+          .mockResolvedValue(mapContainerRoute(unresolvableVesselPorts)),
+      },
+    });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result).toEqual({
+      ...EXPECTED_ROUTE_SUMMARY,
+      current_vessel: {
+        ...EXPECTED_ROUTE_SUMMARY.current_vessel,
+        departure_port: null,
+        arrival_port: null,
+      },
+    });
+  });
+
+  it('get_container_route returns a NotFound soft result for an unknown container', async () => {
+    const client = asClient({
+      containers: {
+        route: vi.fn().mockRejectedValue(new NotFoundError('not found')),
+      },
+    });
+
+    const result = await executeGetContainerRoute(
+      { id: 'container-1' },
+      client,
+    );
+
+    expect(result).toMatchObject({
+      error: 'NotFound',
+      alternative: expect.stringContaining('search_container'),
+    });
   });
 
   it('get_container_route returns feature-not-enabled contract instead of throwing', async () => {
@@ -1065,6 +1336,7 @@ describe('MCP tool contracts', () => {
 
     expect(result).toMatchObject({
       error: 'FeatureNotEnabled',
+      message: expect.stringContaining('sales@terminal49.com'),
       alternative: expect.stringContaining('get_container_transport_events'),
     });
   });
@@ -1151,7 +1423,7 @@ describe('MCP tool contracts', () => {
     const result = await executeListTrackingRequests(
       {
         request_number: 'CAIU1234567',
-        status: 'succeeded',
+        status: 'created',
         scac: 'MAEU',
         page: 3,
         page_size: 10,
@@ -1162,7 +1434,7 @@ describe('MCP tool contracts', () => {
     expect(list).toHaveBeenCalledWith(
       {
         'filter[request_number]': 'CAIU1234567',
-        'filter[status]': 'succeeded',
+        'filter[status]': 'created',
         'filter[scac]': 'MAEU',
       },
       { format: 'mapped', page: 3, pageSize: 10 },
@@ -1549,5 +1821,151 @@ describe('MCP tool contracts', () => {
     expect(result.containers.every((c) => c.duplicate_number === true)).toBe(
       true,
     );
+  });
+});
+
+describe('MCP write tool contracts', () => {
+  const SHIPMENT_ID = '0b5e3a1c-7d2f-4e6a-8b9c-1d2e3f4a5b6c';
+  const REQUEST_ID = '6c1f0d52-8a3e-4b9f-9d21-0e5f4a7b8c90';
+
+  function rawShipment(stoppedAt: string | null) {
+    return {
+      data: {
+        id: SHIPMENT_ID,
+        type: 'shipment',
+        attributes: {
+          bill_of_lading_number: 'MAEU123456789',
+          shipping_line_scac: 'MAEU',
+          line_tracking_stopped_at: stoppedAt,
+          line_tracking_stopped_reason: stoppedAt ? 'user' : null,
+        },
+        relationships: {
+          containers: { data: [{ id: 'container-1', type: 'container' }] },
+        },
+      },
+    };
+  }
+
+  function rawTrackingRequest(status: string) {
+    return {
+      data: {
+        id: REQUEST_ID,
+        type: 'tracking_request',
+        attributes: {
+          request_number: 'MAEU123456780',
+          request_type: 'bill_of_lading',
+          scac: 'MAEU',
+          status,
+          failed_reason: null,
+        },
+        relationships: { tracked_object: { data: null } },
+      },
+    };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('stop_shipment_tracking previews, then stops with the token', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const stopTracking = vi
+      .fn()
+      .mockResolvedValue(rawShipment('2026-10-17T12:00:00Z'));
+    const client = asClient({
+      me: vi.fn().mockResolvedValue({
+        features: { stop_tracking: { status: 'available' } },
+      }),
+      shipments: {
+        get: vi.fn().mockResolvedValue(rawShipment(null)),
+        stopTracking,
+      },
+    });
+
+    const preview = await executeStopShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      writeContext(client),
+    );
+    expect(stopTracking).not.toHaveBeenCalled();
+    const result = await executeStopShipmentTracking(
+      {
+        shipment_id: SHIPMENT_ID,
+        confirmation_token: tokenOf(preview),
+      },
+      client,
+      writeContext(client),
+    );
+
+    expect(stopTracking).toHaveBeenCalledWith(SHIPMENT_ID, { format: 'raw' });
+    expect(result).toMatchObject({
+      status: 'stopped',
+      shipment: { id: SHIPMENT_ID, tracking: 'stopped', container_count: 1 },
+      undo: 'resume_shipment_tracking',
+    });
+  });
+
+  it('resume_shipment_tracking resumes a stopped shipment in one call', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const resumeTracking = vi.fn().mockResolvedValue(rawShipment(null));
+    const client = asClient({
+      shipments: {
+        get: vi.fn().mockResolvedValue(rawShipment('2026-10-10T08:00:00Z')),
+        resumeTracking,
+      },
+    });
+
+    const result = await executeResumeShipmentTracking(
+      { shipment_id: SHIPMENT_ID },
+      client,
+      writeContext(client),
+    );
+
+    expect(resumeTracking).toHaveBeenCalledWith(SHIPMENT_ID, {
+      format: 'raw',
+    });
+    expect(result).toMatchObject({
+      status: 'resumed',
+      shipment: { id: SHIPMENT_ID, tracking: 'active' },
+      undo: 'stop_shipment_tracking',
+    });
+  });
+
+  it('cancel_tracking_request previews, then cancels with the token', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const get = vi
+      .fn()
+      .mockResolvedValueOnce(rawTrackingRequest('pending'))
+      .mockResolvedValueOnce(rawTrackingRequest('pending'))
+      .mockResolvedValueOnce(rawTrackingRequest('cancelled'));
+    const cancel = vi.fn().mockResolvedValue({});
+    const client = asClient({ trackingRequests: { get, cancel } });
+
+    const preview = await executeCancelTrackingRequest(
+      { tracking_request_id: REQUEST_ID },
+      client,
+      writeContext(client),
+    );
+    expect(preview).toMatchObject({
+      preview: {
+        current: { id: REQUEST_ID, scac: 'MAEU', status: 'pending' },
+        proposed: { status: 'cancelled' },
+      },
+    });
+    expect(cancel).not.toHaveBeenCalled();
+    const result = await executeCancelTrackingRequest(
+      {
+        tracking_request_id: REQUEST_ID,
+        confirmation_token: tokenOf(preview),
+      },
+      client,
+      writeContext(client),
+    );
+
+    expect(cancel).toHaveBeenCalledWith(REQUEST_ID, { format: 'raw' });
+    expect(result).toMatchObject({
+      status: 'cancelled',
+      tracking_request: { id: REQUEST_ID, status: 'cancelled' },
+    });
   });
 });

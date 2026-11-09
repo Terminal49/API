@@ -57,6 +57,10 @@ Temporary reasons can become permanent when the `status` changes to `failed`:
 
 [Failed Reasons when tracking request through dashboard](https://help.terminal49.com/en/articles/6116676-what-happens-after-i-add-a-shipment-to-terminal49-recently-added-shipments#h_ac9b93504f)
 
+## Cancelled
+
+You can cancel a tracking request while its `status` is `pending` or `awaiting_manifest` with [Cancel a tracking request](/api-docs/api-reference/tracking-requests/cancel-a-tracking-request) (`PATCH /tracking_requests/{id}/cancel`). The `status` changes to `cancelled` and `failed_reason` is set to `Cancelled by user`. A request in any other status cannot be cancelled.
+
 ## Stopped
 
 When a shipment is no longer being updated then the tracking request `status` is marked as `tracking_stopped`.
@@ -78,7 +82,7 @@ You can also stop tracking a shipment from the dashboard.
 Tracking is stopped at the **shipment level**, not on the tracking request or on an individual container. Use [Stop tracking a shipment](/api-docs/api-reference/shipments/stop-tracking-shipment) (`PATCH /shipments/{id}/stop_tracking`).
 
 - A tracking request initiates tracking and can create a shipment. Once the shipment exists, the shipment is the resource you manage.
-- There is no `DELETE` or "stop" endpoint on the `tracking_requests` resource. The tracking request `status` reflects the request outcome (`pending`, `created`, `failed`, `tracking_stopped`); the shipment is where active tracking is stopped or resumed.
+- There is no `DELETE` or "stop" endpoint on the `tracking_requests` resource. Before a shipment exists, you can [cancel](#cancelled) the request instead. The tracking request `status` reflects the request outcome (`pending`, `awaiting_manifest`, `created`, `failed`, `cancelled`, `tracking_stopped`); the shipment is where active tracking is stopped or resumed.
 - Stopping a shipment stops tracking for **all containers on that shipment**. There is no per-container stop endpoint. This behavior is the same whether the shipment was originally tracked by bill of lading, booking, or container number.
 - To resume, use [Resume tracking a shipment](/api-docs/api-reference/shipments/resume-tracking-shipment).
 

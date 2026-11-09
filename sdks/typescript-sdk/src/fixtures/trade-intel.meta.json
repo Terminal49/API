@@ -1,0 +1,7 @@
+{
+  "facts_since_month": "2022-01-01",
+  "dimensions": [
+    "origin_country",
+    "pod"
+  ]
+}

@@ -17,16 +17,27 @@ import {
 } from './client/errors.js';
 import {
   ContainerManager,
+  DocumentManager,
+  DocumentSchemaManager,
+  EmailSubmissionManager,
   ShipmentManager,
   ShippingLineManager,
   TrackingRequestManager,
+  TradeIntelManager,
 } from './client/managers/index.js';
 import type {
   CreateTrackingRequestFromInferOptions,
   TrackingRequestListFilters,
   TrackingRequestType,
+  TrackingRequestUpdateAttributes,
 } from './client/managers/tracking-requests.js';
+import type { ShipmentUpdateAttributes } from './client/managers/shipments.js';
+import { applyTypedPagination, normalizeInclude } from './client/query.js';
+import { mapVessel, mapVesselFuturePositions } from './client/mappers.js';
+import { callerPayload, type JsonBody } from './client/spec.js';
+import { mapCurrentCredential } from './client/mappers.js';
 import { Transport } from './client/transport.js';
+import type { components, paths } from './generated/terminal49.js';
 import type {
   CallOptions,
   ContainerInclude,
@@ -35,6 +46,7 @@ import type {
   ResponseFormat,
   ShipmentInclude,
   TrackingRequestInclude,
+  WebhookNotificationInclude,
 } from './types/options.js';
 
 /**
@@ -56,11 +68,112 @@ export {
   ValidationError,
 };
 
+/** A webhook event name accepted by `webhookNotifications.examples`. */
+export type WebhookEvent =
+  paths['/webhook_notifications/examples']['get']['parameters']['query']['event'];
+type WebhookNotificationListQuery = NonNullable<
+  paths['/webhook_notifications']['get']['parameters']['query']
+>;
+type CustomFieldDefinitionListQuery = NonNullable<
+  paths['/accounts/{account_id}/custom_field_definitions']['get']['parameters']['query']
+>;
+type CustomFieldListQuery = NonNullable<
+  paths['/custom_fields']['get']['parameters']['query']
+>;
+type TriggerWebhookBody = JsonBody<paths['/webhooks/trigger']['post']>;
+/** Party attributes for `parties.create` and `parties.update`. */
+export type PartyAttributes = NonNullable<
+  JsonBody<paths['/parties']['post']>['data']
+>['attributes'];
+type CustomFieldDefinitionAttributes = NonNullable<
+  components['schemas']['custom_field_definition']['attributes']
+>;
+
+type FuturePositionsQuery =
+  paths['/vessels/{id}/future_positions']['get']['parameters']['query'];
+type FuturePositionsWithCoordsQuery =
+  paths['/vessels/{id}/future_positions_with_coordinates']['get']['parameters']['query'];
+
+/** Parameters for {@link Terminal49Client.getVesselFuturePositions}. */
+export interface VesselFuturePositionsParams {
+  /** Destination port ID. */
+  portId: FuturePositionsQuery['port_id'];
+  /** ID of the port the vessel left before heading to `portId`. */
+  previousPortId: FuturePositionsQuery['previous_port_id'];
+}
+
+/** Parameters for {@link Terminal49Client.getVesselFuturePositionsWithCoords}. */
+export interface VesselFuturePositionsWithCoordsParams extends VesselFuturePositionsParams {
+  /** Starting latitude. */
+  latitude: FuturePositionsWithCoordsQuery['latitude'];
+  /** Starting longitude. */
+  longitude: FuturePositionsWithCoordsQuery['longitude'];
+}
+
+const TRACK_CONTAINER_NUMBER_TYPES = [
+  ['containerNumber', 'container'],
+  ['bookingNumber', 'booking_number'],
+  ['billOfLading', 'bill_of_lading'],
+] as const satisfies readonly (readonly [string, TrackingRequestType])[];
+
+/** Parameters for {@link Terminal49Client.triggerWebhook}. */
+export interface TriggerWebhookParams {
+  /** HTTPS destination URL for the test delivery. */
+  url: TriggerWebhookBody['url'];
+  /** Webhook event name used to generate the example payload, e.g. `tracking_request.succeeded`. */
+  event: TriggerWebhookBody['event'];
+  /** Optional secret used to sign the request in `X-T49-Webhook-Signature`. */
+  secret?: TriggerWebhookBody['secret'];
+  /** Document type for `document_representation.*` example payloads. */
+  documentType?: NonNullable<TriggerWebhookBody['sample']>['document_type'];
+}
+
+/** Filters accepted by `customFields.list`. */
+export interface CustomFieldListFilters {
+  entityType?: CustomFieldListQuery['filter[entity_type]'];
+  entityId?: string;
+  definitionId?: string;
+}
+
+/** Filters accepted by `customFieldDefinitions.list`. */
+export interface CustomFieldDefinitionListFilters {
+  entityType?: CustomFieldDefinitionAttributes['entity_type'];
+  dataType?: CustomFieldDefinitionAttributes['data_type'];
+  displayName?: string;
+}
+
+/** Options for `customFieldDefinitions.list`. */
+export interface CustomFieldDefinitionListOptions extends CallOptions {
+  filters?: CustomFieldDefinitionListFilters;
+  /**
+   * `account`, the default, lists the definitions configured for your account.
+   * `templates` lists the Terminal49 templates you can copy with `template_id`.
+   */
+  scope?: 'account' | 'templates';
+}
+
+// The API scopes the account definition routes to the authenticated account
+// and ignores the account_id path value, so a client without an accountId
+// sends this placeholder.
+const CURRENT_ACCOUNT_ID = 'current';
+
+/** Options for {@link Terminal49Client.getWebhookNotification}. */
+export interface WebhookNotificationGetOptions extends CallOptions {
+  /** Related resources to sideload. */
+  include?: IncludeParam<WebhookNotificationInclude>;
+}
+
+/** Options for {@link Terminal49Client.listWebhookNotifications}. */
+export interface WebhookNotificationListOptions extends ListOptions {
+  /** Related resources to sideload. */
+  include?: IncludeParam<WebhookNotificationInclude>;
+}
+
 /** Configuration for {@link Terminal49Client}. */
 export interface Terminal49ClientConfig {
   /** Terminal49 API token. Pass either the raw token or a value prefixed with `Token ` or `Bearer `. */
   apiToken: string;
-  /** Account id to send as `x-account-id` for user-scoped bearer tokens. */
+  /** Account id to send as `x-account-id` for user-scoped bearer tokens. Also fills `{account_id}` in the account custom field definition routes. */
   accountId?: string;
   /** API base URL. Defaults to `https://api.terminal49.com/v2`. */
   apiBaseUrl?: string;
@@ -103,12 +216,22 @@ function normalizeBaseUrl(input?: string): string {
 export class Terminal49Client {
   private transport: Transport;
   private jsona: Jsona;
+  private accountId: string;
   private defaultFormat: ResponseFormat;
 
   public shipments: ShipmentManager;
   public containers: ContainerManager;
   public trackingRequests: TrackingRequestManager;
   public shippingLines: ShippingLineManager;
+  public documents: DocumentManager;
+  public emailSubmissions: EmailSubmissionManager;
+  public documentSchemas: DocumentSchemaManager;
+  /**
+   * Trade intelligence: US import bill-of-lading records (US Customs
+   * manifests). Plain JSON responses; requires the trade intelligence feature
+   * on the account (otherwise `FeatureNotEnabledError`).
+   */
+  public tradeIntel: TradeIntelManager;
 
   public webhooks = {
     list: (options?: ListOptions) => this.listWebhooks(options),
@@ -123,13 +246,17 @@ export class Terminal49Client {
     delete: (id: string, options?: CallOptions) =>
       this.deleteWebhook(id, options),
     ips: (options?: CallOptions) => this.getWebhookIps(options),
+    events: (options?: CallOptions) => this.listWebhookEvents(options),
+    trigger: (params: TriggerWebhookParams, options?: CallOptions) =>
+      this.triggerWebhook(params, options),
   };
 
   public webhookNotifications = {
-    list: (options?: ListOptions) => this.listWebhookNotifications(options),
-    get: (id: string, options?: CallOptions) =>
+    list: (options?: WebhookNotificationListOptions) =>
+      this.listWebhookNotifications(options),
+    get: (id: string, options?: WebhookNotificationGetOptions) =>
       this.getWebhookNotification(id, options),
-    examples: (event?: string, options?: CallOptions) =>
+    examples: (event: WebhookEvent, options?: CallOptions) =>
       this.getWebhookNotificationExamples(event, options),
   };
 
@@ -137,10 +264,16 @@ export class Terminal49Client {
     get: (id: string, options?: CallOptions) => this.getVessel(id, options),
     getByImo: (imo: string, options?: CallOptions) =>
       this.getVesselByImo(imo, options),
-    futurePositions: (id: string, options?: CallOptions) =>
-      this.getVesselFuturePositions(id, options),
-    futurePositionsWithCoords: (id: string, options?: CallOptions) =>
-      this.getVesselFuturePositionsWithCoords(id, options),
+    futurePositions: (
+      id: string,
+      params: VesselFuturePositionsParams,
+      options?: CallOptions,
+    ) => this.getVesselFuturePositions(id, params, options),
+    futurePositionsWithCoords: (
+      id: string,
+      params: VesselFuturePositionsWithCoordsParams,
+      options?: CallOptions,
+    ) => this.getVesselFuturePositionsWithCoords(id, params, options),
   };
 
   public ports = {
@@ -154,6 +287,10 @@ export class Terminal49Client {
   public parties = {
     list: (options?: ListOptions) => this.listParties(options),
     get: (id: string, options?: CallOptions) => this.getParty(id, options),
+    create: (attributes: PartyAttributes, options?: CallOptions) =>
+      this.createParty(attributes, options),
+    update: (id: string, attributes: PartyAttributes, options?: CallOptions) =>
+      this.updateParty(id, attributes, options),
   };
 
   public metroAreas = {
@@ -161,7 +298,8 @@ export class Terminal49Client {
   };
 
   public customFieldDefinitions = {
-    list: (options?: ListOptions) => this.listCustomFieldDefinitions(options),
+    list: (options?: CustomFieldDefinitionListOptions) =>
+      this.listCustomFieldDefinitions(options),
     get: (id: string, options?: CallOptions) =>
       this.getCustomFieldDefinition(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
@@ -176,7 +314,7 @@ export class Terminal49Client {
   };
 
   public customFieldOptions = {
-    list: (definitionId: string, options?: ListOptions) =>
+    list: (definitionId: string, options?: CallOptions) =>
       this.listCustomFieldOptions(definitionId, options),
     get: (definitionId: string, optionId: string, options?: CallOptions) =>
       this.getCustomFieldOption(definitionId, optionId, options),
@@ -196,7 +334,8 @@ export class Terminal49Client {
   };
 
   public customFields = {
-    list: (options?: ListOptions) => this.listCustomFields(options),
+    list: (options?: CallOptions & { filters?: CustomFieldListFilters }) =>
+      this.listCustomFields(options),
     get: (id: string, options?: CallOptions) =>
       this.getCustomField(id, options),
     create: (payload: Record<string, unknown>, options?: CallOptions) =>
@@ -218,6 +357,7 @@ export class Terminal49Client {
     const baseUrl = normalizeBaseUrl(config.apiBaseUrl);
     const defaultFormat = config.defaultFormat ?? 'raw';
     this.defaultFormat = defaultFormat;
+    this.accountId = config.accountId ?? CURRENT_ACCOUNT_ID;
 
     this.transport = new Transport({
       apiToken: config.apiToken,
@@ -237,6 +377,16 @@ export class Terminal49Client {
       defaultFormat,
     );
     this.shippingLines = new ShippingLineManager(this.transport, defaultFormat);
+    this.documents = new DocumentManager(this.transport, defaultFormat);
+    this.emailSubmissions = new EmailSubmissionManager(
+      this.transport,
+      defaultFormat,
+    );
+    this.documentSchemas = new DocumentSchemaManager(
+      this.transport,
+      defaultFormat,
+    );
+    this.tradeIntel = new TradeIntelManager(this.transport, defaultFormat);
   }
 
   /**
@@ -258,12 +408,8 @@ export class Terminal49Client {
       throw new ValidationError('query is required (/query)');
     }
 
-    const params = new URLSearchParams({ query });
-    // `/search` is not present in the generated OpenAPI types, so it cannot be
-    // routed through the typed `client.GET(...)`. `executeManual` runs it through
-    // the same Auth -> Retry -> ErrorMapping -> timeout pipeline as the typed client.
-    return this.transport.executeManual(
-      `${this.transport.baseUrl}/search?${params.toString()}`,
+    return this.transport.execute(() =>
+      this.transport.client.GET('/search', { params: { query: { query } } }),
     );
   }
 
@@ -280,28 +426,30 @@ export class Terminal49Client {
     return this.containers.get(id, include, options);
   }
 
-  /** Convenience helper for creating a tracking request from a container or booking number. */
+  /** Convenience helper for creating a tracking request from a container, booking, or bill of lading number. */
   async trackContainer(params: {
     containerNumber?: string;
     bookingNumber?: string;
+    billOfLading?: string;
     scac?: string;
     autoDetectVoccScac?: boolean;
     refNumbers?: string[];
   }): Promise<any> {
-    const requestType: TrackingRequestType = params.containerNumber
-      ? 'container'
-      : 'bill_of_lading';
-    const requestNumber = params.containerNumber || params.bookingNumber;
+    const [request] = TRACK_CONTAINER_NUMBER_TYPES.flatMap(
+      ([key, requestType]) => {
+        const requestNumber = params[key];
+        return requestNumber ? [{ requestType, requestNumber }] : [];
+      },
+    );
 
-    if (!requestNumber) {
+    if (!request) {
       throw new ValidationError(
         'request_number is required (/data/attributes/request_number)',
       );
     }
 
     return this.trackingRequests.create({
-      requestType,
-      requestNumber,
+      ...request,
       scac: params.scac,
       autoDetectVoccScac: params.autoDetectVoccScac,
       refNumbers: params.refNumbers,
@@ -353,7 +501,7 @@ export class Terminal49Client {
   /** Update shipment attributes such as reference numbers or tags. */
   async updateShipment(
     id: string,
-    attrs: Record<string, any>,
+    attrs: ShipmentUpdateAttributes,
     options?: CallOptions,
   ): Promise<any> {
     return this.shipments.update(id, attrs, options);
@@ -374,7 +522,9 @@ export class Terminal49Client {
 
   /** Return a demurrage-focused subset of container fields. */
   async getDemurrage(containerId: string): Promise<any> {
-    const data = await this.containers.get(containerId, ['pod_terminal']);
+    const data = await this.containers.get(containerId, ['pod_terminal'], {
+      format: 'raw',
+    });
     const container = data.data?.attributes || {};
     return {
       container_id: containerId,
@@ -396,7 +546,7 @@ export class Terminal49Client {
     return this.containers.events(id, options);
   }
 
-  /** Fetch routing details for a container. This may require a paid Terminal49 feature. */
+  /** Fetch a container's route (ports, current vessel, tracks). Requires the Routing Data feature. */
   async getContainerRoute(id: string, options?: CallOptions): Promise<any> {
     return this.containers.route(id, options);
   }
@@ -411,7 +561,9 @@ export class Terminal49Client {
 
   /** Return rail milestone fields and rail transport events for a container. */
   async getRailMilestones(containerId: string): Promise<any> {
-    const data = await this.containers.get(containerId, ['transport_events']);
+    const data = await this.containers.get(containerId, ['transport_events'], {
+      format: 'raw',
+    });
     const container = data.data?.attributes || {};
     const included = data.included || [];
 
@@ -454,16 +606,20 @@ export class Terminal49Client {
 
   /** List webhooks. */
   async listWebhooks(options?: ListOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint('/webhooks', this.listQuery(options)),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/webhooks', {
+        params: { query: applyTypedPagination({}, options) },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
   /** Fetch a webhook by ID. */
   async getWebhook(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/webhooks/${encodeURIComponent(id)}`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/webhooks/{id}', {
+        params: { path: { id } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -473,11 +629,11 @@ export class Terminal49Client {
     payload: Record<string, unknown>,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(this.endpoint('/webhooks'), {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const raw = await this.transport.execute(() =>
+      this.transport.client.POST('/webhooks', {
+        body: callerPayload<JsonBody<paths['/webhooks']['post']>>(payload),
+      }),
+    );
     return this.formatResult(raw, options?.format);
   }
 
@@ -487,38 +643,87 @@ export class Terminal49Client {
     payload: Record<string, unknown>,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/webhooks/${encodeURIComponent(id)}`),
-      {
-        method: 'PATCH',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-      },
+    const raw = await this.transport.execute(() =>
+      this.transport.client.PATCH('/webhooks/{id}', {
+        params: { path: { id } },
+        body: callerPayload<JsonBody<paths['/webhooks/{id}']['patch']>>(
+          payload,
+        ),
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
   /** Delete a webhook. */
   async deleteWebhook(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/webhooks/${encodeURIComponent(id)}`),
-      { method: 'DELETE' },
+    const raw = await this.transport.execute(() =>
+      this.transport.client.DELETE('/webhooks/{id}', {
+        params: { path: { id } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
+  /**
+   * Describe the credential behind this client: API key or signed-in user, the account it is
+   * scoped to, and which gated features it can use there. Works for free-plan API keys too.
+   */
+  async me(options?: CallOptions): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/me'),
+    );
+    return this.formatResult(raw, options?.format, mapCurrentCredential);
+  }
+
   /** List webhook source IP ranges. */
   async getWebhookIps(options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint('/webhooks/ips'),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/webhooks/ips'),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** List the event names a webhook can subscribe to. */
+  async listWebhookEvents(options?: CallOptions): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/webhooks/events'),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Send a test webhook delivery with an example payload to a URL. */
+  async triggerWebhook(
+    params: TriggerWebhookParams,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.POST('/webhooks/trigger', {
+        body: {
+          url: params.url,
+          event: params.event,
+          secret: params.secret,
+          sample: params.documentType
+            ? { document_type: params.documentType }
+            : undefined,
+        },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
   /** List webhook notifications. */
-  async listWebhookNotifications(options?: ListOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint('/webhook_notifications', this.listQuery(options)),
+  async listWebhookNotifications(
+    options?: WebhookNotificationListOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/webhook_notifications', {
+        params: {
+          query: applyTypedPagination<WebhookNotificationListQuery>(
+            { include: normalizeInclude(options?.include) },
+            options,
+          ),
+        },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -526,109 +731,193 @@ export class Terminal49Client {
   /** Fetch a webhook notification by ID. */
   async getWebhookNotification(
     id: string,
-    options?: CallOptions,
+    options?: WebhookNotificationGetOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/webhook_notifications/${encodeURIComponent(id)}`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/webhook_notifications/{id}', {
+        params: {
+          path: { id },
+          query: { include: normalizeInclude(options?.include) },
+        },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
-  /** Fetch example webhook notification payloads. */
+  /** Fetch the example webhook notification payload for `event`. The API answers 400 without one. */
   async getWebhookNotificationExamples(
-    event?: string,
+    event: WebhookEvent,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint('/webhook_notifications/examples', { event }),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/webhook_notifications/examples', {
+        params: { query: { event } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
   /** Fetch a vessel by ID. */
   async getVessel(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/vessels/${encodeURIComponent(id)}`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/vessels/{id}', {
+        params: { path: { id } },
+      }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapVessel);
   }
 
   /** Fetch a vessel by IMO number. */
   async getVesselByImo(imo: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/vessels/${encodeURIComponent(imo)}`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/vessels/{imo}', {
+        params: { path: { imo } },
+      }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapVessel);
   }
 
-  /** Fetch future vessel positions. */
+  /** Fetch a vessel's estimated positions between two ports. Requires the Routing Data feature. */
   async getVesselFuturePositions(
     id: string,
+    params: VesselFuturePositionsParams,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/vessels/${encodeURIComponent(id)}/future_positions`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/vessels/{id}/future_positions', {
+        params: {
+          path: { id },
+          query: {
+            port_id: params.portId,
+            previous_port_id: params.previousPortId,
+          },
+        },
+      }),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapVesselFuturePositions);
   }
 
-  /** Fetch future vessel positions with coordinates. */
+  /** Fetch a vessel's estimated positions from a starting coordinate. Requires the Routing Data feature. */
   async getVesselFuturePositionsWithCoords(
     id: string,
+    params: VesselFuturePositionsWithCoordsParams,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(
-        `/vessels/${encodeURIComponent(id)}/future_positions_with_coordinates`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET(
+        '/vessels/{id}/future_positions_with_coordinates',
+        {
+          params: {
+            path: { id },
+            query: {
+              port_id: params.portId,
+              previous_port_id: params.previousPortId,
+              latitude: params.latitude,
+              longitude: params.longitude,
+            },
+          },
+        },
       ),
     );
-    return this.formatResult(raw, options?.format);
+    return this.formatResult(raw, options?.format, mapVesselFuturePositions);
   }
 
   /** Fetch a port by ID. */
   async getPort(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/ports/${encodeURIComponent(id)}`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/ports/{id}', { params: { path: { id } } }),
     );
     return this.formatResult(raw, options?.format);
   }
 
   /** Fetch a terminal by ID. */
   async getTerminal(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/terminals/${encodeURIComponent(id)}`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/terminals/{id}', {
+        params: { path: { id } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
   /** List parties. */
   async listParties(options?: ListOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint('/parties', this.listQuery(options)),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/parties', {
+        params: { query: applyTypedPagination({}, options) },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
   /** Fetch a party by ID. */
   async getParty(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/parties/${encodeURIComponent(id)}`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/parties/{id}', { params: { path: { id } } }),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Create a party. */
+  async createParty(
+    attributes: PartyAttributes,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.POST('/parties', {
+        body: { data: { type: 'party', attributes } },
+      }),
+    );
+    return this.formatResult(raw, options?.format);
+  }
+
+  /** Update a party. */
+  async updateParty(
+    id: string,
+    attributes: PartyAttributes,
+    options?: CallOptions,
+  ): Promise<any> {
+    const raw = await this.transport.execute(() =>
+      this.transport.client.PATCH('/parties/{id}', {
+        params: { path: { id } },
+        body: { data: { type: 'party', attributes } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
   /** Fetch a metro area by ID. */
   async getMetroArea(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/metro_areas/${encodeURIComponent(id)}`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/metro_areas/{id}', {
+        params: { path: { id } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
-  /** List custom field definitions. */
-  async listCustomFieldDefinitions(options?: ListOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint('/custom_field_definitions', this.listQuery(options)),
+  /**
+   * List your account's custom field definitions, or the Terminal49 templates.
+   * The API does not paginate this list.
+   */
+  async listCustomFieldDefinitions(
+    options?: CustomFieldDefinitionListOptions,
+  ): Promise<any> {
+    const filters = options?.filters;
+    const query: CustomFieldDefinitionListQuery = {
+      'filter[entity_type]': filters?.entityType,
+      'filter[data_type]': filters?.dataType,
+      'filter[display_name]': filters?.displayName,
+    };
+    const raw = await this.transport.execute(() =>
+      options?.scope === 'templates'
+        ? this.transport.client.GET('/custom_field_definitions', {
+            params: { query },
+          })
+        : this.transport.client.GET(
+            '/accounts/{account_id}/custom_field_definitions',
+            { params: { path: { account_id: this.accountId }, query } },
+          ),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -638,24 +927,31 @@ export class Terminal49Client {
     id: string,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/custom_field_definitions/${encodeURIComponent(id)}`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/custom_field_definitions/{id}', {
+        params: { path: { id } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
-  /** Create a custom field definition. */
+  /** Create a custom field definition for your account. Set `data.attributes.template_id` to copy a Terminal49 template. */
   async createCustomFieldDefinition(
     payload: Record<string, unknown>,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint('/custom_field_definitions'),
-      {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-      },
+    const raw = await this.transport.execute(() =>
+      this.transport.client.POST(
+        '/accounts/{account_id}/custom_field_definitions',
+        {
+          params: { path: { account_id: this.accountId } },
+          body: callerPayload<
+            JsonBody<
+              paths['/accounts/{account_id}/custom_field_definitions']['post']
+            >
+          >(payload),
+        },
+      ),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -666,13 +962,13 @@ export class Terminal49Client {
     payload: Record<string, unknown>,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/custom_field_definitions/${encodeURIComponent(id)}`),
-      {
-        method: 'PATCH',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-      },
+    const raw = await this.transport.execute(() =>
+      this.transport.client.PATCH('/custom_field_definitions/{id}', {
+        params: { path: { id } },
+        body: callerPayload<
+          JsonBody<paths['/custom_field_definitions/{id}']['patch']>
+        >(payload),
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -682,22 +978,26 @@ export class Terminal49Client {
     id: string,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/custom_field_definitions/${encodeURIComponent(id)}`),
-      { method: 'DELETE' },
+    const raw = await this.transport.execute(() =>
+      this.transport.client.DELETE('/custom_field_definitions/{id}', {
+        params: { path: { id } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
-  /** List options for a custom field definition. */
+  /**
+   * List every option of a custom field definition. The API does not paginate
+   * this list.
+   */
   async listCustomFieldOptions(
     definitionId: string,
-    options?: ListOptions,
+    options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(
-        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options`,
-        this.listQuery(options),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET(
+        '/custom_field_definitions/{definition_id}/options',
+        { params: { path: { definition_id: definitionId } } },
       ),
     );
     return this.formatResult(raw, options?.format);
@@ -709,9 +1009,14 @@ export class Terminal49Client {
     optionId: string,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(
-        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options/${encodeURIComponent(optionId)}`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET(
+        '/custom_field_definitions/{definition_id}/options/{option_id}',
+        {
+          params: {
+            path: { definition_id: definitionId, option_id: optionId },
+          },
+        },
       ),
     );
     return this.formatResult(raw, options?.format);
@@ -723,15 +1028,18 @@ export class Terminal49Client {
     payload: Record<string, unknown>,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(
-        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.POST(
+        '/custom_field_definitions/{definition_id}/options',
+        {
+          params: { path: { definition_id: definitionId } },
+          body: callerPayload<
+            JsonBody<
+              paths['/custom_field_definitions/{definition_id}/options']['post']
+            >
+          >(payload),
+        },
       ),
-      {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-      },
     );
     return this.formatResult(raw, options?.format);
   }
@@ -743,15 +1051,20 @@ export class Terminal49Client {
     payload: Record<string, unknown>,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(
-        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options/${encodeURIComponent(optionId)}`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.PATCH(
+        '/custom_field_definitions/{definition_id}/options/{option_id}',
+        {
+          params: {
+            path: { definition_id: definitionId, option_id: optionId },
+          },
+          body: callerPayload<
+            JsonBody<
+              paths['/custom_field_definitions/{definition_id}/options/{option_id}']['patch']
+            >
+          >(payload),
+        },
       ),
-      {
-        method: 'PATCH',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-      },
     );
     return this.formatResult(raw, options?.format);
   }
@@ -762,27 +1075,43 @@ export class Terminal49Client {
     optionId: string,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(
-        `/custom_field_definitions/${encodeURIComponent(definitionId)}/options/${encodeURIComponent(optionId)}`,
+    const raw = await this.transport.execute(() =>
+      this.transport.client.DELETE(
+        '/custom_field_definitions/{definition_id}/options/{option_id}',
+        {
+          params: {
+            path: { definition_id: definitionId, option_id: optionId },
+          },
+        },
       ),
-      { method: 'DELETE' },
     );
     return this.formatResult(raw, options?.format);
   }
 
-  /** List custom field assignments. */
-  async listCustomFields(options?: ListOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint('/custom_fields', this.listQuery(options)),
+  /**
+   * List custom field assignments. The API does not paginate this list.
+   */
+  async listCustomFields(
+    options?: CallOptions & { filters?: CustomFieldListFilters },
+  ): Promise<any> {
+    const filters = options?.filters;
+    const query: CustomFieldListQuery = {
+      'filter[entity_type]': filters?.entityType,
+      'filter[entity_id]': filters?.entityId,
+      'filter[definition_id]': filters?.definitionId,
+    };
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/custom_fields', { params: { query } }),
     );
     return this.formatResult(raw, options?.format);
   }
 
   /** Fetch a custom field assignment by ID. */
   async getCustomField(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/custom_fields/${encodeURIComponent(id)}`),
+    const raw = await this.transport.execute(() =>
+      this.transport.client.GET('/custom_fields/{id}', {
+        params: { path: { id } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -792,13 +1121,10 @@ export class Terminal49Client {
     payload: Record<string, unknown>,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint('/custom_fields'),
-      {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-      },
+    const raw = await this.transport.execute(() =>
+      this.transport.client.POST('/custom_fields', {
+        body: callerPayload<JsonBody<paths['/custom_fields']['post']>>(payload),
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -809,22 +1135,23 @@ export class Terminal49Client {
     payload: Record<string, unknown>,
     options?: CallOptions,
   ): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/custom_fields/${encodeURIComponent(id)}`),
-      {
-        method: 'PATCH',
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-      },
+    const raw = await this.transport.execute(() =>
+      this.transport.client.PATCH('/custom_fields/{id}', {
+        params: { path: { id } },
+        body: callerPayload<JsonBody<paths['/custom_fields/{id}']['patch']>>(
+          payload,
+        ),
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
 
   /** Delete a custom field assignment. */
   async deleteCustomField(id: string, options?: CallOptions): Promise<any> {
-    const raw = await this.transport.executeManual(
-      this.endpoint(`/custom_fields/${encodeURIComponent(id)}`),
-      { method: 'DELETE' },
+    const raw = await this.transport.execute(() =>
+      this.transport.client.DELETE('/custom_fields/{id}', {
+        params: { path: { id } },
+      }),
     );
     return this.formatResult(raw, options?.format);
   }
@@ -856,31 +1183,10 @@ export class Terminal49Client {
   /** Update tracking request attributes. */
   async updateTrackingRequest(
     id: string,
-    attrs: Record<string, any>,
+    attrs: TrackingRequestUpdateAttributes,
     options?: CallOptions,
   ): Promise<any> {
     return this.trackingRequests.update(id, attrs, options);
-  }
-
-  private endpoint(
-    path: string,
-    query?: Record<string, string | number | undefined>,
-  ): string {
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(query ?? {})) {
-      if (value !== undefined) params.set(key, String(value));
-    }
-    const suffix = params.toString();
-    return `${this.transport.baseUrl}${path}${suffix ? `?${suffix}` : ''}`;
-  }
-
-  private listQuery(
-    options?: ListOptions,
-  ): Record<string, string | number | undefined> {
-    return {
-      'page[number]': options?.page,
-      'page[size]': options?.pageSize,
-    };
   }
 
   private formatResult<TDoc, TMap>(

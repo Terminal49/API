@@ -3,3 +3,5 @@ export * from './containers.js';
 export * from './shipments.js';
 export * from './shipping-lines.js';
 export * from './tracking-requests.js';
+export * from './documents.js';
+export * from './trade-intel.js';

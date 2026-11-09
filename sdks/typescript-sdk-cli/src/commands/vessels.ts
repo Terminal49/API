@@ -3,7 +3,18 @@
  */
 
 import type { Command } from 'commander';
+import { finiteNumber } from '../util/input.js';
 import { action } from './action.js';
+
+interface FuturePositionsOptions {
+  portId: string;
+  previousPortId: string;
+}
+
+interface FuturePositionsCoordsOptions extends FuturePositionsOptions {
+  latitude: number;
+  longitude: number;
+}
 
 export function registerVesselsCommand(program: Command): void {
   const cmd = program
@@ -28,27 +39,53 @@ export function registerVesselsCommand(program: Command): void {
       ),
     );
 
-  cmd
+  const futurePositionsCommand = cmd
     .command('future-positions <id>')
-    .description('Get vessel future positions')
-    .action(
-      action(
-        'vessels.future-positions',
-        async ({ client, globals }, id: string) =>
-          client.vessels.futurePositions(id, { format: globals.format }),
-      ),
-    );
+    .description('Get vessel future positions between two ports')
+    .requiredOption('--port-id <id>', 'Destination port id')
+    .requiredOption('--previous-port-id <id>', 'Port the vessel departed from');
+  futurePositionsCommand.action(
+    action(
+      'vessels.future-positions',
+      async ({ client, globals }, id: string) => {
+        const { portId, previousPortId } =
+          futurePositionsCommand.opts<FuturePositionsOptions>();
+        return client.vessels.futurePositions(
+          id,
+          { portId, previousPortId },
+          { format: globals.format },
+        );
+      },
+    ),
+  );
 
-  cmd
+  const futurePositionsCoordsCommand = cmd
     .command('future-positions-coords <id>')
-    .description('Get vessel future positions with coordinates')
-    .action(
-      action(
-        'vessels.future-positions-coords',
-        async ({ client, globals }, id: string) =>
-          client.vessels.futurePositionsWithCoords(id, {
-            format: globals.format,
-          }),
-      ),
+    .description('Get vessel future positions from a starting coordinate')
+    .requiredOption('--port-id <id>', 'Destination port id')
+    .requiredOption('--previous-port-id <id>', 'Port the vessel departed from')
+    .requiredOption(
+      '--latitude <n>',
+      'Starting latitude',
+      finiteNumber('--latitude'),
+    )
+    .requiredOption(
+      '--longitude <n>',
+      'Starting longitude',
+      finiteNumber('--longitude'),
     );
+  futurePositionsCoordsCommand.action(
+    action(
+      'vessels.future-positions-coords',
+      async ({ client, globals }, id: string) => {
+        const { portId, previousPortId, latitude, longitude } =
+          futurePositionsCoordsCommand.opts<FuturePositionsCoordsOptions>();
+        return client.vessels.futurePositionsWithCoords(
+          id,
+          { portId, previousPortId, latitude, longitude },
+          { format: globals.format },
+        );
+      },
+    ),
+  );
 }

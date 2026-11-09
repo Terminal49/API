@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import * as Sentry from '@sentry/node';
+import { redactSecretsDeep } from './redaction.js';
 
 type Environment = NodeJS.ProcessEnv;
 
@@ -106,7 +107,10 @@ export function scrubSensitiveRequestData<T extends Sentry.Event>(event: T): T {
     scrubSpanData(span.data);
   }
 
-  return event;
+  // A tool result can carry a presigned download URL or a confirmation
+  // token, which Sentry's MCP integration records as span attributes when
+  // outputs are recorded.
+  return redactSecretsDeep(event);
 }
 
 export function buildSentryOptions(
@@ -172,6 +176,16 @@ export function captureMcpException(error: unknown): void {
       ? name
       : 'Error';
     Sentry.captureException(safeError);
+  }
+}
+
+/** Records a breadcrumb that later Sentry events in this request carry. */
+export function addMcpBreadcrumb(
+  category: string,
+  data: Record<string, string | null>,
+): void {
+  if (Sentry.isInitialized()) {
+    Sentry.addBreadcrumb({ category, level: 'info', data });
   }
 }
 

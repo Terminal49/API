@@ -1,0 +1,11 @@
+{
+  "container_number": "SYNX0000001",
+  "found": true,
+  "bills_of_lading": [
+    {
+      "bol_number": "SYNTHBOL000001",
+      "scac": "SYNU",
+      "consignee": "EXAMPLE FIXTURE SUPPLY"
+    }
+  ]
+}
