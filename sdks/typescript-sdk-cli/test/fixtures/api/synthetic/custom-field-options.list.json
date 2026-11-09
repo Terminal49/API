@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "data": [
+    {
+      "type": "custom_field_option",
+      "id": "custom_field_option-1",
+      "attributes": {
+        "value": "Example option"
+      }
+    }
+  ]
+}

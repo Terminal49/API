@@ -1,374 +1,491 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const sdkRoot = path.resolve(__dirname, '..');
+const fixturesDir = fileURLToPath(new URL('../src/fixtures/', import.meta.url));
+const stamp = '2026-01-10T12:00:00Z';
+const ref = (type, id) => ({ type, id });
+const rel = (data) => ({ data });
+const resource = (type, id, attributes, relationships = {}) => ({
+  type,
+  id,
+  attributes,
+  relationships,
+});
+const doc = (data, included) => {
+  const document = { data };
+  if (included) document.included = included;
+  return document;
+};
+const link = (name) => ({ self: `https://api.example.test/v2/${name}` });
 
-const envCandidates = [
-  process.env.DOTENV_CONFIG_PATH,
-  path.resolve(sdkRoot, '../.env.local'),
-  path.resolve(sdkRoot, '../.env'),
-  path.resolve(sdkRoot, '.env.local'),
-  path.resolve(sdkRoot, '.env'),
-].filter(Boolean);
-
-for (const candidate of envCandidates) {
-  if (fs.existsSync(candidate)) {
-    dotenv.config({ path: candidate });
-    break;
-  }
-}
-
-const token = process.env.T49_API_TOKEN;
-if (!token) {
-  console.error('Missing T49_API_TOKEN in environment.');
-  process.exit(1);
-}
-
-const baseUrl = (
-  process.env.T49_API_BASE_URL || 'https://api.terminal49.com/v2'
-).replace(/\/+$/, '');
-const authHeader = token.startsWith('Token ') ? token : `Token ${token}`;
-
-const fixturesDir = path.resolve(sdkRoot, 'src/fixtures');
-fs.mkdirSync(fixturesDir, { recursive: true });
-
-const idMaps = new Map();
-const valueMaps = new Map();
-
-function mapId(type, id) {
-  if (!id || typeof id !== 'string') return id;
-  const key = `${type}:${id}`;
-  if (!idMaps.has(key)) {
-    const count =
-      [...idMaps.keys()].filter((k) => k.startsWith(`${type}:`)).length + 1;
-    idMaps.set(key, `${type}-${count}`);
-  }
-  return idMaps.get(key);
-}
-
-function mapValue(key, value, prefix) {
-  if (!value || typeof value !== 'string') return value;
-  const mapKey = `${key}:${prefix}`;
-  if (!valueMaps.has(mapKey)) valueMaps.set(mapKey, new Map());
-  const map = valueMaps.get(mapKey);
-  if (!map.has(value)) {
-    map.set(value, `${prefix}-${String(map.size + 1).padStart(3, '0')}`);
-  }
-  return map.get(value);
-}
-
-function obfuscateTail(value, key, tailLength = 3) {
-  if (!value || typeof value !== 'string') return value;
-  if (value.length <= tailLength) {
-    return mapValue(key, value, key.toUpperCase().slice(0, 3));
-  }
-  const prefix = value.slice(0, -tailLength);
-  const hash = crypto
-    .createHash('sha256')
-    .update(`${key}:${value}`)
-    .digest('hex');
-  const suffix = hash.slice(0, tailLength);
-  return `${prefix}${suffix}`;
-}
-
-function sanitizeAttributes(type, attrs) {
-  if (!attrs || typeof attrs !== 'object') return attrs;
-
-  const sanitized = { ...attrs };
-
-  if (type === 'container') {
-    if (sanitized.number) {
-      sanitized.number = obfuscateTail(sanitized.number, 'container_number');
-    }
-    if (sanitized.container_number) {
-      sanitized.container_number = obfuscateTail(
-        sanitized.container_number,
-        'container_number',
-      );
-    }
-  }
-
-  if (type === 'shipment') {
-    if (sanitized.bill_of_lading_number) {
-      sanitized.bill_of_lading_number = obfuscateTail(
-        sanitized.bill_of_lading_number,
-        'bill_of_lading',
-      );
-    }
-    if (sanitized.bill_of_lading) {
-      sanitized.bill_of_lading = obfuscateTail(
-        sanitized.bill_of_lading,
-        'bill_of_lading',
-      );
-    }
-    if (sanitized.bl_number) {
-      sanitized.bl_number = obfuscateTail(
-        sanitized.bl_number,
-        'bill_of_lading',
-      );
-    }
-  }
-
-  if (type === 'tracking_request') {
-    if (sanitized.request_number) {
-      sanitized.request_number = obfuscateTail(
-        sanitized.request_number,
-        'request_number',
-      );
-    }
-    if (Array.isArray(sanitized.ref_numbers)) {
-      sanitized.ref_numbers = sanitized.ref_numbers.map((value) =>
-        obfuscateTail(value, 'ref_number'),
-      );
-    }
-  }
-
-  if (sanitized.booking_number) {
-    sanitized.booking_number = obfuscateTail(
-      sanitized.booking_number,
-      'booking_number',
-    );
-  }
-
-  if (sanitized.customer_name) {
-    sanitized.customer_name = mapValue(
-      'customer_name',
-      sanitized.customer_name,
-      'CUSTOMER',
-    );
-  }
-
-  return sanitized;
-}
-
-function sanitizeRelationships(relationships) {
-  if (!relationships || typeof relationships !== 'object') return relationships;
-  const sanitized = { ...relationships };
-
-  for (const value of Object.values(sanitized)) {
-    if (!value || typeof value !== 'object') continue;
-    if (Array.isArray(value.data)) {
-      value.data = value.data.map((ref) => ({
-        ...ref,
-        id: mapId(ref.type, ref.id),
-      }));
-    } else if (value.data && typeof value.data === 'object') {
-      value.data = { ...value.data, id: mapId(value.data.type, value.data.id) };
-    }
-  }
-
-  return sanitized;
-}
-
-function sanitizeResource(resource) {
-  if (!resource || typeof resource !== 'object') return resource;
-  const type = resource.type;
-  const sanitized = { ...resource };
-
-  if (type && sanitized.id) {
-    sanitized.id = mapId(type, sanitized.id);
-  }
-
-  if (sanitized.attributes) {
-    sanitized.attributes = sanitizeAttributes(type, sanitized.attributes);
-  }
-
-  if (sanitized.relationships) {
-    sanitized.relationships = sanitizeRelationships(sanitized.relationships);
-  }
-
-  return sanitized;
-}
-
-function sanitizeDocument(doc) {
-  if (!doc || typeof doc !== 'object') return doc;
-  const sanitized = JSON.parse(JSON.stringify(doc));
-
-  if (Array.isArray(sanitized.data)) {
-    sanitized.data = sanitized.data.map((item) => sanitizeResource(item));
-  } else if (sanitized.data && typeof sanitized.data === 'object') {
-    sanitized.data = sanitizeResource(sanitized.data);
-  }
-
-  if (Array.isArray(sanitized.included)) {
-    sanitized.included = sanitized.included.map((item) =>
-      sanitizeResource(item),
-    );
-  }
-
-  return sanitized;
-}
-
-async function fetchJson(pathname) {
-  const response = await fetch(`${baseUrl}${pathname}`, {
-    headers: {
-      Authorization: authHeader,
-      Accept: 'application/json',
+export function buildFixtures() {
+  const origin = resource('port', 'port-1', {
+    id: 'port-1',
+    name: 'Example Origin',
+    code: 'ZZORG',
+    city: 'Example City',
+    country_code: 'ZZ',
+    latitude: '10',
+    longitude: '20',
+    time_zone: 'Etc/UTC',
+  });
+  const destination = resource('port', 'port-2', {
+    id: 'port-2',
+    name: 'Example Destination',
+    code: 'ZZDST',
+    country_code: 'ZZ',
+    latitude: '30',
+    longitude: '40',
+    time_zone: 'Etc/UTC',
+  });
+  const terminal = resource('terminal', 'terminal-1', {
+    name: 'Example Ocean Terminal',
+    nickname: 'Example Ocean',
+    firms_code: 'EX01',
+    website: 'https://terminal.example.test',
+    time_zone: 'Etc/UTC',
+  });
+  const inland = resource('terminal', 'terminal-2', {
+    name: 'Example Inland Terminal',
+    nickname: 'Example Inland',
+    firms_code: 'EX02',
+  });
+  const shipment = resource(
+    'shipment',
+    'shipment-1',
+    {
+      created_at: stamp,
+      bill_of_lading_number: 'SYNTHBOL000001',
+      normalized_number: 'SYNTHBOL000001',
+      bill_of_lading: 'SYNTHBOL000001',
+      bl_number: 'SYNTHBOL000001',
+      booking_number: 'SYNTHBOOK000001',
+      shipping_line_scac: 'SYNU',
+      shipping_line_name: 'Example Ocean Line',
+      shipping_line_short_name: 'Example',
+      customer_name: 'Example Fixture Shipper',
+      ref_numbers: ['SYNTHREF000001'],
+      tags: ['synthetic'],
+      pod_vessel_name: 'EXAMPLE VESSEL',
+      pod_vessel_imo: '0000001',
+      pod_voyage_number: 'SYNTH01',
+      port_of_lading_locode: 'ZZORG',
+      port_of_lading_name: 'Example Origin',
+      port_of_discharge_locode: 'ZZDST',
+      port_of_discharge_name: 'Example Destination',
+      destination_locode: null,
+      destination_name: null,
+      destination_timezone: null,
+      pol_etd_at: stamp,
+      pol_atd_at: stamp,
+      pol_timezone: 'Etc/UTC',
+      pod_eta_at: stamp,
+      pod_original_eta_at: stamp,
+      pod_ata_at: stamp,
+      pod_timezone: 'Etc/UTC',
+      line_tracking_last_attempted_at: stamp,
+      line_tracking_last_succeeded_at: stamp,
+      line_tracking_stopped_at: null,
+      line_tracking_stopped_reason: null,
+    },
+    {
+      port_of_lading: rel(ref('port', 'port-1')),
+      port_of_discharge: rel(ref('port', 'port-2')),
+      pod_terminal: rel(ref('terminal', 'terminal-1')),
+      destination: rel(null),
+      destination_terminal: rel(null),
+      containers: rel([ref('container', 'container-1')]),
+    },
+  );
+  const container = resource(
+    'container',
+    'container-1',
+    {
+      number: 'SYNX0000001',
+      container_number: 'SYNX0000001',
+      seal_number: 'SYNTHSEAL01',
+      created_at: stamp,
+      current_status: 'picked_up',
+      ref_numbers: ['SYNTHREF000001'],
+      equipment_type: 'tank',
+      equipment_length: 40,
+      equipment_height: 'high_cube',
+      weight_in_lbs: 10000,
+      available_for_pickup: true,
+      availability_known: true,
+      location_at_pod_terminal: 'EXAMPLE-A1',
+      pod_arrived_at: stamp,
+      pod_discharged_at: stamp,
+      pod_full_out_at: stamp,
+      pol_full_in_at: stamp,
+      pol_vessel_loaded_at: stamp,
+      pol_vessel_departed_at: stamp,
+      pod_timezone: 'Etc/UTC',
+      pickup_lfd: '2026-01-20',
+      pickup_appointment_at: stamp,
+      fees_at_pod_terminal: [
+        { name: 'Example fee', amount: 25, currency: 'USD' },
+      ],
+      holds_at_pod_terminal: [
+        {
+          name: 'Example hold',
+          status: 'released',
+          description: 'Synthetic hold',
+        },
+      ],
+      import_deadlines: {
+        pickup_lfd_terminal: '2026-01-20',
+        pickup_lfd_rail: null,
+        pickup_lfd_line: null,
+      },
+      pod_rail_carrier_scac: 'SYNR',
+      ind_rail_carrier_scac: 'SYNR',
+      ind_eta_at: stamp,
+      delivered_at: null,
+      empty_terminated_at: null,
+      shipment_last_tracking_request_at: stamp,
+    },
+    {
+      shipment: rel(ref('shipment', 'shipment-1')),
+      pod_terminal: rel(ref('terminal', 'terminal-1')),
+      pickup_facility: rel(null),
+      transport_events: rel([ref('transport_event', 'transport_event-1')]),
+      raw_events: rel([ref('raw_event', 'raw_event-1')]),
+    },
+  );
+  const tracking = resource(
+    'tracking_request',
+    'tracking_request-1',
+    {
+      request_type: 'bill_of_lading',
+      request_number: 'SYNTHBOL000001',
+      status: 'created',
+      scac: 'SYNU',
+      ref_numbers: ['SYNTHREF000001'],
+      created_at: stamp,
+      updated_at: stamp,
+    },
+    { tracked_object: rel(ref('shipment', 'shipment-1')) },
+  );
+  const event = resource(
+    'transport_event',
+    'transport_event-1',
+    {
+      event: 'container.transport.vessel_arrived',
+      timestamp: stamp,
+      created_at: stamp,
+      voyage_number: 'SYNTH01',
+      data_source: 'shipping_line',
+      location_locode: 'ZZDST',
+      timezone: 'Etc/UTC',
+      invalidated_at: null,
+      value: null,
+    },
+    {
+      shipment: rel(ref('shipment', 'shipment-1')),
+      container: rel(ref('container', 'container-1')),
+      location: rel(ref('port', 'port-2')),
+      terminal: rel(ref('terminal', 'terminal-1')),
+      vessel: rel(null),
+    },
+  );
+  const raw = resource(
+    'raw_event',
+    'raw_event-1',
+    {
+      event: 'container.transport.vessel_arrived',
+      original_event: 'Synthetic arrival',
+      timestamp: stamp,
+      actual_at: stamp,
+      estimated_at: null,
+      actual_on: null,
+      estimated: false,
+      index: 1,
+      data_source: 'shipping_line',
+      data_provider_name: 'Example Ocean Line',
+      data_provider_code: 'SYNU',
+      voyage_number: 'SYNTH01',
+      location_name: 'Example Destination',
+      location_locode: 'ZZDST',
+      timezone: 'Etc/UTC',
+    },
+    {
+      container: rel(ref('container', 'container-1')),
+      location: rel(ref('port', 'port-2')),
+      vessel: rel(null),
+    },
+  );
+  const pickup = structuredClone(container);
+  pickup.relationships.pickup_facility = rel(ref('terminal', 'terminal-2'));
+  const lines = [
+    resource('shipping_line', 'shipping_line-1', {
+      scac: 'SYNU',
+      name: 'Example Ocean Line',
+      short_name: 'Example',
+      bol_prefix: 'SYNTH',
+      notes: 'Synthetic carrier',
+      alternative_scacs: ['SYNA'],
+      container_number_tracking_support: true,
+      bill_of_lading_tracking_support: true,
+      booking_number_tracking_support: false,
+    }),
+    resource('shipping_line', 'shipping_line-2', {
+      scac: 'SYBU',
+      name: 'Example Backup Line',
+      short_name: 'Backup',
+      alternative_scacs: [],
+      container_number_tracking_support: false,
+      bill_of_lading_tracking_support: true,
+      booking_number_tracking_support: false,
+    }),
+    resource('shipping_line', 'shipping_line-3', {
+      scac: 'SYCU',
+      name: 'Example Coastal Line',
+      short_name: 'Coastal',
+      alternative_scacs: null,
+    }),
+  ];
+  const account = resource('account', 'account-1', {
+    company_name: 'Example Fixture Shipper',
+    company_type: 'shipper',
+    scac: null,
+    abbr_name: 'Example',
+    city: 'Example City',
+    state_abbr: 'EX',
+    country: 'ZZ',
+    plan: 'free_plan',
+    tracking_slots: {
+      limit: 10,
+      used: 4,
+      active_containers: 3,
+      pending_tracking_requests: 1,
+      remaining: 6,
     },
   });
-
-  const text = await response.text();
-  let body;
-  try {
-    body = text ? JSON.parse(text) : null;
-  } catch {
-    body = null;
-  }
-
-  if (!response.ok) {
-    const message = body?.errors
-      ? JSON.stringify(body.errors)
-      : response.statusText;
-    throw new Error(`${response.status} ${message}`);
-  }
-
-  return body;
+  const userAccount = structuredClone(account);
+  Object.assign(userAccount.attributes, {
+    company_type: 'freight_forwarder',
+    scac: 'SYNU',
+    plan: 'customer',
+    tracking_slots: null,
+  });
+  const user = resource(
+    'user',
+    'user-1',
+    {
+      email: 'fixture@example.test',
+      name: 'Example Operator',
+      role: 'account_manager',
+      job_role: 'forwarder',
+      job_title: 'Operations lead',
+      admin: false,
+    },
+    { accounts: rel([ref('account', 'account-1')]) },
+  );
+  const features = {
+    data_out_api: { status: 'requires_paid_plan' },
+    custom_fields: { status: 'requires_user_credential' },
+  };
+  const geo = {
+    type: 'FeatureCollection',
+    features: [
+      ...['POL', 'TS1', 'POD'].map((label, i) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [20 + i * 10, 10 + i * 10] },
+        properties: {
+          feature_type: 'port',
+          ports_sequence: i + 1,
+          ports_total: 3,
+          location_id: `route-port-${i + 1}`,
+          name: `Example Route Port ${i + 1}`,
+          country_code: 'ZZ',
+          label,
+          inbound_eta_at: i === 2 ? stamp : null,
+          inbound_ata_at: i === 1 ? stamp : null,
+          outbound_etd_at: null,
+          outbound_atd_at: i < 2 ? stamp : null,
+        },
+      })),
+      {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [35, 25] },
+        properties: {
+          feature_type: 'current_vessel',
+          vessel_name: 'EXAMPLE VESSEL',
+          vessel_imo: '0000001',
+          voyage_number: 'SYNTH01',
+          vessel_location_heading: 90,
+          vessel_location_speed: 12,
+          vessel_location_timestamp: stamp,
+          departure_port_id: 'route-port-2',
+          departure_port_name: 'Example Route Port 2',
+          departure_port_label: 'TS1',
+          arrival_port_id: 'route-port-3',
+          arrival_port_name: 'Example Route Port 3',
+          arrival_port_label: 'POD',
+        },
+      },
+    ],
+  };
+  const fixtures = {
+    'shipments.list': {
+      ...doc([shipment]),
+      meta: { total: 1 },
+      links: link('shipments'),
+    },
+    'shipments.get.base': doc(shipment),
+    'shipments.get.include': doc(shipment, [
+      container,
+      origin,
+      destination,
+      terminal,
+    ]),
+    'containers.list': {
+      ...doc([container]),
+      meta: { total: 1 },
+      links: link('containers'),
+    },
+    'containers.get.base': doc(container),
+    'containers.get.include': doc(container, [shipment, terminal]),
+    'containers.get.pickup': doc([pickup], [shipment, terminal, inland]),
+    'containers.events': doc([event], [destination, terminal]),
+    'containers.raw-events': doc([raw], [destination]),
+    'containers.map_geojson': geo,
+    'tracking-requests.list': {
+      ...doc([tracking], [shipment]),
+      meta: { total: 1 },
+    },
+    'tracking-requests.get.base': doc(tracking, [shipment]),
+    'shipping-lines.list': { ...doc(lines), links: link('shipping_lines') },
+    'ports.get': doc(origin),
+    'terminals.get': doc(terminal),
+    'me.get.api-key': doc(
+      resource(
+        'credential',
+        'credential-1',
+        {
+          kind: 'api_key',
+          channel: 'api',
+          name: 'Example fixture key',
+          features,
+        },
+        { account: rel(ref('account', 'account-1')), user: rel(null) },
+      ),
+      [account],
+    ),
+    'me.get.user': doc(
+      resource(
+        'credential',
+        'user-1',
+        { kind: 'user', channel: 'mcp', name: null, features },
+        {
+          account: rel(ref('account', 'account-1')),
+          user: rel(ref('user', 'user-1')),
+        },
+      ),
+      [userAccount, user],
+    ),
+    'trade-intel.meta': {
+      facts_since_month: '2022-01-01',
+      dimensions: ['origin_country', 'pod'],
+    },
+    'trade-intel.companies.search': {
+      results: [
+        {
+          company_name: 'EXAMPLE FIXTURE SUPPLY',
+          states: ['EX'],
+          containers: 12,
+        },
+      ],
+    },
+    'trade-intel.companies.profile': {
+      company_name: 'EXAMPLE FIXTURE SUPPLY',
+      totals: { containers: 1240 },
+      suppliers: [],
+      commodities: [],
+    },
+    'trade-intel.commodities.search': {
+      results: [{ hs4: '9401', description: 'Example chairs' }],
+    },
+    'trade-intel.importers.top': {
+      importers: [
+        {
+          company_name: 'EXAMPLE FIXTURE SUPPLY',
+          containers: 800,
+          states: null,
+        },
+      ],
+    },
+    'trade-intel.trends': {
+      measure: 'containers',
+      interval: 'quarter',
+      since: '2026-01',
+      until: '2026-06',
+      group_by: ['origin_country'],
+      filters: { hs4: '9401' },
+      fact: 'synthetic_import_facts',
+      notes: [],
+      series: [
+        {
+          origin_country: 'VIETNAM',
+          period: '2026-01',
+          value: 12,
+        },
+      ],
+    },
+    'trade-intel.breakdown': {
+      measure: 'containers',
+      dims: ['pod_coast', 'pod'],
+      filters: { hs4: '9401' },
+      since: '2026-01',
+      until: '2026-06',
+      fact: 'synthetic_import_facts',
+      notes: [],
+      rows: [
+        { level: 0, value: 12 },
+        { level: 1, pod_coast: 'example', value: 12 },
+      ],
+    },
+    'trade-intel.containers.lookup': {
+      container_number: 'SYNX0000001',
+      found: true,
+      bills_of_lading: [
+        {
+          bol_number: 'SYNTHBOL000001',
+          scac: 'SYNU',
+          consignee: 'EXAMPLE FIXTURE SUPPLY',
+        },
+      ],
+    },
+    'trade-intel.bills-of-lading.lookup': {
+      bol_number: 'SYNTHBOL000001',
+      found: true,
+      containers: [
+        {
+          container_number: 'SYNX0000001',
+          consignee: 'EXAMPLE FIXTURE SUPPLY',
+        },
+      ],
+    },
+  };
+  return fixtures;
 }
 
-function writeFixture(name, doc) {
-  const sanitized = sanitizeDocument(doc);
-  const filepath = path.resolve(fixturesDir, `${name}.json`);
-  fs.writeFileSync(filepath, JSON.stringify(sanitized, null, 2));
-  console.log(`Wrote ${path.relative(sdkRoot, filepath)}`);
-}
-
-function firstIdFromList(doc) {
-  if (!doc || !Array.isArray(doc.data) || doc.data.length === 0) return null;
-  return doc.data[0]?.id || null;
-}
-
-function firstIncludedId(doc, type) {
-  if (!doc || !Array.isArray(doc.included)) return null;
-  const match = doc.included.find((item) => item.type === type);
-  return match?.id || null;
-}
-
-function firstRelationshipId(doc, relName) {
-  const rel = doc?.data?.relationships?.[relName]?.data;
-  if (!rel) return null;
-  if (Array.isArray(rel)) return rel[0]?.id || null;
-  return rel.id || null;
-}
-
-async function main() {
-  const fixtures = {};
-
-  const shipmentsList = await fetchJson('/shipments?page[size]=1');
-  fixtures.shipmentsList = shipmentsList;
-  writeFixture('shipments.list', shipmentsList);
-
-  const shipmentId = firstIdFromList(shipmentsList);
-  if (shipmentId) {
-    const shipmentGetBase = await fetchJson(`/shipments/${shipmentId}`);
-    fixtures.shipmentGetBase = shipmentGetBase;
-    writeFixture('shipments.get.base', shipmentGetBase);
-
-    const shipmentGetInclude = await fetchJson(
-      `/shipments/${shipmentId}?include=containers,pod_terminal,port_of_lading,port_of_discharge,destination,destination_terminal`,
+export function writeFixtures(directory = fixturesDir) {
+  fs.mkdirSync(directory, { recursive: true });
+  for (const [name, fixture] of Object.entries(buildFixtures())) {
+    fs.writeFileSync(
+      path.join(directory, `${name}.json`),
+      `${JSON.stringify(fixture, null, 2)}\n`,
     );
-    fixtures.shipmentGetInclude = shipmentGetInclude;
-    writeFixture('shipments.get.include', shipmentGetInclude);
   }
-
-  const containersList = await fetchJson('/containers?page[size]=1');
-  fixtures.containersList = containersList;
-  writeFixture('containers.list', containersList);
-
-  const containerId =
-    firstIncludedId(fixtures.shipmentGetInclude, 'container') ||
-    firstRelationshipId(fixtures.shipmentGetInclude, 'containers') ||
-    firstIdFromList(containersList);
-
-  if (containerId) {
-    const containerGetBase = await fetchJson(`/containers/${containerId}`);
-    writeFixture('containers.get.base', containerGetBase);
-
-    const containerGetInclude = await fetchJson(
-      `/containers/${containerId}?include=shipment,pod_terminal`,
-    );
-    writeFixture('containers.get.include', containerGetInclude);
-
-    try {
-      const events = await fetchJson(
-        `/containers/${containerId}/transport_events?include=location,terminal`,
-      );
-      writeFixture('containers.events', events);
-    } catch (error) {
-      console.warn(`Skipping transport events fixture: ${error.message}`);
-    }
-
-    try {
-      const rawEvents = await fetchJson(
-        `/containers/${containerId}/raw_events`,
-      );
-      writeFixture('containers.raw-events', rawEvents);
-    } catch (error) {
-      console.warn(`Skipping raw events fixture: ${error.message}`);
-    }
-  }
-
-  const trackingList = await fetchJson('/tracking_requests?page[size]=1');
-  fixtures.trackingList = trackingList;
-  writeFixture('tracking-requests.list', trackingList);
-
-  const trackingId = firstIdFromList(trackingList);
-  if (trackingId) {
-    const trackingGetBase = await fetchJson(`/tracking_requests/${trackingId}`);
-    writeFixture('tracking-requests.get.base', trackingGetBase);
-
-    try {
-      const trackingGetInclude = await fetchJson(
-        `/tracking_requests/${trackingId}?include=shipment,container`,
-      );
-      writeFixture('tracking-requests.get.include', trackingGetInclude);
-    } catch (error) {
-      console.warn(
-        `Skipping tracking request include fixture: ${error.message}`,
-      );
-    }
-  }
-
-  const shippingLines = await fetchJson('/shipping_lines');
-  writeFixture('shipping-lines.list', shippingLines);
-
-  const portId =
-    firstIncludedId(fixtures.shipmentGetInclude, 'port') ||
-    firstRelationshipId(fixtures.shipmentGetInclude, 'port_of_lading') ||
-    firstRelationshipId(fixtures.shipmentGetInclude, 'port_of_discharge') ||
-    firstRelationshipId(fixtures.shipmentGetInclude, 'destination');
-
-  if (portId) {
-    try {
-      const port = await fetchJson(`/ports/${portId}`);
-      writeFixture('ports.get', port);
-    } catch (error) {
-      console.warn(`Skipping port fixture: ${error.message}`);
-    }
-  }
-
-  const terminalId =
-    firstIncludedId(fixtures.shipmentGetInclude, 'terminal') ||
-    firstRelationshipId(fixtures.shipmentGetInclude, 'pod_terminal') ||
-    firstRelationshipId(fixtures.shipmentGetInclude, 'destination_terminal');
-
-  if (terminalId) {
-    try {
-      const terminal = await fetchJson(`/terminals/${terminalId}`);
-      writeFixture('terminals.get', terminal);
-    } catch (error) {
-      console.warn(`Skipping terminal fixture: ${error.message}`);
-    }
-  }
-
-  console.log('Fixtures generation complete.');
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+if (
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  writeFixtures();
+  console.log('Wrote synthetic SDK fixtures. No API key or network is used.');
+}

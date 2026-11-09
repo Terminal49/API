@@ -1,9 +1,9 @@
 // Carrier rows were generated from Terminal49 production integrations (Metabase db 2) on 2026-08-14.
-// Terminal rows were refreshed from public production integrations on 2026-09-15.
+// Terminal identities were reviewed against enabled production integrations on 2026-11-02.
 // Do not hand-edit rows — refresh from the integrations tables.
 
 export const carrierCoverageGeneratedOn = "2026-08-14";
-export const terminalCoverageGeneratedOn = "2026-09-15";
+export const terminalCoverageGeneratedOn = "2026-11-02";
 
 export const carriers = [
   {
@@ -415,6 +415,7 @@ export const terminals = [
     "locode": "ARBUE",
     "country": "Argentina",
     "region": "Latin America",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
     "firmsCode": "ARBUETERM4"
   },
   {
@@ -514,6 +515,15 @@ export const terminals = [
     "firmsCode": "AUSYDASLPB"
   },
   {
+    "name": "APM Terminals Bahrain",
+    "port": "Bahrain",
+    "locode": "BHAHD",
+    "country": "Bahrain",
+    "region": "Middle East",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "BHAHDPOSU"
+  },
+  {
     "name": "Chittagong Port",
     "port": "Chittagong",
     "locode": "BDCGP",
@@ -527,7 +537,17 @@ export const terminals = [
     "locode": "BRPEC",
     "country": "Brazil",
     "region": "Latin America",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
     "firmsCode": "BRPECBRAPEC"
+  },
+  {
+    "name": "Fraser Surrey Docks",
+    "port": "Fraser Surrey",
+    "locode": "CAFSD",
+    "country": "Canada",
+    "region": "Canada",
+    "notes": "Requires user-provided credentials.",
+    "firmsCode": "3401"
   },
   {
     "name": "South End Container Terminal",
@@ -536,14 +556,6 @@ export const terminals = [
     "country": "Canada",
     "region": "Canada",
     "firmsCode": "2036"
-  },
-  {
-    "name": "Maisonneuve - Section 68",
-    "port": "Montreal",
-    "locode": "CAMTR",
-    "country": "Canada",
-    "region": "Canada",
-    "firmsCode": "2619"
   },
   {
     "name": "MGTP Cast - Section 77",
@@ -560,6 +572,14 @@ export const terminals = [
     "country": "Canada",
     "region": "Canada",
     "firmsCode": "2591"
+  },
+  {
+    "name": "Maisonneuve - Section 68",
+    "port": "Montreal",
+    "locode": "CAMTR",
+    "country": "Canada",
+    "region": "Canada",
+    "firmsCode": "2619"
   },
   {
     "name": "Viau - Section 52",
@@ -610,6 +630,42 @@ export const terminals = [
     "firmsCode": "CLSAISTI"
   },
   {
+    "name": "Tcbuen",
+    "port": "Buenaventura",
+    "locode": "COBUN",
+    "country": "Colombia",
+    "region": "Latin America",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "COBUNTCBUN"
+  },
+  {
+    "name": "Terminal de Moin",
+    "port": "Moín",
+    "locode": "CRMOB",
+    "country": "Costa Rica",
+    "region": "Latin America",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "CRMOBTMOIN"
+  },
+  {
+    "name": "Rijeka Gateway (RGW)",
+    "port": "Rijeka",
+    "locode": "HRRJK",
+    "country": "Croatia",
+    "region": "Europe",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "HRRJKRGW"
+  },
+  {
+    "name": "APM Terminals Aarhus",
+    "port": "Aarhus",
+    "locode": "DKAAR",
+    "country": "Denmark",
+    "region": "Europe",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "DKAARAPMT"
+  },
+  {
     "name": "Haina International Terminals",
     "port": "Rio Haina",
     "locode": "DOHAI",
@@ -631,7 +687,17 @@ export const terminals = [
     "locode": "EGPSD",
     "country": "Egypt",
     "region": "Middle East",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
     "firmsCode": "EGPSDSCCT"
+  },
+  {
+    "name": "APM Terminals Poti",
+    "port": "Poti",
+    "locode": "GEPTI",
+    "country": "Georgia",
+    "region": "Europe",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "GEPTIAPMT"
   },
   {
     "name": "EUROGATE Container Terminal Bremerhaven",
@@ -695,6 +761,7 @@ export const terminals = [
     "locode": "GTPRQ",
     "country": "Guatemala",
     "region": "Latin America",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
     "firmsCode": "GTPRQTCQ"
   },
   {
@@ -736,6 +803,24 @@ export const terminals = [
     "country": "Hong Kong",
     "region": "Asia",
     "firmsCode": "HKHKGMTLHK"
+  },
+  {
+    "name": "Gateway Terminals India",
+    "port": "Nhava Sheva",
+    "locode": "INNSA",
+    "country": "India",
+    "region": "Asia",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "INNSAGTICI"
+  },
+  {
+    "name": "APM Terminals Pipavav",
+    "port": "Pipavav",
+    "locode": "INPPV",
+    "country": "India",
+    "region": "Asia",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "INPPVAPMT"
   },
   {
     "name": "Jakarta International Container Terminal",
@@ -818,6 +903,15 @@ export const terminals = [
     "firmsCode": "ITNAPCONA"
   },
   {
+    "name": "Vado Gateway Terminal",
+    "port": "Vado Ligure",
+    "locode": "ITVDL",
+    "country": "Italy",
+    "region": "Europe",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "ITVDLVGT"
+  },
+  {
     "name": "Kingston Container Terminal",
     "port": "Kingston",
     "locode": "JMKIN",
@@ -831,6 +925,7 @@ export const terminals = [
     "locode": "JOAQJ",
     "country": "Jordan",
     "region": "Middle East",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
     "firmsCode": "JOAQJACT"
   },
   {
@@ -840,6 +935,15 @@ export const terminals = [
     "country": "Lebanon",
     "region": "Middle East",
     "firmsCode": "LBBEYBCTC"
+  },
+  {
+    "name": "APM Terminals Liberia",
+    "port": "Monrovia",
+    "locode": "LRMLW",
+    "country": "Liberia",
+    "region": "Africa",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "LRMLWAPMT"
   },
   {
     "name": "Terminal Portuaria",
@@ -914,11 +1018,39 @@ export const terminals = [
     "firmsCode": "69"
   },
   {
+    "name": "APM Terminals Tangier",
+    "port": "Tangier Med",
+    "locode": "MAPTM",
+    "country": "Morocco",
+    "region": "Africa",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "MAPTMAPMT"
+  },
+  {
+    "name": "APM Terminals Tangier Medport 2",
+    "port": "Tangier Med",
+    "locode": "MAPTM",
+    "country": "Morocco",
+    "region": "Africa",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "MAPTMAPM2"
+  },
+  {
+    "name": "APM Terminals Rotterdam Maasvlakte 2",
+    "port": "Rotterdam",
+    "locode": "NLRTM",
+    "country": "Netherlands",
+    "region": "Europe",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "NLRTMNLMVII"
+  },
+  {
     "name": "Lyttelton Port Company",
     "port": "Lyttelton",
     "locode": "NZLYT",
     "country": "New Zealand",
     "region": "New Zealand",
+    "notes": "Covers import and coastal-feeder containers, including discharge, terminal last free day, and truck pickup. Rail transfers are separate from truck pickup. Pickup readiness and holds are not currently confirmed.",
     "firmsCode": "NZLYTLPC"
   },
   {
@@ -927,7 +1059,26 @@ export const terminals = [
     "locode": "NZTIU",
     "country": "New Zealand",
     "region": "New Zealand",
+    "notes": "Covers import and coastal-feeder containers, including discharge, terminal last free day, and truck pickup. Rail transfers are separate from truck pickup. Pickup readiness and holds are not currently confirmed.",
     "firmsCode": "NZTIUTCTL"
+  },
+  {
+    "name": "APM Terminals Apapa",
+    "port": "Apapa",
+    "locode": "NGAPP",
+    "country": "Nigeria",
+    "region": "Africa",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "NGAPPAPMTER"
+  },
+  {
+    "name": "West Africa Container Terminal (WACT)",
+    "port": "Onne",
+    "locode": "NGONN",
+    "country": "Nigeria",
+    "region": "Africa",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "NGONNAPMT"
   },
   {
     "name": "APM Terminals Salalah",
@@ -946,11 +1097,21 @@ export const terminals = [
     "firmsCode": "PKKHISAPT"
   },
   {
+    "name": "Manzanillo International Terminal",
+    "port": "Manzanillo",
+    "locode": "PAMIT",
+    "country": "Panama",
+    "region": "Latin America",
+    "notes": "Provides terminal-reported pickup status and last free day.",
+    "firmsCode": "PAMITMIT"
+  },
+  {
     "name": "APM Terminals Callao",
     "port": "Callao",
     "locode": "PECLL",
     "country": "Peru",
     "region": "Latin America",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
     "firmsCode": "PECLLAPMCLL"
   },
   {
@@ -1002,12 +1163,31 @@ export const terminals = [
     "firmsCode": "KRPUSBNCT"
   },
   {
+    "name": "Pusan New Port International Terminal",
+    "port": "Busan",
+    "locode": "KRPUS",
+    "country": "South Korea",
+    "region": "Asia",
+    "notes": "Covers import discharge, truck pickup, and empty return. Pickup readiness and holds are not currently confirmed. Terminal last free day is not available.",
+    "firmsCode": "KRPUSPNP"
+  },
+  {
     "name": "APM Terminals Algeciras",
     "port": "Algeciras",
     "locode": "ESALG",
     "country": "Spain",
     "region": "Europe",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
     "firmsCode": "ESALGAPM"
+  },
+  {
+    "name": "Container Terminal Barcelona",
+    "port": "Barcelona",
+    "locode": "ESBCN",
+    "country": "Spain",
+    "region": "Europe",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "ESBCNTCB"
   },
   {
     "name": "Hutchison Ports BEST",
@@ -1018,11 +1198,30 @@ export const terminals = [
     "firmsCode": "ESBCNBEST"
   },
   {
+    "name": "Terminal Gijon",
+    "port": "Gijón",
+    "locode": "ESGIJ",
+    "country": "Spain",
+    "region": "Europe",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "ESGIJTEGIJ"
+  },
+  {
+    "name": "APM Terminals Valencia",
+    "port": "Valencia",
+    "locode": "ESVLC",
+    "country": "Spain",
+    "region": "Europe",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
+    "firmsCode": "ESVLCTCV"
+  },
+  {
     "name": "APM Terminals Gothenburg",
     "port": "Goteborg",
     "locode": "SEGOT",
     "country": "Sweden",
     "region": "Europe",
+    "notes": "Available data varies by terminal. Where rail movements are available, they are reported separately from truck pickup.",
     "firmsCode": "SEGOTCT1"
   },
   {
@@ -1114,6 +1313,42 @@ export const terminals = [
     "firmsCode": "C324"
   },
   {
+    "name": "Paul W Conley Terminal",
+    "port": "Boston",
+    "locode": "USBOS",
+    "country": "United States",
+    "region": "US East Coast",
+    "notes": "Provides terminal-reported pickup status and last free day.",
+    "firmsCode": "A295"
+  },
+  {
+    "name": "Hugh K. Leatherman Terminal",
+    "port": "Charleston",
+    "locode": "USCHS",
+    "country": "United States",
+    "region": "US East Coast",
+    "notes": "Terminal updates are collected from 04:00 to 18:00 US Eastern time. Terminal last free day is not available. Some gate-out records may not distinguish truck pickup from rail transfer.",
+    "firmsCode": "LCT9"
+  },
+  {
+    "name": "North Charleston Terminal",
+    "port": "Charleston",
+    "locode": "USCHS",
+    "country": "United States",
+    "region": "US East Coast",
+    "notes": "Terminal updates are collected from 04:00 to 18:00 US Eastern time. Terminal last free day is not available. Some gate-out records may not distinguish truck pickup from rail transfer.",
+    "firmsCode": "L391"
+  },
+  {
+    "name": "Wando Welch Terminal",
+    "port": "Charleston",
+    "locode": "USCHS",
+    "country": "United States",
+    "region": "US East Coast",
+    "notes": "Terminal updates are collected from 04:00 to 18:00 US Eastern time. Terminal last free day is not available. Some gate-out records may not distinguish truck pickup from rail transfer.",
+    "firmsCode": "N598"
+  },
+  {
     "name": "Gloucester Marine Terminal",
     "port": "Gloucester",
     "locode": "USGLC",
@@ -1186,6 +1421,14 @@ export const terminals = [
     "firmsCode": "W182"
   },
   {
+    "name": "SSA Pier A",
+    "port": "Long Beach",
+    "locode": "USLGB",
+    "country": "United States",
+    "region": "US West Coast",
+    "firmsCode": "Z978"
+  },
+  {
     "name": "Shippers Transport Express",
     "port": "Long Beach",
     "locode": "USLGB",
@@ -1200,14 +1443,6 @@ export const terminals = [
     "country": "United States",
     "region": "US West Coast",
     "firmsCode": "Z773"
-  },
-  {
-    "name": "SSA Pier A",
-    "port": "Long Beach",
-    "locode": "USLGB",
-    "country": "United States",
-    "region": "US West Coast",
-    "firmsCode": "Z978"
   },
   {
     "name": "Total Terminals International",
@@ -1362,14 +1597,6 @@ export const terminals = [
     "firmsCode": "Z985"
   },
   {
-    "name": "Shippers Transport Express",
-    "port": "Oakland",
-    "locode": "USOAK",
-    "country": "United States",
-    "region": "US West Coast",
-    "firmsCode": "STO"
-  },
-  {
     "name": "TraPac Terminal",
     "port": "Oakland",
     "locode": "USOAK",
@@ -1424,14 +1651,6 @@ export const terminals = [
     "country": "United States",
     "region": "US West Coast",
     "firmsCode": "X117"
-  },
-  {
-    "name": "SSA Terminal 30",
-    "port": "Seattle",
-    "locode": "USSEA",
-    "country": "United States",
-    "region": "US West Coast",
-    "firmsCode": "Y197"
   },
   {
     "name": "Terminal 5",

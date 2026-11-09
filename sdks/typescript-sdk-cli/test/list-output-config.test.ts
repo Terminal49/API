@@ -15,10 +15,11 @@ it('parties list takes --format raw from config defaultFormat', async () => {
   };
   stubApi(() => document);
   const configDirectory = join(process.env.XDG_CONFIG_HOME ?? '', 'terminal49');
-  mkdirSync(configDirectory);
+  mkdirSync(configDirectory, { mode: 0o700 });
   writeFileSync(
     join(configDirectory, 'config.json'),
     JSON.stringify({ defaultFormat: 'raw' }),
+    { mode: 0o600 },
   );
 
   const result = await runProgram(['--json', 'parties', 'list']);

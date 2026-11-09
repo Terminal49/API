@@ -7,6 +7,7 @@
  */
 
 import Table from 'cli-table3';
+import { encodeTerminalText } from './terminal-text.js';
 
 /** A column reads the first renderable `key` path, or computes its cell with `value`. */
 type ColumnDef =
@@ -517,12 +518,12 @@ function flattenSearchMetadata(
 
 function formatCell(value: unknown): string {
   if (value === undefined || value === null) return '';
-  if (typeof value === 'string') return value;
-  if (typeof value === 'boolean' || typeof value === 'number')
-    return String(value);
-  if (Array.isArray(value)) return value.join(', ');
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
+  const text = Array.isArray(value)
+    ? value.join(', ')
+    : typeof value === 'object'
+      ? JSON.stringify(value)
+      : String(value);
+  return encodeTerminalText(text);
 }
 
 function normalizeRows(data: unknown): Record<string, unknown>[] {
@@ -836,7 +837,7 @@ function renderDetail(data: unknown): string | undefined {
   });
 
   rows.forEach(([key, value]) => {
-    table.push([key, formatCell(value)]);
+    table.push([encodeTerminalText(key), formatCell(value)]);
   });
 
   return `${table.toString()}\n`;
@@ -946,7 +947,7 @@ function renderRows(
   }
 
   const table = new Table({
-    head: cols.map((c) => c.title),
+    head: cols.map((c) => encodeTerminalText(c.title)),
     style: { head: [], border: [] },
     wordWrap: true,
   });

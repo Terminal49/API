@@ -5,11 +5,13 @@ node_modules
 
 # Environment variables
 .env.local
+.env.*
 .env.development.local
 .env
 *.env
 !.env.sample
 !.env.example
+!.env.local.example
 
 .tool-versions.local
 

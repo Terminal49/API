@@ -25,6 +25,8 @@ vi.mock('@posthog/mcp', async () => {
   return { ...actual, instrument: instrumentMock, PostHog: FakePostHog };
 });
 
+const CONFIRMATION_TOKEN = `t49ct1.k9x2m1.${'A'.repeat(43)}.${'B'.repeat(43)}`;
+
 /** Re-import with fresh module state, since the client is a module-level singleton. */
 async function loadPostHogModule() {
   vi.resetModules();
@@ -330,6 +332,21 @@ describe('PostHog MCP analytics', () => {
       expect(result.properties).toEqual({
         $mcp_tool_name: 'get_document',
         $mcp_result_links: [{ uri: '[REDACTED_URL]' }],
+      });
+    });
+
+    it('redacts confirmation tokens from the properties it keeps', async () => {
+      const result = (await redact({
+        event: '$mcp_tool_call',
+        properties: {
+          $mcp_tool_name: 'stop_shipment_tracking',
+          $mcp_result_note: `token ${CONFIRMATION_TOKEN}`,
+        },
+      })) as { properties: Record<string, unknown> };
+
+      expect(result.properties).toEqual({
+        $mcp_tool_name: 'stop_shipment_tracking',
+        $mcp_result_note: 'token [REDACTED_CONFIRMATION_TOKEN]',
       });
     });
 

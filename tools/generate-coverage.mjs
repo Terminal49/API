@@ -15,6 +15,7 @@ const allowedFields = {
     'smdgCode',
     'firmsCode',
     'features',
+    'notes',
   ],
   shippingLines: [
     'name',
@@ -43,7 +44,7 @@ const read = (name) => readFile(path.join(root, name), 'utf8');
 const exportValue = (source, name) =>
   JSON.parse(
     source.match(
-      new RegExp('export const ' + name + ' = ([\\s\\S]*?);'),
+      new RegExp('export const ' + name + ' = ([\\s\\S]*?);(?:\\n|$)'),
     )?.[1] ?? 'null',
   );
 const camelCase = (label) =>
@@ -64,6 +65,8 @@ const statusLabel = (status) =>
     unknown: 'Unknown',
     signed_in_only: 'Carrier credentials required',
   })[status];
+const updatedOnFor = (data, type) =>
+  data.updatedOnByType?.[type] ?? data.updatedOn;
 const terminalDefinitions = [
   ['importMilestones', 'Import milestones', 'Container milestones'],
   ['availableForPickup', 'Available for pickup', 'Pickup & availability'],
@@ -365,6 +368,7 @@ export function validateCoverage(data) {
       (key) =>
         ![
           'updatedOn',
+          'updatedOnByType',
           'featureCatalog',
           ...types.map(([type]) => type),
         ].includes(key),
@@ -378,6 +382,15 @@ export function validateCoverage(data) {
       data.updatedOn
   )
     throw new Error('Invalid coverage update date');
+  for (const [type, date] of Object.entries(data.updatedOnByType ?? {})) {
+    if (
+      !types.some(([key]) => key === type) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+      !Number.isFinite(Date.parse(date + 'T00:00:00Z')) ||
+      new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) !== date
+    )
+      throw new Error('Invalid coverage update date for ' + type);
+  }
   for (const [type] of types) {
     const catalog = data.featureCatalog[type];
     if (
@@ -407,6 +420,8 @@ export function validateCoverage(data) {
       )
         throw new Error('Invalid shipping line access');
       if (type === 'terminals') {
+        if (entity.notes !== undefined && typeof entity.notes !== 'string')
+          throw new Error('Invalid terminal notes');
         if (typeof entity.terminalCode !== 'string')
           throw new Error('Invalid terminal source code');
         validateTerminalIdentifiers(entity);
@@ -449,7 +464,7 @@ function staticReference(data, type, slug, title) {
     'description: "Complete feature coverage with explicit statuses and public integration identifiers."',
     '---',
     '',
-    'Last updated ' + data.updatedOn + '.',
+    'Last updated ' + updatedOnFor(data, type) + '.',
     '',
     '[Download JSON](https://raw.githubusercontent.com/Terminal49/API/main/docs/data/coverage/' +
       slug +
@@ -503,6 +518,7 @@ function staticReference(data, type, slug, title) {
           (entity.group ? ' ' + entity.group + '.' : ''),
         '',
       );
+    if (entity.notes) lines.push(escapeMarkdown(entity.notes), '');
     lines.push('| Section | Feature | Coverage |', '| --- | --- | --- |');
     for (const feature of definitions)
       lines.push(
@@ -526,7 +542,7 @@ export function generateFiles(data) {
     files.set(
       'docs/data/coverage/' + slug + '.json',
       json({
-        updatedOn: data.updatedOn,
+        updatedOn: updatedOnFor(data, type),
         featureCatalog: data.featureCatalog[type],
         [type]: data[type],
       }),
@@ -548,6 +564,7 @@ export function generateFiles(data) {
         'section',
         'status',
         'updatedOn',
+        ...(type === 'terminals' ? ['notes'] : []),
       ],
     ];
     for (const entity of data[type])
@@ -569,7 +586,8 @@ export function generateFiles(data) {
           feature.label,
           feature.group,
           entity.features[feature.key],
-          data.updatedOn,
+          updatedOnFor(data, type),
+          ...(type === 'terminals' ? [entity.notes] : []),
         ]);
     files.set(
       'docs/data/coverage/' + slug + '.csv',
@@ -610,7 +628,7 @@ export function generateFiles(data) {
     terminalCoverageEntities: data.terminals.map(
       ({ features: _features, ...identity }) => identity,
     ),
-    terminalFeatureSnapshot: { capturedOn: data.updatedOn },
+    terminalFeatureSnapshot: { capturedOn: updatedOnFor(data, 'terminals') },
     terminalFeatureCoverage: Object.fromEntries(
       data.terminals.map((row) => [
         row.locode + ':' + (row.terminalCode || row.name),

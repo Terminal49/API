@@ -14,14 +14,24 @@ Coverage changes as carriers and terminals come online. This page records what w
 
 For product and API changes, see the [API changelog](/updates/home).
 
-<Update label="October 18, 2026" description="Wilmington (NC) removed from the public terminal table">
+<Update label="November 9, 2026" description="Wilmington (NC) removed from the public terminal table">
   **Status at this update: degraded.** Wilmington terminal data is unavailable; carrier-reported events remain available. No resolution date is confirmed.
-  The public terminal table now lists 137 direct integrations, down from 138 on October 9.
+  The public terminal table now lists 160 direct integrations, down from 161 on November 2.
 
   - Port of Wilmington Container Terminal (`L194`) is removed because we can't currently retrieve terminal data from the NC Ports portal. It will return to the table once terminal data is flowing again.
   - Containers discharging at Wilmington still show carrier-reported events.
 
   No API endpoint or schema changes are required.
+</Update>
+
+<Update label="November 2, 2026" description="Expanded terminal coverage worldwide">
+  Track shipments across 161 directly connected terminals worldwide, including 26 APM facilities across the Americas, Europe, Africa, Asia, and the Middle East.
+
+  - Expanded APM coverage includes Aarhus, Rotterdam Maasvlakte II, Tangier Med, Pipavav, Apapa, Moín, and more.
+  - Coverage also includes PNIT in Busan, Boston Conley, North Charleston, Wando Welch, Hugh K. Leatherman, and Manzanillo International Terminal in Panama.
+  - Seattle Terminal 30 and Shippers Transport Express in Oakland are no longer listed as supported. The Long Beach and Carson facilities remain supported.
+
+  See the [full terminal list](/coverage/terminals) for pickup availability, last free day, holds, and movement milestones available at each location, along with connection requirements. No changes to your API integration are required.
 </Update>
 
 <Update label="October 14, 2026" description="Seaboard Marine added to the public carrier list">

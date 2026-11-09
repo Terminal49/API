@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "data": {
+    "data": {
+      "type": "terminal",
+      "id": "terminal-1",
+      "attributes": {
+        "name": "Example Ocean Terminal",
+        "nickname": "Example Ocean",
+        "firms_code": "EX01",
+        "website": "https://terminal.example.test",
+        "time_zone": "Etc/UTC"
+      },
+      "relationships": {}
+    }
+  }
+}

@@ -3,10 +3,36 @@ import {
   StreamableHTTPClientTransport,
 } from '@modelcontextprotocol/client';
 import { createMcpHandler } from '@modelcontextprotocol/server';
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import * as Sentry from '@sentry/node';
+import { Terminal49Error, TimeoutError } from '@terminal49/sdk';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vite-plus/test';
 import { createTerminal49McpServer } from './server.js';
+import { trackContainerAudit } from './tools/track-container.js';
 
-afterEach(() => vi.unstubAllGlobals());
+vi.mock('@sentry/node', () => ({
+  captureException: vi.fn(),
+  addBreadcrumb: vi.fn(),
+  flush: vi.fn().mockResolvedValue(true),
+  isInitialized: vi.fn(() => true),
+  wrapMcpServerWithSentry: vi.fn((server) => server),
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.spyOn(console, 'error').mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 interface RecordedRequest {
   method: string;
@@ -69,6 +95,16 @@ function stubApi(routes: Record<string, (body: any) => unknown>) {
   return requests;
 }
 
+/**
+ * The API calls a test made, without GET /me. The write audit looks up the
+ * account with it, and these tests check only what track_container sends.
+ */
+function apiCalls(requests: RecordedRequest[]): string[] {
+  return requests
+    .map((r) => `${r.method} ${r.url.pathname}`)
+    .filter((call) => call !== 'GET /v2/me');
+}
+
 async function connect(): Promise<Client> {
   const handler = createMcpHandler(
     () => createTerminal49McpServer('TEST_KEY', 'https://api.test/v2'),
@@ -105,6 +141,33 @@ const createdTrackingRequest = (body: any) => ({
 });
 
 describe('track_container carrier selection', () => {
+  afterEach(() => {
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+    expect(Sentry.flush).not.toHaveBeenCalled();
+  });
+
+  it('returns a check-digit error without calling the API or reporting an exception', async () => {
+    const requests = stubApi({});
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330012' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).toBe(
+        'Container number MSKU4330012 fails the ISO 6346 check digit.',
+      );
+      expect(apiCalls(requests)).toEqual([]);
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('"event":"mcp.tool.error"'),
+      );
+    } finally {
+      await client.close();
+    }
+  });
+
   it('sends the inferred carrier, not the container owner prefix', async () => {
     const requests = stubApi({
       'GET /search': () => ({ data: [] }),
@@ -165,9 +228,7 @@ describe('track_container carrier selection', () => {
       expect(textOf(result)).toBe(
         'Terminal49 could not infer the carrier for ZZQU4330056; scac is required.',
       );
-      expect(
-        requests.map((r) => `${r.method} ${r.url.pathname}`),
-      ).not.toContain('POST /v2/tracking_requests');
+      expect(apiCalls(requests)).not.toContain('POST /v2/tracking_requests');
     } finally {
       await client.close();
     }
@@ -194,9 +255,7 @@ describe('track_container carrier selection', () => {
       expect(textOf(result)).toBe(
         'Terminal49 could not tell whether ABC123456 is a container, bill of lading, or booking number; numberType is required (container, bill_of_lading, or booking_number).',
       );
-      expect(
-        requests.map((r) => `${r.method} ${r.url.pathname}`),
-      ).not.toContain('POST /v2/tracking_requests');
+      expect(apiCalls(requests)).not.toContain('POST /v2/tracking_requests');
     } finally {
       await client.close();
     }
@@ -337,6 +396,11 @@ function rejectedCreate(body: unknown) {
 }
 
 describe('track_container when the API refuses the tracking request', () => {
+  afterEach(() => {
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+    expect(Sentry.flush).not.toHaveBeenCalled();
+  });
+
   it('passes the account limit message through instead of calling the number invalid', async () => {
     rejectedCreate({
       errors:
@@ -582,7 +646,7 @@ describe('track_container when the API refuses the tracking request', () => {
       expect(textOf(result)).toBe(
         'Tracking identifier ABC is invalid. Verify the identifier type and carrier SCAC.',
       );
-      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+      expect(apiCalls(requests)).toEqual([
         'GET /v2/search',
         'POST /v2/tracking_requests/infer_number',
       ]);
@@ -590,6 +654,96 @@ describe('track_container when the API refuses the tracking request', () => {
       await client.close();
     }
   });
+});
+
+describe('unexpected tool failures still report exceptions', () => {
+  it.each([
+    { status: 401, name: 'AuthenticationError' },
+    { status: 422, name: 'ValidationError' },
+    { status: 500, name: 'UpstreamError' },
+  ])('reports an unhandled $name from tracking', async ({ status, name }) => {
+    stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () =>
+        new Response(
+          JSON.stringify({ message: 'UPSTREAM_INTERNAL_DIAGNOSTIC' }),
+          {
+            status,
+            headers: { 'content-type': 'application/vnd.api+json' },
+          },
+        ),
+    });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).not.toContain('UPSTREAM_INTERNAL_DIAGNOSTIC');
+      expect(Sentry.captureException).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          name,
+          message: 'The Terminal49 upstream request could not be completed.',
+        }),
+      );
+      expect(Sentry.flush).toHaveBeenCalledExactlyOnceWith(2000);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('reports a NotFoundError from a container lookup', async () => {
+    stubApi({});
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'get_container',
+        arguments: { id: '11111111-1111-4111-8111-111111111111' },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(Sentry.captureException).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ name: 'NotFoundError' }),
+      );
+      expect(Sentry.flush).toHaveBeenCalledExactlyOnceWith(2000);
+    } finally {
+      await client.close();
+    }
+  });
+
+  it.each(['TimeoutError', 'TrackContainerError', 'ContainerCheckDigitError'])(
+    'reports an SDK error named %s without treating its name as a validation class',
+    async (name) => {
+      const error =
+        name === 'TimeoutError'
+          ? new TimeoutError()
+          : new Terminal49Error('Unexpected SDK failure');
+      error.name = name;
+      stubApi({
+        'GET /search': () => ({ data: [] }),
+        'POST /tracking_requests/infer_number': () => {
+          throw error;
+        },
+      });
+      const client = await connect();
+      try {
+        const result = await client.callTool({
+          name: 'track_container',
+          arguments: { number: 'MSKU4330011' },
+        });
+
+        expect(result.isError).toBe(true);
+        expect(Sentry.captureException).toHaveBeenCalledExactlyOnceWith(
+          expect.objectContaining({ name }),
+        );
+        expect(Sentry.flush).toHaveBeenCalledExactlyOnceWith(2000);
+      } finally {
+        await client.close();
+      }
+    },
+  );
 });
 
 function trackingRequestSearchHit(
@@ -627,9 +781,7 @@ describe('track_container when search finds a tracking request', () => {
       });
 
       expect(result.isError).not.toBe(true);
-      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
-        'GET /v2/search',
-      ]);
+      expect(apiCalls(requests)).toEqual(['GET /v2/search']);
       expect(result.structuredContent).toEqual({
         tracking_request_created: false,
         source: 'search_match',
@@ -658,9 +810,7 @@ describe('track_container when search finds a tracking request', () => {
         arguments: { number: 'MAEU12345678', scac: 'MAEU' },
       });
 
-      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
-        'GET /v2/search',
-      ]);
+      expect(apiCalls(requests)).toEqual(['GET /v2/search']);
       expect(result.structuredContent).toEqual({
         tracking_request_created: false,
         source: 'search_match',
@@ -688,9 +838,7 @@ describe('track_container when search finds a tracking request', () => {
         arguments: { number: 'ZZQU4330040', scac: 'oolu' },
       });
 
-      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
-        'GET /v2/search',
-      ]);
+      expect(apiCalls(requests)).toEqual(['GET /v2/search']);
       expect(result.structuredContent).toMatchObject({
         tracking_request_created: false,
         source: 'search_match',
@@ -728,7 +876,7 @@ describe('track_container when search finds a tracking request', () => {
         });
 
         expect(result.isError).not.toBe(true);
-        expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+        expect(apiCalls(requests)).toEqual([
           'GET /v2/search',
           'POST /v2/tracking_requests/infer_number',
           'POST /v2/tracking_requests',
@@ -761,7 +909,7 @@ describe('track_container when search finds a tracking request', () => {
         arguments: { number: 'ZZQU4330040' },
       });
 
-      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+      expect(apiCalls(requests)).toEqual([
         'GET /v2/search',
         'POST /v2/tracking_requests/infer_number',
         'POST /v2/tracking_requests',
@@ -829,7 +977,7 @@ describe('track_container when search finds a container', () => {
         arguments: { number: 'MSKU4330011', scac: 'MAEU' },
       });
 
-      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+      expect(apiCalls(requests)).toEqual([
         'GET /v2/search',
         'GET /v2/containers/cargo-earlier',
       ]);
@@ -860,7 +1008,7 @@ describe('track_container when search finds a container', () => {
       });
 
       expect(result.isError).not.toBe(true);
-      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+      expect(apiCalls(requests)).toEqual([
         'GET /v2/search',
         'GET /v2/containers/cargo-earlier',
         'POST /v2/tracking_requests/infer_number',
@@ -901,7 +1049,7 @@ describe('track_container when search finds a container', () => {
         arguments: { number: 'MSKU4330011', scac: 'MAEU' },
       });
 
-      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+      expect(apiCalls(requests)).toEqual([
         'GET /v2/search',
         'GET /v2/containers/cargo-earlier',
         'GET /v2/containers/cargo-later',
@@ -931,7 +1079,7 @@ describe('track_container when search finds a container', () => {
       });
 
       expect(result.isError).not.toBe(true);
-      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
+      expect(apiCalls(requests)).toEqual([
         'GET /v2/search',
         'POST /v2/tracking_requests/infer_number',
         'POST /v2/tracking_requests',
@@ -961,9 +1109,7 @@ describe('track_container when search finds a container', () => {
         arguments: { number: 'ZZQU4330040' },
       });
 
-      expect(requests.map((r) => `${r.method} ${r.url.pathname}`)).toEqual([
-        'GET /v2/search',
-      ]);
+      expect(apiCalls(requests)).toEqual(['GET /v2/search']);
       expect(result.structuredContent).toMatchObject({
         tracking_request_created: false,
         source: 'search_match',
@@ -987,7 +1133,7 @@ describe('list_tracking_requests status filter', () => {
 
       expect(result.isError).toBe(true);
       expect(textOf(result)).toContain('status');
-      expect(requests).toEqual([]);
+      expect(apiCalls(requests)).toEqual([]);
     } finally {
       await client.close();
     }
@@ -1124,5 +1270,171 @@ describe('search_container', () => {
     } finally {
       await client.close();
     }
+  });
+});
+
+describe('track_container audit', () => {
+  it('emits one audit event naming the tracking request it created', async () => {
+    const requestId = '3d2c1b0a-9f8e-4d7c-8b6a-5f4e3d2c1b0a';
+    stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () =>
+        inferResponse('MSKU4330011', 'MAEU'),
+      'POST /tracking_requests': (body) => ({
+        ...createdTrackingRequest(body),
+        data: { ...createdTrackingRequest(body).data, id: requestId },
+      }),
+    });
+    const lines: string[] = [];
+    const spy = vi
+      .spyOn(console, 'error')
+      .mockImplementation((line: unknown) => {
+        lines.push(String(line));
+      });
+    const client = await connect();
+    try {
+      await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011' },
+      });
+    } finally {
+      await client.close();
+      spy.mockRestore();
+    }
+
+    const audits = lines
+      .filter((line) => line.startsWith('{'))
+      .map((line) => JSON.parse(line))
+      .filter((event) => event.event === 'mcp.write.audit');
+    expect(audits).toEqual([
+      expect.objectContaining({
+        tool: 'track_container',
+        tier: 'A',
+        phase: 'execute',
+        outcome: 'created',
+        entity_type: 'tracking_request',
+        entity_id: requestId,
+        credential_type: 'api_key',
+      }),
+    ]);
+  });
+});
+
+describe('track_container when Terminal49 limits the request rate', () => {
+  function auditOutcomes(lines: string[]): string[] {
+    return lines
+      .filter((line) => line.startsWith('{'))
+      .map((line) => JSON.parse(line))
+      .filter((event) => event.event === 'mcp.write.audit')
+      .map((event) => event.outcome);
+  }
+
+  async function track(): Promise<{
+    result: Awaited<ReturnType<Client['callTool']>>;
+    outcomes: string[];
+  }> {
+    const lines: string[] = [];
+    const spy = vi
+      .spyOn(console, 'error')
+      .mockImplementation((line: unknown) => {
+        lines.push(String(line));
+      });
+    const client = await connect();
+    try {
+      const result = await client.callTool({
+        name: 'track_container',
+        arguments: { number: 'MSKU4330011' },
+      });
+      return { result, outcomes: auditOutcomes(lines) };
+    } finally {
+      await client.close();
+      spy.mockRestore();
+    }
+  }
+
+  it('returns rate_limited as a soft result when the create call answers 429', async () => {
+    stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () =>
+        inferResponse('MSKU4330011', 'MAEU'),
+      'POST /tracking_requests': () =>
+        new Response(JSON.stringify({ errors: [{ status: '429' }] }), {
+          status: 429,
+          headers: {
+            'content-type': 'application/vnd.api+json',
+            'Retry-After': '1',
+          },
+        }),
+    });
+
+    const { result, outcomes } = await track();
+
+    expect(result.isError).not.toBe(true);
+    expect(result.structuredContent).toMatchObject({
+      error: 'rate_limited',
+      retry_after_s: 1,
+    });
+    expect(outcomes).toEqual(['rate_limited']);
+  });
+
+  it('reports the created request when the container read after it answers 429', async () => {
+    const containerId = '7c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f';
+    stubApi({
+      'GET /search': () => ({ data: [] }),
+      'POST /tracking_requests/infer_number': () =>
+        inferResponse('MSKU4330011', 'MAEU'),
+      'POST /tracking_requests': (body) => ({
+        ...createdTrackingRequest(body),
+        included: [{ id: containerId, type: 'container', attributes: {} }],
+      }),
+      [`GET /containers/${containerId}`]: () =>
+        new Response(JSON.stringify({ errors: [{ status: '429' }] }), {
+          status: 429,
+          headers: {
+            'content-type': 'application/vnd.api+json',
+            'Retry-After': '0',
+          },
+        }),
+    });
+
+    const { result, outcomes } = await track();
+
+    expect(result.isError).not.toBe(true);
+    expect(result.structuredContent).toMatchObject({
+      tracking_request_created: true,
+      tracking_request: { id: 'tr-1', container_id: containerId },
+    });
+    expect(outcomes).toEqual(['created']);
+  });
+});
+
+describe('trackContainerAudit', () => {
+  it.each([
+    [
+      { tracking_request_created: true, tracking_request: { id: 'a' } },
+      'created',
+      'a',
+    ],
+    [
+      {
+        tracking_request_created: false,
+        source: 'duplicate',
+        tracking_request: { id: 'b' },
+      },
+      'duplicate',
+      'b',
+    ],
+    [
+      { tracking_request_created: false, id: 'container-1' },
+      'already_tracked',
+      undefined,
+    ],
+    [
+      { error: 'NotFound', tracking_request_created: false },
+      'NotFound',
+      undefined,
+    ],
+  ])('reads %j as %s', (result, outcome, entityId) => {
+    expect(trackContainerAudit(result)).toEqual({ outcome, entityId });
   });
 });
