@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "data": {
+    "container_id": "container-1",
+    "pickup_lfd": "2026-01-20",
+    "pickup_appointment_at": "2026-01-10T12:00:00Z",
+    "available_for_pickup": true,
+    "fees_at_pod_terminal": [
+      {
+        "name": "Example fee",
+        "amount": 25,
+        "currency": "USD"
+      }
+    ],
+    "holds_at_pod_terminal": [
+      {
+        "name": "Example hold",
+        "status": "released",
+        "description": "Synthetic hold"
+      }
+    ],
+    "pod_arrived_at": "2026-01-10T12:00:00Z",
+    "pod_discharged_at": "2026-01-10T12:00:00Z"
+  }
+}

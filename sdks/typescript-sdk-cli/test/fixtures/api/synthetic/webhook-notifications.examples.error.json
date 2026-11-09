@@ -1,0 +1,7 @@
+{
+  "ok": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Synthetic invalid webhook event"
+  }
+}

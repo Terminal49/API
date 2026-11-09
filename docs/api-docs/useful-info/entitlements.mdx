@@ -19,12 +19,29 @@ Some Terminal49 features require account enablement beyond standard API access.
 | --- | --- | --- | --- |
 | Read endpoints (`GET /v2/shipments`, `GET /v2/containers`, `GET /v2/tracking_requests/{id}`, and other GETs) | Full API access (paid plan or 7-day API trial) | Open [Developers](https://app.terminal49.com/developers) and click **Start trial** for 7 days with the same 10-active-container limit, or see [Pricing](/api-docs/useful-info/pricing) for ongoing access | `401 Unauthorized` with `You do not have permissions for using the API, except for creating tracking requests. All other permissions require a paid plan. See https://app.terminal49.com/settings/billing`. `POST /v2/tracking_requests` still works. |
 | Container Map GeoJSON API (`GET /v2/containers/{id}/map_geojson`) | Routing Data | Contact sales@terminal49.com | `403 Forbidden` with `Routing data feature is not enabled for this account` |
-| Vessel position and future-position endpoints | Routing Data / vessel positions | Contact sales@terminal49.com | `403 Forbidden` with `Routing data feature is not enabled for this account` |
+| Vessel endpoints (`GET /v2/vessels/{id}`, IMO lookup, position history, and future positions) | Routing Data | Contact sales@terminal49.com | `403 Forbidden` with `Routing data feature is not enabled for this account`. Vessels outside your actively tracked shipments return `404`. See [Vessel data access](#vessel-data-access). |
 | MCP `get_container_route` tool | Routing Data | Contact sales@terminal49.com | The tool returns a feature-not-enabled response; use `get_container_transport_events` for historical milestones |
-| Terminal49 Map Embed | Publishable map API key | Contact support@terminal49.com | The browser embed cannot authenticate without a valid publishable key |
+| Terminal49 Map Embed | Publishable map API key, plus Routing Data for vessel positions | Contact support@terminal49.com | The browser embed cannot authenticate without a valid publishable key. Without Routing Data, vessel requests from the embed return `403`. |
 | Tracking Widget Embed | Publishable widget API key | Contact support@terminal49.com | The browser widget cannot authenticate without a valid publishable key |
 | Container refresh (`PATCH /v2/containers/{id}/refresh`) | On-demand refresh | Contact sales@terminal49.com | `403 Forbidden`; the endpoint is also rate-limited to 10 requests per minute for entitled accounts |
 | Rail LFD data (`import_deadlines.pickup_lfd_rail` and the `container.pickup_lfd_rail.changed` webhook event) | Rail Plan | Contact sales@terminal49.com | `container.pickup_lfd_rail.changed` notifications are not delivered, and rail-carrier LFD updates are not surfaced on the container |
+
+## Vessel data access
+
+Vessel data is part of Routing Data. These rules apply to every `/v2/vessels` endpoint, whether you call it with an API key or, where the endpoint allows it, a publishable API key.
+
+| Your account | Response |
+| --- | --- |
+| No full API access (free plan, paused API access, or an invalid key) | `401 Unauthorized` |
+| Full API access without Routing Data | `403 Forbidden` with `Routing data feature is not enabled for this account` |
+| Routing Data, vessel on one of your actively tracked shipments | `200 OK` with the vessel and its current position |
+| Routing Data, any other vessel | `404 Not Found` |
+
+A vessel counts as yours while at least one of your actively tracked shipments references it, including transshipment vessels and vessels for upcoming legs. When you stop tracking every shipment that references a vessel, its endpoints return `404` for you.
+
+The same rules apply to vessel positions inside other responses. In included vessel resources and webhook payloads, the vessel's position fields (`latitude`, `longitude`, `nautical_speed_knots`, `navigational_heading_degrees`, and `position_timestamp`) are `null` when your account does not have Routing Data or the vessel is not on one of your actively tracked shipments. The field names stay the same, so your parser does not need to change.
+
+The standalone `GET /v2/vessels/{id}/location` endpoint has been removed. Read the current position from [`GET /v2/vessels/{id}`](/api-docs/api-reference/vessels/get-a-vessel-using-the-id) instead.
 
 ## Pricing
 

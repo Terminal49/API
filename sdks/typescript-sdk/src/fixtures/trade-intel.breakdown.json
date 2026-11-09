@@ -9,36 +9,17 @@
   },
   "since": "2026-01",
   "until": "2026-06",
-  "fact": "hs_lane_month",
-  "notes": [
-    "volume is physical containers, each counted once"
-  ],
+  "fact": "synthetic_import_facts",
+  "notes": [],
   "rows": [
     {
       "level": 0,
-      "value": 60000
+      "value": 12
     },
     {
       "level": 1,
-      "pod_coast": "WEST",
-      "value": 32000
-    },
-    {
-      "level": 2,
-      "pod_coast": "WEST",
-      "pod": "LOS ANGELES",
-      "value": 18000
-    },
-    {
-      "level": 2,
-      "pod_coast": "WEST",
-      "pod": "LONG BEACH",
-      "value": 14000
-    },
-    {
-      "level": 1,
-      "pod_coast": "EAST",
-      "value": 28000
+      "pod_coast": "example",
+      "value": 12
     }
   ]
 }
