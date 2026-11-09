@@ -219,7 +219,7 @@ describe('checked-in POD serializer contract projections', () => {
         { id: 'shipment-1' },
         client,
       );
-      expect(result.containers.containers[0]).toMatchObject({
+      expect(result.containers?.containers[0]).toMatchObject({
         pickup_lfd: expected.value,
         pickup_lfd_source: expected.source,
       });

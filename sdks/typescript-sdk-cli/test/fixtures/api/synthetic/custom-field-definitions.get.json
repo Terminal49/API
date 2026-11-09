@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "data": {
+    "data": {
+      "type": "custom_field_definition",
+      "id": "custom_field_definition-1",
+      "attributes": {
+        "entity_type": "shipment",
+        "api_slug": "example_reference",
+        "display_name": "Example reference",
+        "data_type": "text"
+      }
+    }
+  }
+}

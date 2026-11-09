@@ -6,6 +6,7 @@
 import { Terminal49Client } from '@terminal49/sdk';
 import { resolvePodDeadline } from '../lib/pod-deadline.js';
 import { logMcpEvent } from '../logging.js';
+import { assertNoIgnoredFilters } from './ignored-filters.js';
 import { compactContainer } from './compact-rows.js';
 
 const MAX_PAGE_SIZE = 25;
@@ -75,6 +76,8 @@ export async function executeListContainers(
         pageSize,
       },
     );
+
+    assertNoIgnoredFilters(result?.meta?.ignored_filters);
 
     const duration = Date.now() - startTime;
     logMcpEvent({

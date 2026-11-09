@@ -1,3 +1,4 @@
+import { encodeTerminalText } from '../output/terminal-text.js';
 import {
   DEFAULT_ITERATE_MAX_PAGES,
   DEFAULT_ITERATE_MAX_ROWS,
@@ -148,7 +149,7 @@ export function warnUnsupportedFilters(result: unknown): void {
   if (!Array.isArray(unsupportedFilters) || unsupportedFilters.length === 0)
     return;
   process.stderr.write(
-    `Warning: unsupported filters ignored by SDK: ${unsupportedFilters.join(', ')}\n`,
+    `Warning: unsupported filters ignored by SDK: ${encodeTerminalText(unsupportedFilters.join(', '))}\n`,
   );
 }
 

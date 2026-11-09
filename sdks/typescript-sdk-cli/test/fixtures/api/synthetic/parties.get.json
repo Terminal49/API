@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "data": {
+    "data": {
+      "type": "party",
+      "id": "party-1",
+      "attributes": {
+        "company_name": "Example Fixture Partner",
+        "email": "partner@example.test"
+      }
+    }
+  }
+}

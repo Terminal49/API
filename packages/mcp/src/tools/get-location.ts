@@ -22,14 +22,16 @@ const LOCATION_LABELS: Record<LocationKind, string> = {
 export const getLocationInputSchema = z.object({
   kind: z
     .enum(LOCATION_KINDS)
-    .describe('What to look up: port, terminal, or metro_area.'),
+    .describe(
+      'Which kind of location id names. A terminal is looked up by Terminal49 ID only; a port or metro area also by UN/LOCODE.',
+    ),
   id: z
     .string()
     .trim()
     .min(1)
     .max(36)
     .describe(
-      'The Terminal49 location ID (UUID format). A port or metro_area also accepts its five-character UN/LOCODE, such as USLAX. Identifier only; never pass conversation text.',
+      'Terminal49 ID of the location, such as a port or terminal ID from a shipment, or for a port or metro_area its UN/LOCODE, such as USLAX. Identifier only; never pass conversation text.',
     ),
 });
 

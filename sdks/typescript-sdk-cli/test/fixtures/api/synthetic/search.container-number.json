@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "data": [
+    {
+      "type": "shipment",
+      "id": "shipment-1",
+      "attributes": {
+        "number": "SYNTHBOL000001",
+        "bill_of_lading_number": "SYNTHBOL000001",
+        "shipping_line_scac": "SYNU",
+        "scac": "SYNU",
+        "customer_name": "Example Fixture Shipper",
+        "status": "in_transit"
+      }
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "ok": true,
+  "data": {
+    "data": [
+      {
+        "type": "raw_event",
+        "id": "raw_event-1",
+        "attributes": {
+          "event": "container.transport.vessel_arrived",
+          "original_event": "Synthetic arrival",
+          "timestamp": "2026-01-10T12:00:00Z",
+          "actual_at": "2026-01-10T12:00:00Z",
+          "estimated_at": null,
+          "actual_on": null,
+          "estimated": false,
+          "index": 1,
+          "data_source": "shipping_line",
+          "data_provider_name": "Example Ocean Line",
+          "data_provider_code": "SYNU",
+          "voyage_number": "SYNTH01",
+          "location_name": "Example Destination",
+          "location_locode": "ZZDST",
+          "timezone": "Etc/UTC"
+        },
+        "relationships": {
+          "container": {
+            "data": {
+              "type": "container",
+              "id": "container-1"
+            }
+          },
+          "location": {
+            "data": {
+              "type": "port",
+              "id": "port-2"
+            }
+          },
+          "vessel": {
+            "data": null
+          }
+        }
+      }
+    ],
+    "included": [
+      {
+        "type": "port",
+        "id": "port-2",
+        "attributes": {
+          "id": "port-2",
+          "name": "Example Destination",
+          "code": "ZZDST",
+          "country_code": "ZZ",
+          "latitude": "30",
+          "longitude": "40",
+          "time_zone": "Etc/UTC"
+        },
+        "relationships": {}
+      }
+    ]
+  }
+}

@@ -217,3 +217,23 @@ describe('renderTable', () => {
     expect(table).not.toMatch(/Seq.*Label/);
   });
 });
+
+describe('terminal controls in human output', () => {
+  const marker = 'safe\x1b[2J\x07\r\n\t\x7f\x85\u202evalue';
+  it('encodes cells, detail keys, projected headers, and vessel headings', () => {
+    for (const output of [
+      renderTable('shipments.list', [{ id: marker }]),
+      renderTable('shipments.get', { [marker]: marker }),
+      renderTable('shipments.list', [{ [marker]: marker }], {
+        fields: [marker],
+      }),
+      renderTable('vessels.future-positions', {
+        name: marker,
+        positions: [{}],
+      }),
+    ]) {
+      expect(output).not.toMatch(/[\x00-\x09\x0b-\x1f\x7f-\x9f\u202e]/);
+      expect(output).toContain('\\u001b');
+    }
+  });
+});

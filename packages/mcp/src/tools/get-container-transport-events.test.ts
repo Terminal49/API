@@ -42,10 +42,7 @@ describe('get_container_transport_events', () => {
     );
 
     expect(
-      result.timeline.map((event: { event: string; vessel_id: unknown }) => [
-        event.event,
-        event.vessel_id,
-      ]),
+      result.timeline.map((event) => [event.event, event.vessel_id]),
     ).toEqual([
       ['container.transport.vessel_departed', VESSEL_ID],
       ['container.transport.full_out', null],
