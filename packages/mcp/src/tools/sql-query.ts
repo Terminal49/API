@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import {
   NetworkError,
   RateLimitError,
@@ -27,14 +27,24 @@ export function isSqlTool(toolName: string): boolean {
   return SQL_TOOL_NAMES.some((name) => name === toolName);
 }
 
-/** A hash of the caller's credentials and account, so no token is held as a key. */
+/**
+ * A keyed tag of the caller's high-entropy credential and account, so no token
+ * is held as a key; never a stored password hash. Same pattern as
+ * `credentialHash` in write-kit.ts.
+ */
 export function sqlScope(
   apiToken: string,
   apiBaseUrl: string | undefined,
   accountId: string | undefined,
 ): string {
-  return createHash('sha256')
-    .update(JSON.stringify([apiBaseUrl ?? '', accountId ?? '', apiToken]))
+  return createHmac('sha256', apiToken)
+    .update(
+      JSON.stringify([
+        'terminal49-mcp-sql-scope-v1',
+        apiBaseUrl ?? '',
+        accountId ?? '',
+      ]),
+    )
     .digest('hex');
 }
 
