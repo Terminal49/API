@@ -1,5 +1,5 @@
 ---
-title: "Terminal49 MCP Server"
+title: "Terminal49 MCP server"
 sidebarTitle: "MCP Overview"
 description: "Connect Claude, ChatGPT, Cursor, or any MCP client to the Terminal49 MCP server to query live shipment tracking data with OAuth sign-in and no API key."
 keywords:
@@ -590,7 +590,7 @@ Use the typed `advanced_filters` object for the full shipment filter catalog. Us
 **Good for**
 
 - "Show actively tracked shipments arriving at Los Angeles this week."
-- "Find shipments by an exact Bill of Lading number."
+- "Find shipments by an exact bill of lading number."
 
 [Filter usage, values, and pagination](/mcp/filtering-worklists) explains the inputs and result metadata.
 
@@ -674,7 +674,7 @@ Find the companies on the account's shipments (customers, shippers, consignees, 
 
 ### `set_party_role`
 
-Attach a party to containers or shipments in a role, replace the party in that role, or detach it. For a party already on a record, use the `party_id` shown in that record's party roles (`get_container` with `party_roles`, or `get_shipment_details` with `include_party_roles`): `list_parties` can list a customer under an account id that party roles do not accept. Use `list_parties` only for a party that is on no record yet.
+Attach a party to containers or shipments in a role, replace the party in that role, or detach it. For a party already on a record, use the `party_id` shown in that record's party roles (`get_container` with `party_roles`, or `get_shipment_details` with `include_party_roles`). `list_parties` can list a customer under an account ID that party roles do not accept. Use `list_parties` only for a party that is on no record yet.
 
 `add`, and a `replace` that detaches nobody, run at once. `remove`, and a `replace` that detaches another party, ask you to approve a preview of every record that changes, as described under [Write tools](#write-tools). One approval covers the whole call.
 
@@ -771,7 +771,7 @@ Get one tracking request: its number, carrier SCAC, status, failure reason, retr
 
 ### `identify_tracking_number`
 
-Identify a container, Bill of Lading, or booking number without tracking it. The tool creates nothing and adds no tracking volume.
+Identify a container, bill of lading, or booking number without tracking it. The tool creates nothing and adds no tracking volume.
 
 **Parameters**
 - `number` *(string, required)* – one number, 4 to 64 characters
@@ -871,7 +871,7 @@ Find documents on the account, such as Bills of Lading, arrival notices, and del
 
 **Parameters**
 - `filename` *(string, optional)* – text to match in the file name
-- `reference` *(string, optional)* – one reference to match, such as a Bill of Lading, booking, container, or PO number
+- `reference` *(string, optional)* – one reference to match, such as a bill of lading, booking, container, or PO number
 - `document_types` *(string[], optional)* – document type codes, such as `arrival_notice`
 - `sort` *(string, optional)* – `created_at`, `document_type`, or `added_by`, with a leading `-` for descending (default: `-created_at`)
 - `page`, `page_size` *(optional)* – page number and page size (default and maximum 25)
@@ -918,7 +918,7 @@ Extracted data and the source email are text that people outside your account wr
 
 **Good for**
 - "What does this arrival notice say about the consignee?"
-- "Who sent this Bill of Lading?"
+- "Who sent this bill of lading?"
 - "Give me the delivery order file."
 
 **REST equivalent**: [GET /documents/{id}](/api-docs/api-reference/documents/get-a-document), [GET /documents/{id}/download_url](/api-docs/api-reference/documents/get-a-document-download-url)
@@ -931,7 +931,7 @@ Seven tools can change your account's data. `track_container` is in the default 
 
 - **Tier A** tools run in one call. Starting or resuming tracking consumes tracking quota and may incur pay-as-you-go charges. These additive tools carry a client interaction hint and explain that consequence; your client controls its permission UI.
 
-- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, to request user interaction in clients that support this hint. `stop_shipment_tracking` and `cancel_tracking_request` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call and ask only when a record in the call would lose a party or a value; a call that only adds runs at once. `update_record` works the same way on one record: adding reference numbers or tags runs at once, and removing any asks first.
+- **Tier C** tools need your approval of a preview. They are marked destructive, and they carry `_meta["anthropic/requiresUserInteraction"]`, to request user interaction in clients that support this hint. `stop_shipment_tracking` and `cancel_tracking_request` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call. They ask only when a record in the call would lose a party or a value. A call that only adds runs at once. `update_record` works the same way on one record: adding reference numbers or tags runs at once, and removing any asks first.
 
 A call that needs your approval never changes anything the first time. It reads the record, or every record in the batch, and builds a preview of the record now and after the change. For a batch, the preview lists each record that changes and counts the rest, and one approval covers the whole call. How you approve the preview depends on your AI client.
 
@@ -945,7 +945,11 @@ Either way, the approval expires after 5 minutes and works only for the same too
 The confirmation step makes sure you see the current state before a destructive change. Terminal49 still decides what your credential can do.
 </Note>
 
-Write tools return these results with `isError: false`, so the AI client can explain them: `rate_limited` when Terminal49 limits the request rate, with `retry_after_s` when Terminal49 says how long to wait, `not_permitted` when the change needs your approval and the server has no secret to sign approvals with, and the codes listed for each tool. Each of these results says that nothing was changed.
+Write tools return these results with `isError: false`, so the AI client can explain them. Each of these results says that nothing was changed.
+
+- `rate_limited` when Terminal49 limits the request rate, with `retry_after_s` when Terminal49 says how long to wait.
+- `not_permitted` when the change needs your approval and the server has no secret to sign approvals with.
+- The codes listed for each tool.
 
 ---
 
@@ -958,13 +962,13 @@ Stop carrier and terminal updates for a shipment and all its containers. Tier C.
 - `confirmation_token` *(string, optional)* – leave it out to get a preview. Send it only after you approve that preview.
 
 **Returns**
-- Without a token: a `preview` with the shipment's Bill of Lading, carrier SCAC, number of containers, and tracking state, and a `confirmation_token`
+- Without a token: a `preview` with the shipment's bill of lading, carrier SCAC, number of containers, and tracking state, and a `confirmation_token`
 - `status: "stopped"` with the shipment and `undo: "resume_shipment_tracking"`
 - `status: "already_stopped"` when tracking is already off
 - `status: "noop"` with the shipment when Terminal49 refuses the stop and tracking is still on. Nothing changed.
 - `FeatureNotEnabled` when your account or credential cannot stop tracking. The tool checks this before it reads the shipment.
 
-The token also covers the Bill of Lading and the number of containers. If a container is added after the preview, you get a new preview.
+The token also covers the bill of lading and the number of containers. If a container is added after the preview, you get a new preview.
 
 **Good for**
 - "Stop tracking MAEU123456789, it was delivered."
@@ -981,7 +985,7 @@ Start tracking a stopped shipment again. Tier A.
 - `shipment_id` *(uuid, required)* – shipment UUID
 
 **Returns**
-- `status: "resumed"` with the shipment and `undo: "stop_shipment_tracking"`. Updates the carrier published while tracking was stopped may be missing. A resumed shipment can count against your tracking limits.
+- `status: "resumed"` with the shipment and `undo: "stop_shipment_tracking"`. Updates that the carrier published while tracking was stopped may be missing. A resumed shipment can count against your tracking limits.
 - `status: "already_tracking"` when tracking was never stopped. Nothing is sent.
 - `status: "noop"` with the shipment when Terminal49 refuses the resume and tracking is still off. Nothing changed.
 - `FeatureNotEnabled` when your account or credential cannot resume tracking. Nothing changed.
