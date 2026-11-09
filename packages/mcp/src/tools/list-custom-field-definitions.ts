@@ -40,13 +40,13 @@ export const listCustomFieldDefinitionsInputSchema = z.object({
     .enum(['container', 'shipment'])
     .optional()
     .describe(
-      'Only list fields for containers or for shipments. Omit for both.',
+      'The kind of record whose fields to list. Omit it to list fields for both containers and shipments.',
     ),
   include_archived: z
     .boolean()
     .optional()
     .default(false)
-    .describe('Also list archived fields. Default: false'),
+    .describe('Also list archived fields, which no longer appear on records.'),
 });
 
 export type ListCustomFieldDefinitionsArgs = z.input<
@@ -55,29 +55,52 @@ export type ListCustomFieldDefinitionsArgs = z.input<
 
 const optionSchema = z.object({
   id: z.string(),
-  label: z.string().nullable(),
-  value: z.string().nullable(),
+  label: z.string().nullable().describe('What the dashboard shows.'),
+  value: z
+    .string()
+    .nullable()
+    .describe('What to pass as the value when setting the field.'),
 });
 
 const definitionSchema = z.object({
   id: z.string(),
-  api_slug: z.string(),
+  api_slug: z
+    .string()
+    .describe('Names the field in custom field values and writes.'),
   display_name: z.string().nullable(),
   description: z.string().nullable(),
   entity_type: z.enum(['container', 'shipment']).nullable(),
-  data_type: z.string().nullable(),
+  data_type: z
+    .string()
+    .nullable()
+    .describe('Value type, such as date, enum, or enum_multi.'),
   reference_type: z.string().nullable(),
-  validation: z.record(z.string(), z.unknown()).nullable(),
+  validation: z
+    .record(z.string(), z.unknown())
+    .nullable()
+    .describe('Validation rules the account set on the field.'),
   sensitive: z.boolean().nullable(),
   archived: z.boolean(),
-  options: z.array(optionSchema).nullable().optional(),
-  options_note: z.string().optional(),
+  options: z
+    .array(optionSchema)
+    .nullable()
+    .optional()
+    .describe(
+      'Allowed options of an enum or enum_multi field; null when they could not be loaded.',
+    ),
+  options_note: z.string().optional().describe('Why options is null.'),
 });
 
 export const listCustomFieldDefinitionsOutputSchema = z.object({
-  total: z.number(),
-  definitions: z.array(definitionSchema).nullable(),
-  custom_fields_note: z.string().optional(),
+  total: z.number().describe('Number of definitions returned.'),
+  definitions: z
+    .array(definitionSchema)
+    .nullable()
+    .describe('null when custom fields are unavailable to this credential.'),
+  custom_fields_note: z
+    .string()
+    .optional()
+    .describe('Why definitions is null.'),
 });
 
 export type ListCustomFieldDefinitionsResult = z.infer<
@@ -90,7 +113,9 @@ const rawDefinitionsSchema = z.object({ data: z.array(z.unknown()) });
 const rawDefinitionSchema = z.object({
   id: z.string(),
   attributes: z.object({
-    api_slug: z.string(),
+    api_slug: z
+      .string()
+      .describe('Names the field in custom field values and writes.'),
     display_name: nullableString,
     description: nullableString,
     entity_type: nullableString,

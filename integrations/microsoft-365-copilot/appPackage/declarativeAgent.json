@@ -1,0 +1,31 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.6/schema.json",
+  "version": "v1.6",
+  "name": "AskT49",
+  "description": "Use Terminal49 to track ocean containers, investigate delays and holds, and plan pickups. Requires a Terminal49 account.",
+  "instructions": "$[file('instructions.txt')]",
+  "conversation_starters": [
+    {
+      "title": "Pickup readiness",
+      "text": "Which of my containers are ready for pickup?"
+    },
+    {
+      "title": "Last free days",
+      "text": "Which containers have a last free day in the next three days?"
+    },
+    {
+      "title": "Arrival changes",
+      "text": "Which of my shipments have changed arrival estimates?"
+    },
+    {
+      "title": "Shipment exceptions",
+      "text": "Which active containers need my attention today?"
+    }
+  ],
+  "actions": [
+    {
+      "id": "terminal49",
+      "file": "ai-plugin.json"
+    }
+  ]
+}
