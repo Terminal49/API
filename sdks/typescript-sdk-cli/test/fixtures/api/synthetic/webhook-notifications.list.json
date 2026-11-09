@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "data": [
+    {
+      "type": "webhook_notification",
+      "id": "webhook_notification-1",
+      "attributes": {
+        "event": "container.transport.vessel_arrived",
+        "status": "delivered",
+        "url": "https://webhooks.example.test/events"
+      }
+    }
+  ]
+}

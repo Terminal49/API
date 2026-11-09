@@ -1,0 +1,28 @@
+{
+  "ok": true,
+  "data": [
+    {
+      "id": "transport_event-1",
+      "event": "container.transport.vessel_arrived",
+      "timestamp": "2026-01-10T12:00:00Z",
+      "createdAt": "2026-01-10T12:00:00Z",
+      "voyageNumber": "SYNTH01",
+      "dataSource": "shipping_line",
+      "locationLocode": "ZZDST",
+      "timezone": "Etc/UTC",
+      "invalidatedAt": null,
+      "value": null,
+      "location": {
+        "id": "port-2",
+        "name": "Example Destination",
+        "locode": "ZZDST"
+      },
+      "terminal": {
+        "id": "terminal-1",
+        "name": "Example Ocean Terminal",
+        "nickname": "Example Ocean",
+        "firmsCode": "EX01"
+      }
+    }
+  ]
+}

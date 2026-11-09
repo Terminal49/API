@@ -7,19 +7,145 @@
  */
 
 import { Terminal49Client } from '@terminal49/sdk';
+import { z } from 'zod';
 import { logMcpEvent } from '../logging.js';
-import { type CustomFieldsResult, loadCustomFields } from './custom-fields.js';
+import {
+  type CustomFieldsResult,
+  customFieldValueSchema,
+  loadCustomFields,
+} from './custom-fields.js';
+import {
+  loadPartyRoles,
+  partyRoleSchema,
+  type PartyRolesResult,
+} from './party-roles.js';
 
 export interface GetShipmentArgs {
   id: string;
   include_containers?: boolean;
   include_custom_fields?: boolean;
+  include_party_roles?: boolean;
 }
+
+// Values copied straight from API attributes are nullish: the API can omit
+// them, and a missing optional field must not fail the whole tool call.
+const apiString = z.string().nullish();
+
+const portDetailsSchema = z
+  .object({ id: z.string(), code: apiString, country_code: apiString })
+  .nullable();
+
+const terminalSchema = z
+  .object({
+    id: z.string(),
+    name: apiString,
+    nickname: apiString,
+    firms_code: apiString,
+  })
+  .nullable();
+
+/**
+ * Output contract for get_shipment_details. Agents that script tool calls read
+ * field names from this schema, so every key `formatShipmentResponse` emits is
+ * listed.
+ */
+export const shipmentDetailsSchema = z.object({
+  id: z.string(),
+  bill_of_lading: apiString,
+  normalized_number: apiString,
+  status: z.enum([
+    'delivered_to_destination',
+    'arrived_at_pod',
+    'in_transit',
+    'awaiting_departure',
+    'pending',
+  ]),
+  shipping_line: z.object({
+    scac: apiString,
+    name: apiString,
+    short_name: apiString,
+  }),
+  customer_name: apiString,
+  // The API allows null entries in ref_numbers.
+  reference_numbers: z.array(z.string().nullable()),
+  tags: z.array(z.string()),
+  routing: z.object({
+    port_of_lading: z.object({
+      locode: apiString,
+      name: apiString,
+      port_details: portDetailsSchema,
+      etd: apiString,
+      atd: apiString,
+      timezone: apiString,
+    }),
+    port_of_discharge: z.object({
+      locode: apiString,
+      name: apiString,
+      port_details: portDetailsSchema,
+      terminal: terminalSchema,
+      eta: apiString,
+      ata: apiString,
+      original_eta: apiString,
+      timezone: apiString,
+    }),
+    destination: z
+      .object({
+        locode: z.string(),
+        name: apiString,
+        terminal: terminalSchema,
+        eta: apiString,
+        ata: apiString,
+        timezone: apiString,
+      })
+      .nullable(),
+  }),
+  vessel_at_pod: z.object({
+    name: apiString,
+    imo: apiString,
+    voyage_number: apiString,
+  }),
+  containers: z
+    .object({
+      count: z.number(),
+      containers: z.array(
+        z.object({
+          id: z.string(),
+          number: apiString,
+          equipment_type: apiString,
+          equipment_length: z.number().nullish(),
+          available_for_pickup: z.boolean().nullish(),
+          pod_arrived_at: apiString,
+          pod_discharged_at: apiString,
+          pickup_lfd: apiString,
+        }),
+      ),
+    })
+    .optional(),
+  custom_fields: z.array(customFieldValueSchema).nullable(),
+  custom_fields_note: z.string().optional(),
+  // Present only when include_party_roles is true.
+  party_roles: z.array(partyRoleSchema).nullable().optional(),
+  party_roles_note: z.string().optional(),
+  tracking: z.object({
+    line_tracking_last_attempted_at: apiString,
+    line_tracking_last_succeeded_at: apiString,
+    line_tracking_stopped_at: apiString,
+    line_tracking_stopped_reason: apiString,
+  }),
+  updated_at: apiString,
+  created_at: apiString,
+  _metadata: z.object({
+    shipment_status: z.string(),
+    includes_loaded: z.array(z.string()),
+  }),
+});
+
+type ShipmentDetails = z.input<typeof shipmentDetailsSchema>;
 
 export async function executeGetShipmentDetails(
   args: GetShipmentArgs,
   client: Terminal49Client,
-): Promise<any> {
+): Promise<ShipmentDetails> {
   if (!args.id || args.id.trim() === '') {
     throw new Error('Shipment ID is required');
   }
@@ -35,11 +161,16 @@ export async function executeGetShipmentDetails(
   try {
     const includeContainers = args.include_containers !== false;
     const includeCustomFields = args.include_custom_fields === true;
-    const [result, customFields] = await Promise.all([
+    const [result, customFields, partyRoles] = await Promise.all([
       client.shipments.get(args.id, includeContainers, { format: 'raw' }),
       includeCustomFields
         ? loadCustomFields(() =>
             client.shipments.customFields(args.id, { format: 'mapped' }),
+          )
+        : Promise.resolve(null),
+      args.include_party_roles === true
+        ? loadPartyRoles(() =>
+            client.shipments.partyRoles(args.id, { format: 'raw' }),
           )
         : Promise.resolve(null),
     ]);
@@ -54,7 +185,12 @@ export async function executeGetShipmentDetails(
       timestamp: new Date().toISOString(),
     });
 
-    return formatShipmentResponse(raw, includeContainers, customFields);
+    return formatShipmentResponse(
+      raw,
+      includeContainers,
+      customFields,
+      partyRoles,
+    );
   } catch (error) {
     const duration = Date.now() - startTime;
 
@@ -76,7 +212,8 @@ function formatShipmentResponse(
   apiResponse: any,
   includeContainers: boolean,
   customFields: CustomFieldsResult | null,
-): any {
+  partyRoles: PartyRolesResult | null,
+): ShipmentDetails {
   const shipment = apiResponse.data?.attributes || {};
   const relationships = apiResponse.data?.relationships || {};
   const included = apiResponse.included || [];
@@ -199,6 +336,10 @@ function formatShipmentResponse(
     ...(customFields?.custom_fields_note
       ? { custom_fields_note: customFields.custom_fields_note }
       : {}),
+    ...(partyRoles ? { party_roles: partyRoles.party_roles } : {}),
+    ...(partyRoles?.party_roles_note
+      ? { party_roles_note: partyRoles.party_roles_note }
+      : {}),
     tracking: {
       line_tracking_last_attempted_at: shipment.line_tracking_last_attempted_at,
       line_tracking_last_succeeded_at: shipment.line_tracking_last_succeeded_at,
@@ -216,12 +357,16 @@ function formatShipmentResponse(
         ...(Array.isArray(customFields?.custom_fields)
           ? ['custom_fields']
           : []),
+        ...(Array.isArray(partyRoles?.party_roles) ? ['party_roles'] : []),
       ],
     },
   };
 }
 
-function extractContainers(relationships: any, included: any[]): any {
+function extractContainers(
+  relationships: any,
+  included: any[],
+): ShipmentDetails['containers'] {
   const containerRefs = relationships.containers?.data || [];
 
   if (containerRefs.length === 0) {
@@ -255,7 +400,7 @@ function extractContainers(relationships: any, included: any[]): any {
   };
 }
 
-function determineShipmentStatus(shipment: any): string {
+function determineShipmentStatus(shipment: any): ShipmentDetails['status'] {
   if (shipment.destination_ata_at) return 'delivered_to_destination';
   if (shipment.pod_ata_at) return 'arrived_at_pod';
   if (shipment.pol_atd_at) return 'in_transit';

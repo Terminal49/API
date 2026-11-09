@@ -637,6 +637,44 @@ describe('all public tools over MCP client transport', () => {
     },
   );
 
+  it.each([
+    {
+      name: 'AuthenticationError',
+      status: 401,
+      expected:
+        'Terminal49 rejected the credentials for this request (HTTP 401). Check that the API key or connection is valid and has API access.',
+    },
+    {
+      name: 'AuthorizationError',
+      status: 403,
+      expected:
+        'This Terminal49 account is not permitted to make this request (HTTP 403).',
+    },
+  ])(
+    'list_shipments names a $status credential failure without upstream detail',
+    async ({ name, status, expected }) => {
+      const denied = Object.assign(
+        new Error('private upstream auth detail token=secret-token'),
+        { name, status },
+      );
+      configureFailure('list_shipments', denied);
+      const { client, handler } = await connectClient();
+
+      try {
+        const result = await client.callTool({
+          name: 'list_shipments',
+          arguments: argumentsFor('list_shipments'),
+        });
+
+        expect(result.isError).toBe(true);
+        expect(result.content).toEqual([{ type: 'text', text: expected }]);
+      } finally {
+        await client.close();
+        await handler.close();
+      }
+    },
+  );
+
   it('track_container returns the created request alongside its readable linked container', async () => {
     sdk.search.mockResolvedValue({ data: [] });
     sdk.createTrackingRequestFromInfer.mockResolvedValue({

@@ -69,7 +69,7 @@ The SDK exposes a `Terminal49Client` with methods grouped by resource type. Each
 | `client.trackingRequests.list(filters?, options?)` | List tracking requests. |
 | `client.trackingRequests.get(id, options?)` | Fetch a single tracking request. `options.include` accepts `tracked_object`, `customer`, and `user`. In `mapped` format, `shipment` comes from `tracked_object`. |
 | `client.trackingRequests.update(id, attrs, options?)` | Update tracking request attributes. |
-| `client.trackingRequests.cancel(id)` | Cancel a tracking request that is still `pending` or `awaiting_manifest`. Other statuses return 422. |
+| `client.trackingRequests.cancel(id, options?)` | Cancel a tracking request that is still `pending` or `awaiting_manifest`. Other statuses return 422. |
 | `client.trackingRequests.create(params)` | Create a tracking request with an explicit request type and SCAC. |
 | `client.trackingRequests.inferNumber(number)` | Detect whether a number is a container, booking, or bill of lading. |
 | `client.trackingRequests.createFromInfer(number, options?)` | Create a tracking request with automatic number type detection. |

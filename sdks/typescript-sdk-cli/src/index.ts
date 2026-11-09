@@ -31,6 +31,7 @@ import { registerVesselsCommand } from './commands/vessels.js';
 import { registerWebhookNotificationsCommand } from './commands/webhook-notifications.js';
 import { registerWebhooksCommand } from './commands/webhooks.js';
 import { getExitCode, printError, writesJsonErrors } from './errors.js';
+import { encodeTerminalText } from './output/terminal-text.js';
 import { nonNegativeInt, positiveInt } from './util/input.js';
 
 function loadPackageVersion(): string {
@@ -126,11 +127,16 @@ export function createProgram(): Command {
 function configureCommanderErrors(command: Command, program: Command): void {
   command.exitOverride();
   command.configureOutput({
+    writeOut: (text) =>
+      process.stdout.write(text.split('\n').map(encodeTerminalText).join('\n')),
     // printError reports every parse error, as JSON when stderr expects it.
     outputError: () => {},
     // Commander writes a bare group's help here; JSON stderr gets only main()'s usage error.
     writeErr: (text) => {
-      if (!writesJsonErrors(program)) process.stderr.write(text);
+      if (!writesJsonErrors(program))
+        process.stderr.write(
+          text.split('\n').map(encodeTerminalText).join('\n'),
+        );
     },
   });
   for (const subcommand of command.commands) {

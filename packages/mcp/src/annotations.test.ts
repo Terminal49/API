@@ -5,9 +5,13 @@ import { createTerminal49McpServer } from './server.js';
 import {
   DEFAULT_TOOLSETS,
   TOOL_REGISTRY,
+  type ToolDefinition,
   TOOLSETS,
   type Toolset,
 } from './tools/registry.js';
+
+/** The registry with each tier widened, so checks for any tier compile. */
+const REGISTRY: readonly ToolDefinition[] = TOOL_REGISTRY;
 
 vi.mock('@sentry/node', () => ({
   captureException: vi.fn(),
@@ -126,23 +130,71 @@ describe('MCP tool annotations', () => {
   });
 
   it('matches each tier to its annotations', () => {
-    for (const tool of TOOL_REGISTRY) {
+    for (const tool of REGISTRY) {
       const { readOnlyHint, destructiveHint } = tool.annotations;
       expect(readOnlyHint, `${tool.name} tier ${tool.tier}`).toBe(
         tool.tier === 'read',
       );
-      expect(destructiveHint, `${tool.name} tier ${tool.tier}`).toBe(
-        tool.tier === 'C',
-      );
+      if (tool.tier === 'C') {
+        expect(destructiveHint, `${tool.name} tier C`).toBe(true);
+      }
+    }
+  });
+
+  it('advertises only the expected writes, and the record edits as destructive', () => {
+    // MCP: destructiveHint false means the tool only adds. set_party_role
+    // detaches parties (remove, replace) and set_custom_field overwrites or
+    // clears values, so both must say true. track_container only creates.
+    const tools = getRegisteredTools(TOOLSETS);
+    const writes = Object.entries(tools)
+      .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
+      .map(([name]) => name);
+    const destructiveTools = Object.entries(tools)
+      .filter(([, tool]) => tool.annotations?.destructiveHint === true)
+      .map(([name]) => name);
+
+    expect(writes.sort()).toEqual([
+      'cancel_tracking_request',
+      'resume_shipment_tracking',
+      'set_custom_field',
+      'set_party_role',
+      'stop_shipment_tracking',
+      'track_container',
+      'update_record',
+    ]);
+    expect(destructiveTools.sort()).toEqual([
+      'cancel_tracking_request',
+      'set_custom_field',
+      'set_party_role',
+      'stop_shipment_tracking',
+      'update_record',
+    ]);
+  });
+
+  it('marks the record edits as idempotent and track_container as not', () => {
+    const tools = getRegisteredTools();
+
+    expect(tools.set_party_role?.annotations?.idempotentHint).toBe(true);
+    expect(tools.set_custom_field?.annotations?.idempotentHint).toBe(true);
+    expect(tools.track_container?.annotations?.idempotentHint).toBe(false);
+  });
+
+  it('marks every read-only tool as idempotent', () => {
+    const tools = getRegisteredTools(TOOLSETS);
+    const reads = Object.entries(tools).filter(
+      ([, tool]) => tool.annotations?.readOnlyHint,
+    );
+
+    expect(reads.length).toBeGreaterThan(0);
+    for (const [name, tool] of reads) {
+      expect(tool.annotations?.idempotentHint, name).toBe(true);
     }
   });
 
   it('gives every tier C tool an optional confirmation_token input', () => {
     const tools = getRegisteredTools(TOOLSETS);
 
-    for (const definition of TOOL_REGISTRY.filter(
-      (tool) => tool.tier === 'C',
-    )) {
+    for (const definition of REGISTRY.filter((tool) => tool.tier === 'C')) {
       const schema = tools[definition.name]?.inputSchema;
       expect(schema, definition.name).toBeDefined();
       const jsonSchema = z.toJSONSchema(schema!, { io: 'input' }) as {
@@ -257,7 +309,7 @@ describe('MCP tool annotations', () => {
     expect(claude.listing).toMatchObject({
       name: 'Terminal49',
       tagline: 'Track ocean shipments',
-      documentation_url: 'https://docs.terminal49.com/mcp/home',
+      documentation_url: 'https://terminal49.com/docs/mcp/home',
       privacy_policy_url: 'https://terminal49.com/privacy',
       terms_of_service_url: 'https://terminal49.com/terms',
       support_email: 'support@terminal49.com',

@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `set_party_role` and `set_custom_field` are tier C tools that ask for the user's approval only when a record in the call would lose a party or a value. `add`, a `replace` that detaches nobody, and filling empty fields run at once. `remove`, a `replace` that detaches another party, and overwriting or clearing a value return one preview of every record that changes in the batch, and write after the user approves it on either confirmation channel. The approval is bound to the state of every record read, so a change to any of them re-asks. A `remove` whose `party_id` matches no role while the record holds another party in that role fails with guidance instead of reporting `unchanged`; a `party_id` Terminal49 does not know stops the call as `party_not_found`.
+
 ### Added
+- Tier C write tools (`stop_shipment_tracking`, `cancel_tracking_request`) confirm with the user through MCP 2026-07-28 form elicitation when the request declares it: the first call returns `input_required` with the preview and a signed `requestState`, the client asks the user, and the write runs only on their accept. A `confirmation_token` on such a request is refused (`token_not_accepted`), and a decline returns `status: "declined"`. Other clients keep the preview-then-token flow. Tier C tools now carry `_meta["anthropic/requiresUserInteraction"]: true`, so Claude Code prompts on every call.
 - Trade intelligence tools for US ocean import market data (US Customs bill-of-lading records, January 2022 onward): `search_importers`, `get_importer_profile`, `search_commodities`, `rank_importers`, `get_trade_trends`, `get_trade_breakdown`, and `get_trade_data_coverage`. All are read-only and gated per account; without the feature they reply that trade intelligence isn't enabled instead of failing. Responses are compacted (rounded numbers, capped lists, internal fields dropped), and the tool descriptions and server instructions carry the data caveats agents need. Record-level container and bill of lading lookups stay out of MCP.
+
+### Fixed
+- `list_parties`: route customers to `advanced_filters.customer_id`. `GET /parties` lists a customer created before party roles under its customer account ID, which `customer_id` filters accept and `advanced_filters.parties` does not, so a customer filter on the returned ID matched no containers. Looking up one party by `id` now returns it under the ID you passed instead of the account ID.
+
+### Changed
+- `get_container`, `get_shipment_details`, and `get_container_transport_events` publish a full output schema instead of an open object. Every field the tool returns is now listed with its type, so agents that script tool calls (code mode) can read field names without a probe call. Values copied straight from the API stay nullable, so a field the API omits does not fail the call.
 
 ## [1.2.0] - 2026-10-09
 

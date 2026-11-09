@@ -11,6 +11,7 @@ export const TOOLSETS = [
   'core',
   'documents',
   'operations',
+  'tracking_lifecycle',
   'documents_write',
   'developer',
   'trade',
@@ -20,9 +21,16 @@ export type Toolset = (typeof TOOLSETS)[number];
 
 /**
  * `read` tools only fetch data. Tier `A` writes are additive or reversible and
- * run in one call. Tier `C` writes need a confirmation token.
+ * run in one call. Tier `C` writes need the user's approval of a preview.
  */
 export type ToolTier = 'read' | 'A' | 'C';
+
+/**
+ * When a tier C tool asks the user. `always`: every call previews first.
+ * `destructive_only`: a batch tool that asks only when a record in the call
+ * would lose a value or a party, and otherwise writes at once.
+ */
+export type ConfirmationScope = 'always' | 'destructive_only';
 
 export interface ToolAnnotations {
   readOnlyHint: boolean;
@@ -31,19 +39,24 @@ export interface ToolAnnotations {
   openWorldHint: boolean;
 }
 
-export interface ToolDefinition {
+interface ToolBase {
   name: string;
   title: string;
   toolset: Toolset;
-  tier: ToolTier;
   annotations: ToolAnnotations;
+  /** Ask the client to involve the user even for consequential additive writes. */
+  requiresUserInteraction?: boolean;
 }
+
+export type ToolDefinition =
+  | (ToolBase & { tier: 'read' | 'A' })
+  | (ToolBase & { tier: 'C'; confirms: ConfirmationScope });
 
 function readTool<const Name extends string>(
   name: Name,
   title: string,
   toolset: Toolset = 'core',
-): ToolDefinition & { name: Name } {
+): ToolDefinition & { name: Name; tier: 'read' } {
   return {
     name,
     title,
@@ -52,6 +65,7 @@ function readTool<const Name extends string>(
     annotations: {
       readOnlyHint: true,
       destructiveHint: false,
+      idempotentHint: true,
       openWorldHint: false,
     },
   };
@@ -62,6 +76,7 @@ export const TOOL_REGISTRY = [
   readTool('search_container', 'Search Containers'),
   {
     name: 'track_container',
+    requiresUserInteraction: true,
     title: 'Track Container',
     toolset: 'core',
     tier: 'A',
@@ -72,16 +87,103 @@ export const TOOL_REGISTRY = [
       openWorldHint: false,
     },
   },
+  readTool('identify_tracking_number', 'Identify Tracking Number'),
   readTool('get_container', 'Get Container Details'),
   readTool('get_shipment_details', 'Get Shipment Details'),
   readTool('get_container_transport_events', 'Get Container Transport Events'),
   readTool('get_supported_shipping_lines', 'Get Supported Shipping Lines'),
   readTool('get_container_route', 'Get Container Route'),
+  readTool('get_location', 'Get Location'),
+  readTool('get_vessel', 'Get Vessel'),
   readTool('list_shipments', 'List Shipments'),
   readTool('list_containers', 'List Containers'),
   readTool('summarize_containers', 'Summarize Containers'),
   readTool('list_parties', 'List Parties'),
+  // A replace or detach removes the party that held the role, and a set or
+  // clear overwrites the field value, so both are marked destructive.
+  {
+    name: 'set_party_role',
+    title: 'Set Party Role',
+    toolset: 'operations',
+    tier: 'C',
+    confirms: 'destructive_only',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
+    name: 'set_custom_field',
+    title: 'Set Custom Field',
+    toolset: 'operations',
+    tier: 'C',
+    confirms: 'destructive_only',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
+    name: 'update_record',
+    title: 'Update Record',
+    toolset: 'operations',
+    tier: 'C',
+    confirms: 'destructive_only',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  readTool('list_custom_field_definitions', 'List Custom Field Definitions'),
   readTool('list_tracking_requests', 'List Tracking Requests'),
+  readTool('get_tracking_request', 'Get Tracking Request'),
+  readTool('list_documents', 'List Documents', 'documents'),
+  readTool('get_document', 'Get Document', 'documents'),
+  {
+    name: 'stop_shipment_tracking',
+    title: 'Stop Shipment Tracking',
+    toolset: 'tracking_lifecycle',
+    tier: 'C',
+    confirms: 'always',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
+    name: 'resume_shipment_tracking',
+    requiresUserInteraction: true,
+    title: 'Resume Shipment Tracking',
+    toolset: 'tracking_lifecycle',
+    tier: 'A',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
+  {
+    name: 'cancel_tracking_request',
+    title: 'Cancel Tracking Request',
+    toolset: 'tracking_lifecycle',
+    tier: 'C',
+    confirms: 'always',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  },
   {
     name: 'search_docs',
     title: 'Search Terminal49 Docs',
@@ -90,6 +192,7 @@ export const TOOL_REGISTRY = [
     annotations: {
       readOnlyHint: true,
       destructiveHint: false,
+      idempotentHint: true,
       openWorldHint: true,
     },
   },
@@ -111,6 +214,7 @@ export type ToolName = RegisteredTool['name'];
 export const DEFAULT_TOOLSETS: readonly Toolset[] = [
   'core',
   'documents',
+  'operations',
   'trade',
 ];
 

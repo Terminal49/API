@@ -20,7 +20,7 @@ description: "DocumentManager reference for the Terminal49 TypeScript SDK, used 
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
 | `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
-| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+| `defaultFormat?` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
 
 #### Returns
 
@@ -118,7 +118,7 @@ List documents with optional filters and pagination.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`DocumentListFilters`](/sdk/reference/client/managers/interfaces/DocumentListFilters) |
+| `filters?` | [`DocumentListFilters`](/sdk/reference/client/managers/interfaces/DocumentListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns

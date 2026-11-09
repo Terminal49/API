@@ -181,20 +181,18 @@ Stable error codes include `USAGE_ERROR`, `NETWORK_ERROR`, `AUTH_ERROR`, `RATE_L
 - `t49 config path|get|set|list|clear|auth-status|client-check`
 - `t49 commands`
 
-## Live Fixture Smoke Coverage
+## Synthetic fixture coverage
 
-To validate output formatting against real read-only API payloads:
+Regenerate JSON and table fixtures without an API key or network access:
 
 ```bash
 cd sdks/typescript-sdk-cli
-export T49_API_TOKEN=Token YOUR_API_KEY
-npm run fixtures:capture:live
+npm run fixtures:generate
 npm test
 ```
 
-This captures JSON and table fixtures under:
-
-- `test/fixtures/api/live/`
-- `test/fixtures/table/live/`
-
-Error fixtures are also captured for known read-only failure modes so output behavior remains test-covered.
+The generator uses the SDK's authored synthetic corpus, SDK mappers, and the CLI
+renderer. It writes API envelopes to `test/fixtures/api/synthetic/` and table
+snapshots to `test/fixtures/table/synthetic/`. Error fixtures cover upstream and
+validation failures. The legacy `fixtures:capture:live` command runs the same
+offline generator. Do not write customer responses to these public directories.

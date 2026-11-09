@@ -20,7 +20,7 @@ description: "ContainerManager reference for the Terminal49 TypeScript SDK, used
 | Parameter | Type | Default value |
 | ------ | ------ | ------ |
 | `transport` | [`Transport`](/sdk/reference/client/transport/classes/Transport) | `undefined` |
-| `defaultFormat` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
+| `defaultFormat?` | [`ResponseFormat`](/sdk/reference/types/options/type-aliases/ResponseFormat) | `'raw'` |
 
 #### Returns
 
@@ -131,7 +131,7 @@ Remove a custom field value from a container.
 | Parameter | Type |
 | ------ | ------ |
 | `id` | `string` |
-| `include` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
+| `include?` | [`IncludeParam`](/sdk/reference/types/options/type-aliases/IncludeParam)\<[`ContainerInclude`](/sdk/reference/types/options/type-aliases/ContainerInclude)\> |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns
@@ -148,7 +148,7 @@ Remove a custom field value from a container.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) \| `undefined` |
+| `filters?` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) \| `undefined` |
 | `options?` | `Omit`\<[`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions), `"page"`\> |
 
 #### Returns
@@ -165,7 +165,7 @@ Remove a custom field value from a container.
 
 | Parameter | Type |
 | ------ | ------ |
-| `filters` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) |
+| `filters?` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) |
 | `options?` | [`ListOptions`](/sdk/reference/types/options/interfaces/ListOptions) |
 
 #### Returns
@@ -325,7 +325,7 @@ one dimension, in one request (`GET /containers/summary`).
 | Parameter | Type |
 | ------ | ------ |
 | `groupBy` | [`ContainerSummaryGroupBy`](/sdk/reference/types/options/type-aliases/ContainerSummaryGroupBy) |
-| `filters` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) |
+| `filters?` | [`ContainerListFilters`](/sdk/reference/types/filters/interfaces/ContainerListFilters) |
 | `options?` | [`CallOptions`](/sdk/reference/types/options/interfaces/CallOptions) |
 
 #### Returns

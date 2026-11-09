@@ -1,3 +1,4 @@
+import { redactSignedUrls } from '../src/signed-urls.js';
 import { isRecord, type ToolResult } from './client.js';
 
 // Fixture discovery must not depend on shipments still being actively tracked.
@@ -8,9 +9,8 @@ export const fixtureListArgs = {
 
 export function fixtureItems(tool: string, result: ToolResult): unknown[] {
   if (result.http !== 200 || result.isError) {
-    // Never print upstream messages or payloads: they may contain customer data.
     throw new Error(
-      `Fixture discovery ${tool} failed (HTTP ${result.http}, tool error: ${result.isError}); check eval credentials and upstream availability.`,
+      `Fixture discovery ${tool} failed (HTTP ${result.http}, tool error: ${result.isError}): ${describeFailure(result)}; check eval credentials and upstream availability.`,
     );
   }
   if (!isRecord(result.payload) || !Array.isArray(result.payload.items)) {
@@ -19,4 +19,17 @@ export function fixtureItems(tool: string, result: ToolResult): unknown[] {
     );
   }
   return result.payload.items;
+}
+
+const MAX_FAILURE_TEXT = 300;
+
+// Tool error text is the server's client-facing message, which already hides
+// upstream detail. It is still redacted because CI logs are public.
+function describeFailure(result: ToolResult): string {
+  const text = (result.errorMessage ?? result.rawText).trim();
+  if (!text) return 'no error text';
+  return redactSignedUrls(text)
+    .replace(/\b(Bearer|Token)\s+\S+/gi, '$1 [REDACTED]')
+    .replace(/[A-Za-z0-9_\-+/=.]{24,}/g, '[REDACTED]')
+    .slice(0, MAX_FAILURE_TEXT);
 }
