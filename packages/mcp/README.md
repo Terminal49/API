@@ -17,7 +17,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (34 Available)
+### 🛠️ Tools (38 Available)
 
 The default toolsets, `core`, `documents`, `operations` and `trade`, serve these 31:
 
@@ -62,6 +62,15 @@ The opt-in `tracking_lifecycle` toolset adds three more. A deployment serves the
 | **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
 | **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
 | **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
+
+The `analytics` toolset adds four SQL analysis tools. Only signed-in users whose account has SQL access get them:
+
+| Tool | Description | Key Features |
+|------|-------------|--------------|
+| **`query_guide`** | Read how to measure for a topic, or list the guides | Read before the first query |
+| **`describe_views`** | List the queryable views, or one view's columns and named metrics | Filter wide views by column or search |
+| **`sql_query`** | Run one read-only `SELECT` over the `assistant_*` views | Returns a sample of rows and a `result_id` |
+| **`get_query_result`** | Page more rows of a stored result | Results are kept 24 hours |
 
 ### 🎯 Prompts (3 Workflows)
 

@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **34 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 31 of them; the three tracking lifecycle tools are opt-in.
+The Terminal49 MCP Server provides **38 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 31 of them; the three tracking lifecycle tools are opt-in, and the four SQL analysis tools are served only to signed-in users whose account has SQL access.
 
 `packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role`, `set_custom_field` and `update_record` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
@@ -952,7 +952,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 34 tools and 4 resources, the LLM can:
+With these 38 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates
