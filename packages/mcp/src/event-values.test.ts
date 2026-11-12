@@ -60,7 +60,17 @@ describe.each(['timeline', 'fallback', 'snapshot'] as const)(
               attributes: {
                 number: 'TEST1234567',
                 current_status: 'available',
-                pickup_lfd: '2099-01-10',
+                // The snapshot's deadline is the API-selected POD value, never
+                // the legacy flat field or an event value.
+                pickup_lfd: '2099-12-31',
+                import_deadlines: {
+                  pod: {
+                    unified: {
+                      current_value: '2099-01-10',
+                      current_selection: 'facility',
+                    },
+                  },
+                },
               },
             },
             included: events,

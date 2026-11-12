@@ -8,6 +8,7 @@
 
 import { Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
+import { resolvePodDeadline } from '../lib/pod-deadline.js';
 import { logMcpEvent } from '../logging.js';
 import {
   type CustomFieldsResult,
@@ -117,6 +118,7 @@ export const shipmentDetailsSchema = z.object({
           pod_arrived_at: apiString,
           pod_discharged_at: apiString,
           pickup_lfd: apiString,
+          pickup_lfd_source: apiString,
         }),
       ),
     })
@@ -381,6 +383,7 @@ function extractContainers(
       if (!container) return null;
 
       const attrs = container.attributes || {};
+      const pickupLfd = resolvePodDeadline(attrs.import_deadlines || {});
       return {
         id: container.id,
         number: attrs.number,
@@ -389,7 +392,8 @@ function extractContainers(
         available_for_pickup: attrs.available_for_pickup,
         pod_arrived_at: attrs.pod_arrived_at,
         pod_discharged_at: attrs.pod_discharged_at,
-        pickup_lfd: attrs.pickup_lfd,
+        pickup_lfd: pickupLfd.value,
+        pickup_lfd_source: pickupLfd.source,
       };
     })
     .filter((c: any) => c !== null);

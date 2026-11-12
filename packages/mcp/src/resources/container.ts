@@ -6,7 +6,8 @@
 import { Terminal49Client } from '@terminal49/sdk';
 import { resolveContainerStatus } from '../lib/container-status.js';
 import { evaluateDemurrageUrgency } from '../lib/demurrage.js';
-import { formatInZone } from '../lib/temporal.js';
+import { resolvePodDeadline } from '../lib/pod-deadline.js';
+import { dayDeltaInZone, formatInZone } from '../lib/temporal.js';
 
 const URI_PATTERN = /^(?:t49:|terminal49:\/\/)container\/([a-f0-9-]{36})$/i;
 
@@ -96,17 +97,18 @@ function generateSummary(id: string, container: any, shipment?: any): string {
   // line_tracking_stopped_* lives on the SHIPMENT, not the container, so read it
   // from the sideloaded shipment's attributes (absent shipment → not-stopped).
   const shipmentAttrs = shipment?.attributes;
+  const importDeadlines = container.import_deadlines || {};
+  const { value: pickupLfd } = resolvePodDeadline(importDeadlines);
   const demurrage = evaluateDemurrageUrgency({
     fees_at_pod_terminal: container.fees_at_pod_terminal,
-    pickup_lfd: container.pickup_lfd ?? null,
+    pickup_lfd: pickupLfd,
+    days_until_lfd: dayDeltaInZone(pickupLfd, podTimezone),
     terminal_checked_at: container.terminal_checked_at ?? null,
     tracking_stopped: Boolean(
       shipmentAttrs?.line_tracking_stopped_at ||
       shipmentAttrs?.line_tracking_stopped_reason,
     ),
   });
-
-  const importDeadlines = container.import_deadlines || {};
 
   return `# Container ${label}
 
@@ -124,7 +126,7 @@ ${podTimezone ? `**Terminal Timezone:** ${podTimezone}` : ''}
 
 ## Demurrage & Fees
 
-- **Last Free Day (LFD):** ${formatInZone(container.pickup_lfd, podTimezone)}
+- **Last Free Day (LFD):** ${formatInZone(pickupLfd, podTimezone)}
 - **LFD (Terminal):** ${formatInZone(importDeadlines.pickup_lfd_terminal, podTimezone)}
 - **LFD (Rail):** ${formatInZone(importDeadlines.pickup_lfd_rail, container.final_destination_timezone ?? podTimezone)}
 - **LFD (Line):** ${formatInZone(importDeadlines.pickup_lfd_line, podTimezone)}
