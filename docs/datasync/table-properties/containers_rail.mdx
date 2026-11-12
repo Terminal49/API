@@ -94,7 +94,7 @@ _Columns marked with * are only included with the Intermodal Rail product._
 | `ind_rail_unloaded_at`*           | Inland Destination Rail Unloaded, as a UTC timestamp                                                                   | `timestamp`|
 | `ind_rail_unloaded_at_local`*     | Inland Destination Rail Unloaded, as a string in the Inland Destination local time zone                                | `text`     |
 | `ind_last_free_day_on`*           | Last Free Day at the inland destination facility from the rail carrier, as a UTC timestamp<br /><br />Named `ind_facility_lfd_on` in the API | `timestamp`|
-| `ind_last_free_day_on_local`*     | Last Free Day at the inland destination facility from the rail carrier, as a string in the inland estination local time zone                 | `text`     |
+| `ind_last_free_day_on_local`*     | Last Free Day at the inland destination facility from the rail carrier, as a string in the inland destination local time zone                 | `text`     |
 | `ind_full_out_at`                 | Inland Destination Full Out event, as a UTC timestamp<br /><br />Named `final_destination_full_out_at` in the API      | `timestamp`|
 | `ind_full_out_at_local`           | Inland Destination Full Out event, as a string in the Inland Destination local time zone                               | `text`     |
 | `empty_terminated_at`             | Container Empty Returned event, as a UTC timestamp                                                                     | `timestamp`|
@@ -114,7 +114,7 @@ _Columns marked with * are only included with the Intermodal Rail product._
 | `equipment_type`                  | Container type: Dry, Flat Rack, Open Top, Reefer, Tank, unknown                                                        | `text`     |
 | `equipment_height`                | Container height: High Cube, Standard, unknown                                                                         | `text`     |
 | `equipment`                       | Concatenation of the equipment_length, equipment_type, and equipment_height                                            | `text`     |
-| `weight_in_lbs`                   | Weight of the containre in lbs                                                                                         | `integer`  |
+| `weight_in_lbs`                   | Weight of the container in lbs                                                                                         | `integer`  |
 | `seal_number`                     | Seal number of the container                                                                                           | `text`     |
 | `pod_full_out_chassis_number`     | The chassis number used when container was picked up at POD, if available                                              | `text`     |
 | `pod_voyage_number`               | Voyage number of the vessel that arrived or will arrive at the POD                                                     | `text`     |
