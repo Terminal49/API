@@ -21,14 +21,14 @@ Test numbers do not simulate every milestone, ETA, LFD, or availability event. T
 
 ## Tracking request API 
 You create shipments by making requests to the tracking request API. 
-When using the API , ensure that:
+When using the API, ensure that:
 - you set the test number in `request_number` attribute in the request body 
 - you set the `scac` attribute to `TEST` in the request body
 
 
 ## Test numbers
 
-Number.            | Use Case
+Number             | Use Case
 -------------------|---------
  TEST-TR-SUCCEEDED | Test the `tracking_request.succeeded` outcome and webhook
  TEST-TR-FAILED    | Test the `tracking_request.failed` outcome and webhook
