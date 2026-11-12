@@ -84,6 +84,14 @@ const PARAGRAPHS: readonly Paragraph[] = [
       },
     ],
   },
+  {
+    aboutTools: true,
+    segments: [
+      {
+        text: 'For account-wide counts and trends, use sql_query.',
+      },
+    ],
+  },
 ];
 
 /** Claude Code cuts server instructions off after this many UTF-8 bytes. */

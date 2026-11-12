@@ -250,6 +250,7 @@ describe('record writes through the /mcp gateway', () => {
     process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
     const upstream = stubUpstream((method, path) => {
       if (path === '/v2/connected-clients/resolve') return slowResolve;
+      if (path === '/v2/assistant_views') return { status: 403, body: {} };
       const id = path.split('/')[3] ?? '';
       if (method === 'GET') {
         return { delayMs: 3_000, body: { data: [] } };
@@ -309,6 +310,7 @@ describe('record writes through the /mcp gateway', () => {
     process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
     stubUpstream((method, path) => {
       if (path === '/v2/connected-clients/resolve') return slowResolve;
+      if (path === '/v2/assistant_views') return { status: 403, body: {} };
       if (path === `/v2/parties/${PARTY}`) return { body: partyDoc };
       const id = path.split('/')[3] ?? '';
       if (method === 'GET') {

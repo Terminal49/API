@@ -14,10 +14,42 @@ function selectedRecordWrites(
 
 describe('resolveToolSelection', () => {
   it('serves the default toolsets when the operator sets none', () => {
-    expect(resolveToolSelection({ env: {}, credentialType: 'user' })).toEqual({
+    expect(
+      resolveToolSelection({ env: {}, credentialType: 'api_key' }),
+    ).toEqual({
       toolsets: DEFAULT_TOOLSETS,
       readOnly: false,
     });
+  });
+
+  it('adds analytics for a signed-in user when the operator sets none', () => {
+    expect(
+      resolveToolSelection({ env: {}, credentialType: 'user' }).toolsets,
+    ).toEqual([...DEFAULT_TOOLSETS, 'analytics']);
+  });
+
+  it.each(['api_key', 'agent', 'shared_token'] as const)(
+    'never serves analytics to a %s credential',
+    (credentialType) => {
+      expect(
+        resolveToolSelection({
+          env: {
+            T49_MCP_TOOLSETS: 'core,analytics',
+            T49_MCP_ALLOW_SHARED_TOKEN_WRITES: 'true',
+          },
+          credentialType,
+        }).toolsets,
+      ).toEqual(['core']);
+    },
+  );
+
+  it('drops analytics when the operator allowlist leaves it out', () => {
+    expect(
+      resolveToolSelection({
+        env: { T49_MCP_TOOLSETS: 'core,trade' },
+        credentialType: 'user',
+      }).toolsets,
+    ).toEqual(['core', 'trade']);
   });
 
   it('serves the toolsets the operator allows', () => {

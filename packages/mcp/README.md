@@ -17,7 +17,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (34 Available)
+### 🛠️ Tools (38 Available)
 
 The default toolsets, `core`, `documents`, `operations` and `trade`, serve these 31:
 
@@ -62,6 +62,15 @@ The opt-in `tracking_lifecycle` toolset adds three more. A deployment serves the
 | **`stop_shipment_tracking`** | Stop carrier and terminal updates for a shipment and its containers | C: needs a confirmed preview |
 | **`resume_shipment_tracking`** | Start tracking a stopped shipment again | A: runs in one call |
 | **`cancel_tracking_request`** | Cancel a tracking request that is still pending or awaiting a manifest. It cannot be undone. | C: needs a confirmed preview |
+
+The `analytics` toolset adds four SQL analysis tools. Only signed-in users whose account has SQL access get them:
+
+| Tool | Description | Key Features |
+|------|-------------|--------------|
+| **`query_guide`** | Read how to measure for a topic, or list the guides | Read before the first query |
+| **`describe_views`** | List the queryable views, or one view's columns and named metrics | Filter wide views by column or search |
+| **`sql_query`** | Run one read-only `SELECT` over the `assistant_*` views | Returns a sample of rows and a `result_id` |
+| **`get_query_result`** | Page more rows of a stored result | Results are kept 24 hours |
 
 ### 🎯 Prompts (3 Workflows)
 
@@ -426,7 +435,7 @@ npm run lint
 |----------|----------|---------|-------------|
 | `T49_API_TOKEN` | ✅ Yes | - | Terminal49 API token |
 | `T49_API_BASE_URL` | No | `https://api.terminal49.com/v2` | API base URL |
-| `T49_MCP_TOOLSETS` | No | `core,documents,operations,trade` | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
+| `T49_MCP_TOOLSETS` | No | `core,documents,operations,trade` (plus `analytics` for signed-in users) | Comma-separated toolsets this deployment serves. See [Toolsets](#toolsets). |
 | `T49_MCP_READ_ONLY` | No | `false` | Serve only tools whose `readOnlyHint` is true. Accepts `true`, `false`, `1` or `0`, in any case. |
 | `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | `false` | Serve toolsets other than `core` and `trade` when callers share `T49_API_TOKEN` |
 | `T49_MCP_CONFIRMATION_SECRET` | For tier C writes over HTTP | - | Signs confirmation tokens. At least 32 characters. See [Confirming writes](#confirming-writes). |
@@ -452,8 +461,9 @@ Signed URLs, such as the document download link that `get_document` returns, are
 
 ### Toolsets
 
-Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `tracking_lifecycle`, `documents_write`, `developer` or `trade`. `list_documents` and `get_document` are in `documents`. `set_party_role`, `set_custom_field` and `update_record` are in `operations`. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in `tracking_lifecycle`, which no deployment serves until `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
+Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`, `operations`, `tracking_lifecycle`, `documents_write`, `developer`, `trade` or `analytics`. `list_documents` and `get_document` are in `documents`. `set_party_role`, `set_custom_field` and `update_record` are in `operations`. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in `tracking_lifecycle`, which no deployment serves until `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. The SQL query tools (`sql_query`, `describe_views`, `query_guide`, `get_query_result`) are in `analytics`. Every other tool today is in `core`. `documents_write` and `developer` have no tools yet. The default toolsets are `core`, `documents`, `operations` and `trade`. `whoami` reports the toolsets a session serves and whether it has write tools.
 
+- `analytics` is served only to signed-in (OAuth) users, and only when `GET /v2/assistant_views` confirms the account has SQL access. When `T49_MCP_TOOLSETS` is unset, those users get it in addition to the defaults; when it is set, it must list `analytics`. API keys, agent tokens and the shared token never get it.
 - `T49_MCP_TOOLSETS` lists the toolsets the server allows. stdio and the HTTP gateway both read it. An unknown name, or a value made only of commas, stops stdio with an error that names the variable. HTTP requests fail with a generic 500, and the gateway logs the cause.
 - The `X-T49-MCP-Toolsets` request header can only narrow that list. The server serves the toolsets that appear in both. An unknown name, or a value made only of commas, returns 400.
 - `X-T49-MCP-Read-Only: true` or `T49_MCP_READ_ONLY=true` removes every tool whose `readOnlyHint` is false, including `track_container`. Both accept `true`, `false`, `1` or `0`, in any case. Any other header value returns 400. The header cannot turn off read-only mode that the env turned on.
