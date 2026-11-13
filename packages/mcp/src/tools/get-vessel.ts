@@ -29,7 +29,7 @@ const uuid = (description: string) => z.string().uuid().describe(description);
 
 export const getVesselInputSchema = z.object({
   id: uuid(
-    'Terminal49 vessel ID, for example vessel_id from get_container_transport_events. Identifier only; never pass conversation text.',
+    'Terminal49 vessel ID, for example vessel_id from get_container events.timeline. Identifier only; never pass conversation text.',
   ),
   eta_to: z
     .object({

@@ -56,18 +56,6 @@
         "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
       }
     },
-    "get_container_transport_events": {
-      "annotations": {
-        "readOnlyHint": true,
-        "openWorldHint": false,
-        "destructiveHint": false
-      },
-      "justifications": {
-        "read_only_justification": "Retrieves the transport-event timeline without changing it.",
-        "open_world_justification": "Does not publish content or change public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, revoke access, or perform irreversible actions."
-      }
-    },
     "get_supported_shipping_lines": {
       "annotations": {
         "readOnlyHint": true,

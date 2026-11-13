@@ -150,7 +150,7 @@ const FEATURE_NOT_ENABLED: FeatureNotEnabledResult = {
     'Route data is a paid feature (Routing Data) and is not enabled for this Terminal49 account. ' +
     'Contact sales@terminal49.com to enable it.',
   alternative:
-    'Use get_container_transport_events to see historical movement, or get_container for the POL, POD, and ETA.',
+    'Use get_container for historical movement (events.timeline), the POL, POD, and ETA.',
 };
 
 const NOT_FOUND: NotFoundResult = {
@@ -166,7 +166,7 @@ const NO_ROUTE_DATA: NoRouteDataResult = {
   message:
     'Terminal49 has no route data for this container yet. This is common before the container is loaded on a vessel.',
   alternative:
-    'Use get_container_transport_events to see milestones so far, or get_container for the POL, POD, and ETA.',
+    'Use get_container for milestones so far (events.timeline), the POL, POD, and ETA.',
 };
 
 function logSoftError<T extends SoftError>(

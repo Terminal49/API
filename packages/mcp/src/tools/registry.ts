@@ -90,7 +90,6 @@ export const TOOL_REGISTRY = [
   readTool('identify_tracking_number', 'Identify Tracking Number'),
   readTool('get_container', 'Get Container Details'),
   readTool('get_shipment_details', 'Get Shipment Details'),
-  readTool('get_container_transport_events', 'Get Container Transport Events'),
   readTool('get_supported_shipping_lines', 'Get Supported Shipping Lines'),
   readTool('get_container_route', 'Get Container Route'),
   readTool('get_location', 'Get Location'),

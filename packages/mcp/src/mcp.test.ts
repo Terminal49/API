@@ -381,7 +381,7 @@ describe('MCP server wiring', () => {
     expect(tools).toContain('track_container');
     expect(tools).toContain('get_container');
     expect(tools).toContain('get_shipment_details');
-    expect(tools).toContain('get_container_transport_events');
+    expect(tools).not.toContain('get_container_transport_events');
     expect(tools).toContain('get_supported_shipping_lines');
     expect(tools).toContain('get_container_route');
     expect(tools).toContain('summarize_containers');
@@ -421,7 +421,6 @@ describe('MCP server wiring', () => {
       identify_tracking_number: { number: 'CAIU1234567' },
       get_container: { id },
       get_shipment_details: { id },
-      get_container_transport_events: { id },
       get_supported_shipping_lines: { search: 'Maersk' },
       get_container_route: { id },
       get_location: { kind: 'port', id: 'USLAX' },
@@ -764,7 +763,6 @@ describe('MCP server wiring', () => {
       'track_container',
       'get_container',
       'get_shipment_details',
-      'get_container_transport_events',
       'get_supported_shipping_lines',
       'get_container_route',
       'list_shipments',

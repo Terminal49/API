@@ -10,7 +10,7 @@ describe('EvalClient.callTool', () => {
     const structuredContent = {
       error: 'FeatureNotEnabled',
       message: 'Routing Data is not enabled for this account.',
-      alternative: 'Use get_container_transport_events instead.',
+      alternative: 'Use get_container instead.',
     };
     vi.stubGlobal(
       'fetch',

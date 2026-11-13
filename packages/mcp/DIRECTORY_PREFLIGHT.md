@@ -42,8 +42,7 @@ ChatGPT directory.
       Each known failure must identify its cause and next action; do not wrap
       non-retryable failures in a generic retry message.
 - [ ] Confirm `track_container.number` is required and `get_container`
-      `transport_events` returns only event counts plus the latest event. Use
-      `get_container_transport_events` for full history.
+      always returns the full `events.timeline`, each event with `reported_at`.
 - [ ] Recheck the [privacy policy](https://terminal49.com/privacy) and MCP data
       practices: tools access the authenticated private account, use only tool
       arguments, and only `track_container`, `set_party_role`, and

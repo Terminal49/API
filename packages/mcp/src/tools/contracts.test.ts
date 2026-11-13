@@ -9,7 +9,6 @@ import { executeCancelTrackingRequest } from './cancel-tracking-request.js';
 import { auditEvents, tokenOf, writeContext } from '../test/write-context.js';
 import { executeGetContainer } from './get-container.js';
 import { executeGetContainerRoute } from './get-container-route.js';
-import { executeGetContainerTransportEvents } from './get-container-transport-events.js';
 import { executeGetShipmentDetails } from './get-shipment-details.js';
 import { executeListContainers } from './list-containers.js';
 import { executeListShipments } from './list-shipments.js';
@@ -241,7 +240,7 @@ describe('MCP tool contracts', () => {
     // (raw-sourced) summary only — no _mapped bloat.
     expect(getContainer).toHaveBeenCalledWith(
       'container-1',
-      ['shipment', 'pod_terminal'],
+      ['shipment', 'pod_terminal', 'transport_events'],
       { format: 'raw' },
     );
     expect(result.tracking_request_created).toBe(true);
@@ -283,7 +282,7 @@ describe('MCP tool contracts', () => {
     expect(createFromInfer).not.toHaveBeenCalled();
     expect(getContainer).toHaveBeenCalledWith(
       'container-42',
-      ['shipment', 'pod_terminal'],
+      ['shipment', 'pod_terminal', 'transport_events'],
       { format: 'raw' },
     );
     expect(result.tracking_request_created).toBe(false);
@@ -633,63 +632,7 @@ describe('MCP tool contracts', () => {
     expect(result).not.toHaveProperty('_mapped');
   });
 
-  describe.each(['primary', 'fallback'] as const)(
-    'event values via %s',
-    (path) => {
-      it.each([
-        ['deadline', '2099-01-20T04:00:00Z'],
-        ['null', null],
-        ['absent', undefined],
-        ['zero', 0],
-        ['false', false],
-        ['empty string', ''],
-        ['structured', { amount: 25, currency: 'USD' }],
-        ['array', ['reported', 0]],
-      ])(
-        'preserves %s without interpreting it as the event timestamp',
-        async (_label, value) => {
-          const event = {
-            id: 'event-deadline',
-            type: 'transport_event',
-            attributes: {
-              event: 'container.detention_lfd_line.changed',
-              timestamp: '2099-01-02T00:00:00Z',
-              ...(value === undefined ? {} : { value }),
-              data_source: 'shipping_line',
-              invalidated_at: '2099-01-03T00:00:00Z',
-            },
-          };
-          const events =
-            path === 'primary'
-              ? vi.fn().mockResolvedValue({ raw: { data: [event] } })
-              : vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
-          const get = vi.fn().mockResolvedValue({
-            data: { id: 'container-1', type: 'container' },
-            included: [event],
-          });
-          const result = await executeGetContainerTransportEvents(
-            { id: 'container-1' },
-            asClient({ containers: { events, get } }),
-          );
-          expect(result.timeline[0]).toMatchObject({
-            event: 'container.detention_lfd_line.changed',
-            timestamp: '2099-01-02T00:00:00.000Z',
-            value: value ?? null,
-            data_source: 'shipping_line',
-            invalidated_at: '2099-01-03T00:00:00Z',
-          });
-          expect(result._metadata.source).toBe(
-            path === 'primary'
-              ? 'transport_events_subresource'
-              : 'container_include_fallback',
-          );
-          if (path === 'primary') expect(get).not.toHaveBeenCalled();
-        },
-      );
-    },
-  );
-
-  it('preserves latest-event deadline metadata in the compact container snapshot without replacing pickup LFD', async () => {
+  it('keeps reported deadline values in the container timeline without replacing pickup LFD', async () => {
     const raw = buildContainerRaw();
     const event = {
       id: 'deadline',
@@ -709,211 +652,68 @@ describe('MCP tool contracts', () => {
       { id: 'container-1', include: ['transport_events'] },
       asClient({ containers: { get } }),
     );
-    expect(result.events?.latest_event).toMatchObject(event.attributes);
-    expect(result.events?.latest_event?.value).toBe(event.attributes.value);
-    expect(result.events?.latest_event?.data_source).toBe('shipping_line');
-    expect(result.events?.latest_event?.invalidated_at).toBeNull();
+    const deadline = result.events?.timeline?.find(
+      (item) => item.event === event.attributes.event,
+    );
+    expect(deadline).toMatchObject({
+      value: event.attributes.value,
+      data_source: 'shipping_line',
+      invalidated_at: null,
+    });
     expect(result.demurrage.pickup_lfd).toBe('2099-01-10');
   });
 
-  it('get_container_transport_events returns timeline and milestone summary', async () => {
-    const events = vi.fn().mockResolvedValue({
-      raw: {
-        data: [
-          {
-            id: 'evt-2',
-            type: 'transport_event',
-            attributes: {
-              event: 'container.transport.vessel_departed',
-              timestamp: '2025-01-02T00:00:00Z',
-            },
-            relationships: {
-              location: { data: { id: 'loc-1', type: 'port' } },
-            },
-          },
-          {
-            id: 'evt-1',
-            type: 'transport_event',
-            attributes: {
-              event: 'container.transport.vessel_loaded',
-              timestamp: '2025-01-01T00:00:00Z',
-            },
-            relationships: {
-              location: { data: { id: 'loc-1', type: 'port' } },
-            },
-          },
-        ],
-        included: [
-          {
-            id: 'loc-1',
-            type: 'port',
-            attributes: { name: 'Shanghai', locode: 'CNSHA' },
-          },
-        ],
-      },
-      mapped: [{ id: 'evt-1' }, { id: 'evt-2' }],
-    });
-
-    const client = asClient({
-      containers: {
-        events,
+  it('returns every arrival estimate so a later estimate on another voyage cannot hide the current one', async () => {
+    const raw = buildContainerRaw();
+    const estimate = (
+      id: string,
+      timestamp: string,
+      voyage: string,
+      created_at: string,
+    ) => ({
+      id,
+      type: 'transport_event',
+      attributes: {
+        event: 'container.transport.estimated.vessel_arrived',
+        timestamp,
+        voyage_number: voyage,
+        created_at,
+        data_source: 'shipping_line',
+        invalidated_at: null,
       },
     });
-
-    const result = await executeGetContainerTransportEvents(
-      { id: 'container-1' },
-      client,
-    );
-
-    expect(events).toHaveBeenCalledWith('container-1', { format: 'raw' });
-    expect(result.total_events).toBe(2);
-    expect(result.timeline[0]).toMatchObject({
-      event: 'container.transport.vessel_loaded',
-      value: null,
-      data_source: null,
-      invalidated_at: null,
-    });
-    expect(result.milestones).toMatchObject({
-      vessel_loaded_at: '2025-01-01T00:00:00.000Z',
-      vessel_departed_at: '2025-01-02T00:00:00.000Z',
-    });
-    // A 200 from the sub-resource means the container exists; surface
-    // container_found consistently with the fallback path.
-    expect(result._metadata.source).toBe('transport_events_subresource');
-    expect(result._metadata.container_found).toBe(true);
-    // No duplicate mapped payload should be surfaced.
-    expect(result).not.toHaveProperty('summary');
-    expect(result).not.toHaveProperty('mapped');
-  });
-
-  it('get_container_transport_events falls back to the container include path when the dedicated sub-resource 404s', async () => {
-    const events = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
     const get = vi.fn().mockResolvedValue({
-      data: {
-        id: 'container-1',
-        type: 'container',
-        attributes: { number: 'CAIU1234567' },
-        relationships: {
-          transport_events: {
-            data: [
-              { id: 'evt-1', type: 'transport_event' },
-              { id: 'evt-2', type: 'transport_event' },
-            ],
-          },
-        },
-      },
+      ...raw,
       included: [
-        {
-          id: 'evt-1',
-          type: 'transport_event',
-          attributes: {
-            event: 'container.transport.vessel_loaded',
-            timestamp: '2025-01-01T00:00:00Z',
-            // Canonical transport_event payloads carry location_locode (and a
-            // location relationship that is NOT side-loaded on the include
-            // path), not a location_name attribute.
-            location_locode: 'CNSHA',
-          },
-        },
-        {
-          id: 'evt-2',
-          type: 'transport_event',
-          attributes: {
-            event: 'container.transport.vessel_departed',
-            timestamp: '2025-01-02T00:00:00Z',
-            location_locode: 'CNSHA',
-          },
-        },
+        ...raw.included,
+        estimate(
+          'next-voyage',
+          '2099-12-06T16:00:00Z',
+          'NEXT02N',
+          '2099-09-25T00:00:00Z',
+        ),
+        estimate(
+          'current-voyage',
+          '2099-11-24T19:00:00Z',
+          'CURRENT01W',
+          '2099-10-30T00:00:00Z',
+        ),
       ],
     });
 
-    const client = asClient({ containers: { events, get } });
-
-    const result = await executeGetContainerTransportEvents(
+    const result = await executeGetContainer(
       { id: 'container-1' },
-      client,
+      asClient({ containers: { get } }),
     );
 
-    expect(events).toHaveBeenCalledWith('container-1', { format: 'raw' });
-    expect(get).toHaveBeenCalledWith('container-1', ['transport_events'], {
-      format: 'raw',
-    });
-    // Fallback returns the real events, never a false-empty timeline.
-    expect(result.total_events).toBe(2);
-    expect(result.timeline[0]).toMatchObject({
-      event: 'container.transport.vessel_loaded',
-      value: null,
-      data_source: null,
-      invalidated_at: null,
-    });
-    // The movement location must survive the fallback even though the related
-    // port resource is not side-loaded — resolve it from location_locode.
-    expect(result.timeline[0].location).toMatchObject({ code: 'CNSHA' });
-    expect(result.milestones).toMatchObject({
-      vessel_loaded_at: '2025-01-01T00:00:00.000Z',
-      vessel_departed_at: '2025-01-02T00:00:00.000Z',
-    });
-    expect(result._metadata.source).toBe('container_include_fallback');
-    // It must NOT masquerade a success-shaped empty timeline carrying an error.
-    expect(result._metadata).not.toHaveProperty('error');
-  });
-
-  it('get_container_transport_events surfaces a real error for a genuinely missing container', async () => {
-    const events = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
-    const get = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
-
-    const client = asClient({ containers: { events, get } });
-
-    await expect(
-      executeGetContainerTransportEvents({ id: 'missing-container' }, client),
-    ).rejects.toBeInstanceOf(NotFoundError);
-
-    expect(events).toHaveBeenCalledWith('missing-container', { format: 'raw' });
-    expect(get).toHaveBeenCalledWith(
-      'missing-container',
-      ['transport_events'],
-      {
-        format: 'raw',
-      },
-    );
-  });
-
-  it('get_container_transport_events returns an empty-but-valid timeline for a container with no events', async () => {
-    const events = vi.fn().mockRejectedValue(new NotFoundError('Not Found'));
-    const get = vi.fn().mockResolvedValue({
-      data: {
-        id: 'container-1',
-        type: 'container',
-        attributes: { number: 'CAIU1234567' },
-        relationships: { transport_events: { data: [] } },
-      },
-      included: [],
-    });
-
-    const client = asClient({ containers: { events, get } });
-
-    const result = await executeGetContainerTransportEvents(
-      { id: 'container-1' },
-      client,
-    );
-
-    expect(result.total_events).toBe(0);
-    expect(result.timeline).toEqual([]);
-    // Empty-but-valid is distinct from a bad container id: no error metadata.
-    expect(result._metadata).not.toHaveProperty('error');
-    expect(result._metadata.container_found).toBe(true);
-  });
-
-  it('get_container_transport_events does not fall back for non-NotFound failures', async () => {
-    const events = vi.fn().mockRejectedValue(new Error('boom'));
-    const get = vi.fn();
-
-    const client = asClient({ containers: { events, get } });
-
-    await expect(
-      executeGetContainerTransportEvents({ id: 'container-1' }, client),
-    ).rejects.toThrow('boom');
-    expect(get).not.toHaveBeenCalled();
+    expect(
+      result.events?.timeline
+        ?.filter((item) => item.event?.includes('estimated.vessel_arrived'))
+        .map((item) => [item.timestamp, item.voyage_number, item.reported_at]),
+    ).toEqual([
+      ['2099-11-24T19:00:00.000Z', 'CURRENT01W', '2099-10-30T00:00:00.000Z'],
+      ['2099-12-06T16:00:00.000Z', 'NEXT02N', '2099-09-25T00:00:00.000Z'],
+    ]);
   });
 
   it('search_container handles partially missing fields safely', async () => {
@@ -1165,7 +965,7 @@ describe('MCP tool contracts', () => {
 
     expect(result).toMatchObject({
       error: 'NoRouteData',
-      alternative: expect.stringContaining('get_container_transport_events'),
+      alternative: expect.stringContaining('events.timeline'),
     });
   });
 
@@ -1337,7 +1137,7 @@ describe('MCP tool contracts', () => {
     expect(result).toMatchObject({
       error: 'FeatureNotEnabled',
       message: expect.stringContaining('sales@terminal49.com'),
-      alternative: expect.stringContaining('get_container_transport_events'),
+      alternative: expect.stringContaining('events.timeline'),
     });
   });
 

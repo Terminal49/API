@@ -329,19 +329,17 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
-    it('get_container_transport_events returns a timeline', async ({
-      skip,
-    }) => {
+    it('get_container returns the event timeline', async ({ skip }) => {
       if (!fixtures.containerId) return skip();
       const { result, score } = await evaluate(
-        'get_container_transport_events',
+        'get_container',
         { id: fixtures.containerId },
         {
-          requiredKeys: ['total_events', 'timeline'],
+          requiredKeys: ['events'],
           predicates: [
             {
-              name: 'timeline is an array',
-              test: (p) => hasArray(p, 'timeline'),
+              name: 'events.timeline is an array',
+              test: (p) => isRecord(p) && hasArray(p.events, 'timeline'),
             },
           ],
         },
@@ -613,17 +611,20 @@ if (!cfg) {
       expect(score.contractPass).toBe(true);
     });
 
-    it('get_vessel reads a vessel from the transport events', async ({
+    it('get_vessel reads a vessel from the container timeline', async ({
       skip,
     }) => {
       if (!fixtures.containerId) return skip();
-      const events = await client.callTool('get_container_transport_events', {
+      const container = await client.callTool('get_container', {
         id: fixtures.containerId,
       });
-      const timeline =
-        isRecord(events.payload) && Array.isArray(events.payload.timeline)
-          ? events.payload.timeline.filter(isRecord)
-          : [];
+      const events =
+        isRecord(container.payload) && isRecord(container.payload.events)
+          ? container.payload.events
+          : {};
+      const timeline = Array.isArray(events.timeline)
+        ? events.timeline.filter(isRecord)
+        : [];
       const vesselId = timeline.find(
         (event) => typeof event.vessel_id === 'string',
       )?.vessel_id;

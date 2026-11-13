@@ -84,10 +84,7 @@ const PARTY_ROLES = [
   },
 ];
 
-type DetailTool =
-  | 'get_container'
-  | 'get_shipment_details'
-  | 'get_container_transport_events';
+type DetailTool = 'get_container' | 'get_shipment_details';
 
 async function callTool(name: DetailTool, args: Record<string, unknown>) {
   const server = createTerminal49McpServer('fixture-token', 'https://api.test');
@@ -113,18 +110,17 @@ beforeEach(() => {
 });
 
 describe('detail tool output schemas', () => {
-  it.each([
-    'get_container',
-    'get_shipment_details',
-    'get_container_transport_events',
-  ] as const)('%s advertises a closed object schema', (name) => {
-    const server = createTerminal49McpServer('fixture-token');
-    const schema = (server as any)._registeredTools[name].outputSchema;
-    const jsonSchema = z.toJSONSchema(schema, { io: 'output' }) as any;
+  it.each(['get_container', 'get_shipment_details'] as const)(
+    '%s advertises a closed object schema',
+    (name) => {
+      const server = createTerminal49McpServer('fixture-token');
+      const schema = (server as any)._registeredTools[name].outputSchema;
+      const jsonSchema = z.toJSONSchema(schema, { io: 'output' }) as any;
 
-    expect(jsonSchema.additionalProperties).toBe(false);
-    expect(Object.keys(jsonSchema.properties).length).toBeGreaterThan(3);
-  });
+      expect(jsonSchema.additionalProperties).toBe(false);
+      expect(Object.keys(jsonSchema.properties).length).toBeGreaterThan(3);
+    },
+  );
 
   it('get_container matches its schema with a sparse container', async () => {
     sdk.containersGet.mockResolvedValue({
@@ -370,99 +366,6 @@ describe('detail tool output schemas', () => {
       containers: { count: 1 },
       custom_fields: [{ slug: 'po_number' }],
       party_roles: PARTY_ROLES,
-    });
-  });
-
-  it('get_container_transport_events matches its schema from the sub-resource', async () => {
-    sdk.containersEvents.mockResolvedValue({
-      raw: {
-        data: [
-          {
-            id: 'event-1',
-            type: 'transport_event',
-            attributes: {
-              event: 'container.transport.vessel_departed',
-              timestamp: '2026-07-25T08:00:00Z',
-              timezone: 'Asia/Shanghai',
-              voyage_number: '628E',
-              data_source: 'shipping_line',
-            },
-            relationships: {
-              location: { data: { id: 'port-1' } },
-              vessel: { data: { id: 'vessel-1', type: 'vessel' } },
-            },
-          },
-          {
-            id: 'event-2',
-            type: 'transport_event',
-            attributes: {
-              event: 'container.pickup_lfd.changed',
-              timestamp: '2026-08-20T10:00:00Z',
-              value: '2026-08-24',
-              invalidated_at: '2026-08-21T10:00:00Z',
-            },
-          },
-        ],
-        included: [
-          {
-            id: 'port-1',
-            type: 'port',
-            attributes: { name: 'Shanghai', code: 'CNSHA' },
-          },
-        ],
-      },
-    });
-
-    const { tool, result } = await callTool('get_container_transport_events', {
-      id: CONTAINER_ID,
-    });
-
-    expectOutputMatchesSchema(tool, result);
-    expect(result.structuredContent).toMatchObject({
-      total_events: 2,
-      timeline: [
-        {
-          vessel_id: 'vessel-1',
-          location: { name: 'Shanghai', code: 'CNSHA', type: 'port' },
-        },
-        { vessel_id: null, value: '2026-08-24', location: null },
-      ],
-      milestones: { vessel_departed_at: '2026-07-25T08:00:00.000Z' },
-      _metadata: {
-        source: 'transport_events_subresource',
-        container_found: true,
-      },
-    });
-  });
-
-  it('get_container_transport_events matches its schema on the include fallback', async () => {
-    const { NotFoundError } = await import('@terminal49/sdk');
-    sdk.containersEvents.mockRejectedValue(new NotFoundError('Not Found'));
-    sdk.containersGet.mockResolvedValue({
-      raw: {
-        data: { id: CONTAINER_ID, attributes: {} },
-        included: [
-          {
-            id: 'event-1',
-            type: 'transport_event',
-            attributes: {
-              event: 'container.transport.discharged',
-              timestamp: '2026-08-19T14:00:00Z',
-              location_locode: 'USLAX',
-            },
-          },
-        ],
-      },
-    });
-
-    const { tool, result } = await callTool('get_container_transport_events', {
-      id: CONTAINER_ID,
-    });
-
-    expectOutputMatchesSchema(tool, result);
-    expect(result.structuredContent).toMatchObject({
-      timeline: [{ location: { code: 'USLAX' } }],
-      _metadata: { source: 'container_include_fallback' },
     });
   });
 });

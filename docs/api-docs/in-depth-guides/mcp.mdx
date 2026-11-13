@@ -163,7 +163,7 @@ Once configured, verify everything works:
   <Step title="Ask Claude to list tools">
     > "List the tools available in the Terminal49 MCP server."
 
-    Claude should respond with a list of 31 tools including `search_container`, `track_container`, the list tools, and the trade intelligence tools.
+    Claude should respond with a list of 30 tools including `search_container`, `track_container`, the list tools, and the trade intelligence tools.
   </Step>
   <Step title="Search for a test container">
     > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
@@ -220,7 +220,6 @@ printf '%s\n' \
 | `identify_tracking_number` | Predict a number's type and carrier, and check whether it is already tracked, without tracking it | `number: string` |
 | `get_container` | Get container with optional includes | `id: uuid`, `include?: ['shipment', 'pod_terminal', 'transport_events', 'custom_fields', 'party_roles']` |
 | `get_shipment_details` | Get shipment and containers | `id: uuid`, `include_containers?: boolean`, `include_custom_fields?: boolean`, `include_party_roles?: boolean` |
-| `get_container_transport_events` | Get event timeline | `id: uuid` |
 | `get_supported_shipping_lines` | List carriers with SCAC codes | `search?: string` |
 | `get_container_route` | Get ports in route order with ETAs and the current vessel (paid feature) | `id: uuid` |
 | `get_location` | Get a port, terminal, or metro area | `kind` (`port`, `terminal`, or `metro_area`), `id` (UUID, or a UN/LOCODE for a port or metro area) |

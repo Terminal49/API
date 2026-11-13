@@ -22,10 +22,6 @@
       "implementation": "packages/mcp/src/tools/get-shipment-details.ts"
     },
     {
-      "name": "get_container_transport_events",
-      "implementation": "packages/mcp/src/tools/get-container-transport-events.ts"
-    },
-    {
       "name": "get_supported_shipping_lines",
       "implementation": "packages/mcp/src/tools/get-supported-shipping-lines.ts"
     },

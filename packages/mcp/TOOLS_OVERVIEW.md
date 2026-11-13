@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **34 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 31 of them; the three tracking lifecycle tools are opt-in.
+The Terminal49 MCP Server provides **33 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 30 of them; the three tracking lifecycle tools are opt-in.
 
 `packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role`, `set_custom_field` and `update_record` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
@@ -57,11 +57,6 @@ track_container({
 // Default (fast, covers 80% of cases)
 get_container({ id: "uuid" })
 
-// With transport events (for journey analysis)
-get_container({
-  id: "uuid",
-  include: ["shipment", "transport_events"]
-})
 
 // Minimal (fastest)
 get_container({
@@ -135,58 +130,7 @@ get_shipment_details({
 
 ---
 
-### 5. `get_container_transport_events` ⭐ **NEW**
-**Purpose**: Get detailed event timeline for a container
-
-**Usage**:
-```typescript
-get_container_transport_events({ id: "container-uuid" })
-```
-
-**Returns**:
-- Complete chronological timeline
-- Event categorization (vessel/rail/terminal/truck)
-- Key milestones extracted
-- Location context for each event
-- `vessel_id` on each event, or `null`. Pass it to `get_vessel`.
-- Presentation guidance
-
-**Example Response**:
-```json
-{
-  "total_events": 47,
-  "event_categories": {
-    "vessel_events": 8,
-    "rail_events": 12,
-    "terminal_events": 18,
-    ...
-  },
-  "timeline": [
-    {
-      "event": "container.transport.vessel_loaded",
-      "timestamp": "2024-06-08T10:30:00Z",
-      "location": { "name": "Shanghai", "code": "CNSHA" }
-    },
-    ...
-  ],
-  "milestones": {
-    "vessel_loaded_at": "2024-06-08T10:30:00Z",
-    "vessel_departed_at": "2024-06-09T14:00:00Z",
-    "vessel_arrived_at": "2024-06-22T08:30:00Z",
-    "discharged_at": "2024-06-23T11:15:00Z"
-  }
-}
-```
-
-**When to Use**:
-- User asks "what happened?" or "show me the journey"
-- Need detailed timeline
-- Analyzing delays or milestones
-- More efficient than `get_container` with events when you only need event data
-
----
-
-### 6. `get_supported_shipping_lines` ⭐ **NEW**
+### 5. `get_supported_shipping_lines` ⭐ **NEW**
 **Purpose**: List supported carriers with SCAC codes
 
 **Usage**:
@@ -212,7 +156,7 @@ get_supported_shipping_lines({ search: "MSCU" })
 
 ---
 
-### 7. `get_container_route` ⭐ **NEW**
+### 6. `get_container_route` ⭐ **NEW**
 **Purpose**: Get the container's ports in route order and its current vessel, from `GET /containers/{id}/map_geojson`
 
 **Usage**:
@@ -232,7 +176,7 @@ It does not return track geometry, port codes, transport mode, carrier SCAC, or 
 {
   "error": "FeatureNotEnabled",
   "message": "Route data is a paid feature (Routing Data)... Contact sales@terminal49.com to enable it.",
-  "alternative": "Use get_container_transport_events to see historical movement..."
+  "alternative": "Use get_container for historical movement (events.timeline)..."
 }
 ```
 
@@ -243,7 +187,7 @@ It does not return track geometry, port codes, transport mode, carrier SCAC, or 
 
 ---
 
-### 8. `list_shipments` ✅
+### 7. `list_shipments` ✅
 **Purpose**: List shipments with optional voyage status, port, arrival, and tag filters
 
 **Usage**:
@@ -264,7 +208,7 @@ list_shipments({
 
 ---
 
-### 9. `list_containers` ✅
+### 8. `list_containers` ✅
 **Purpose**: List containers with optional filters and pagination
 
 **Usage**:
@@ -285,7 +229,7 @@ list_containers({
 
 ---
 
-### 10. `list_tracking_requests` ✅
+### 9. `list_tracking_requests` ✅
 **Purpose**: List tracking requests and monitor intake or failure modes
 
 **Usage**:
@@ -306,7 +250,7 @@ list_tracking_requests({
 
 ---
 
-### 11. `summarize_containers`
+### 10. `summarize_containers`
 **Purpose**: Count containers grouped by one dimension, for "how many" and "break down by" questions
 
 **Usage**:
@@ -328,7 +272,7 @@ Accepts the `list_containers` filters except `sort`, `include`, `view`, `page`, 
 
 ---
 
-### 12. `list_parties`
+### 11. `list_parties`
 **Purpose**: Find the companies on the account's shipments by name and return their IDs
 
 **Usage**:
@@ -354,7 +298,7 @@ With `id`, the tool reads that one party, returns it under the ID you passed, an
 
 ---
 
-### 13. `search_docs`
+### 12. `search_docs`
 **Purpose**: Search the public Terminal49 documentation
 
 **Usage**:
@@ -372,7 +316,7 @@ search_docs({
 
 ---
 
-### 14. `whoami`
+### 13. `whoami`
 **Purpose**: Identify the caller, the account the session is scoped to, and which gated features that credential can use
 
 **Usage**:
@@ -393,7 +337,7 @@ whoami()
 
 ---
 
-### 15. `get_tracking_request`
+### 14. `get_tracking_request`
 **Purpose**: Read one tracking request, for example right after `track_container`
 
 **Usage**:
@@ -414,7 +358,7 @@ get_tracking_request({
 
 ---
 
-### 16. `identify_tracking_number`
+### 15. `identify_tracking_number`
 **Purpose**: Identify a number without tracking it
 
 **Usage**:
@@ -434,7 +378,7 @@ It creates nothing and adds no tracking volume. Carrier prediction uses the beta
 
 ---
 
-### 17. `get_location`
+### 16. `get_location`
 **Purpose**: Read a port, terminal or metro area
 
 **Usage**:
@@ -455,7 +399,7 @@ The tool checks the ID for each kind before it calls the API. A wrong ID returns
 
 ---
 
-### 18. `get_vessel`
+### 17. `get_vessel`
 **Purpose**: Read a vessel and, on request, project its track to a port
 
 **Usage**:
@@ -482,11 +426,11 @@ The tool always returns `position`. It has no option to leave it out.
 
 The projection needs Routing Data. Without it, `eta` is `null` and `eta_note` explains why. A port pair the API cannot project, such as a wrong `port_id` or `previous_port_id`, also gives `eta: null` and an `eta_note`, and the vessel still comes back. If vessel data itself is gated, the tool returns `FeatureNotEnabled` with `isError: false`.
 
-**When to Use**: "Where is the vessel now?" or "When will it reach the port?" Get `vessel_id` from `get_container_transport_events` and port IDs from `get_shipment_details`.
+**When to Use**: "Where is the vessel now?" or "When will it reach the port?" Get `vessel_id` from `get_container`'s `events.timeline` and port IDs from `get_shipment_details`.
 
 ---
 
-### 19. `list_custom_field_definitions`
+### 18. `list_custom_field_definitions`
 **Purpose**: List the account's custom fields
 
 **Usage**:
@@ -508,7 +452,7 @@ If the credential cannot read custom fields, `definitions` is `null` and `custom
 
 ---
 
-### 20. `list_documents`
+### 19. `list_documents`
 **Purpose**: Find documents on the account, such as Bills of Lading, arrival notices and delivery orders
 
 **Usage**:
@@ -535,7 +479,7 @@ list_documents({
 
 ---
 
-### 21. `get_document`
+### 20. `get_document`
 **Purpose**: Read one document
 
 **Usage**:
@@ -571,7 +515,7 @@ An approval works only for the same tool, arguments, account and credential, bef
 
 Every write tool returns these soft results with `isError: false`: `rate_limited` for a 429, with `retry_after_s` when Terminal49 sent a `Retry-After` header, and the tool's own codes below. All of them say that nothing was changed.
 
-### 22. `stop_shipment_tracking`
+### 21. `stop_shipment_tracking`
 **Purpose**: Stop carrier and terminal updates for a shipment and all its containers. Tier C.
 
 **Usage**:
@@ -595,7 +539,7 @@ stop_shipment_tracking({
 
 ---
 
-### 23. `resume_shipment_tracking`
+### 22. `resume_shipment_tracking`
 **Purpose**: Start tracking a stopped shipment again. Tier A.
 
 **Usage**:
@@ -613,7 +557,7 @@ resume_shipment_tracking({ shipment_id: "shipment-uuid" })
 
 ---
 
-### 24. `cancel_tracking_request`
+### 23. `cancel_tracking_request`
 **Purpose**: Cancel a tracking request that Terminal49 is still working on, such as one with a typo or the wrong carrier. Tier C. It cannot be undone.
 
 **Usage**:
@@ -636,7 +580,7 @@ cancel_tracking_request({
 
 ---
 
-### 25. `set_party_role`
+### 24. `set_party_role`
 **Purpose**: Attach a party to up to 50 containers or shipments in a role, replace the party in that role, or detach it. Tier C: a call that detaches a party asks the user; a call that only attaches runs at once.
 
 **Usage**:
@@ -661,7 +605,7 @@ set_party_role({ ...sameArguments, confirmation_token: "t49ct1...." })
 
 ---
 
-### 26. `set_custom_field`
+### 25. `set_custom_field`
 **Purpose**: Set or clear one of the account's custom fields on up to 50 containers or shipments. Tier C: a call that overwrites or clears a value asks the user; a call that only fills empty fields runs at once.
 
 **Usage**:
@@ -684,7 +628,7 @@ set_custom_field({ ...sameArguments, confirmation_token: "t49ct1...." })
 
 ---
 
-### 27. `update_record`
+### 26. `update_record`
 **Purpose**: Add or remove reference numbers, such as PO or job numbers, on a container, shipment or tracking request, and tags on a shipment. Tier C, `confirms: "destructive_only"`: a call that only adds runs at once; a call that removes anything needs the user's approval of a preview.
 
 **Usage**:
@@ -771,9 +715,7 @@ update_record({ ...sameArguments, confirmation_token: "t49ct1...." })
 → Check `container_state` and present location
 
 ### User asks: "Show me the journey of CAIU1234567"
-→ Use `get_container` first (fast)
-→ Check metadata → `needs_more_data_for` suggests transport_events
-→ Use `get_container_transport_events` for detailed timeline
+→ Use `get_container`: `events.timeline` has every event
 
 ### User asks: "Tell me about shipment MAEU123456789"
 → Use `search_container` to find shipment
@@ -799,7 +741,7 @@ update_record({ ...sameArguments, confirmation_token: "t49ct1...." })
 → Use `get_location`
 
 ### User asks: "Where is the vessel now?"
-→ Use `get_container_transport_events` for the `vessel_id`, then `get_vessel`
+→ Use `get_container` for the `vessel_id` in `events.timeline`, then `get_vessel`
 
 ### User asks: "Find the arrival notice for MAEU123456789"
 → Use `list_documents` with `reference` and `document_types`, then `get_document` with `include_extracted_data`
@@ -812,7 +754,7 @@ update_record({ ...sameArguments, confirmation_token: "t49ct1...." })
 
 ### User asks: "How did it get from Shanghai to Chicago?"
 → Option A: Use `get_container_route` (paid feature, shows ports and ETAs)
-→ Option B: Use `get_container_transport_events` (shows actual movement)
+→ Option B: Use `get_container` (`events.timeline` shows actual movement)
 
 ---
 
@@ -854,8 +796,8 @@ get_container({ id: "abc-123" })
 
 **Step 3**: Follow-up for complete data
 ```typescript
-get_container_transport_events({ id: "abc-123" })
-// Returns 87 events with full timeline
+get_container({ id: "abc-123" })
+// events.timeline has all 87 events
 ```
 
 **Step 4**: LLM uses milestone glossary
@@ -892,8 +834,6 @@ get_container_transport_events({ id: "abc-123" })
 - `get_supported_shipping_lines`
 
 ### Moderate Queries (500ms - 2s)
-- `get_container` with transport_events
-- `get_container_transport_events`
 - `search_container`
 
 ### Slower Queries (1-3s)
@@ -926,8 +866,8 @@ get_container_transport_events({ id: "abc-123" })
 ### Workflow 3: Journey Analysis
 ```
 1. User: "How long did the rail portion take?"
-2. LLM: get_container_transport_events(id)
-3. Extract rail_loaded_at and rail_unloaded_at from milestones
+2. LLM: get_container(id)
+3. Read the rail loaded and unloaded events from events.timeline
 4. Calculate duration
 5. LLM: "Rail transit took 8 days (June 24 - July 2)"
 ```
@@ -952,7 +892,7 @@ get_container_transport_events({ id: "abc-123" })
 
 ## Summary
 
-With these 34 tools and 4 resources, the LLM can:
+With these 33 tools and 4 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

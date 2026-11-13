@@ -63,7 +63,6 @@ const TOOL_NAMES = [
   'track_container',
   'get_container',
   'get_shipment_details',
-  'get_container_transport_events',
   'get_supported_shipping_lines',
   'get_container_route',
   'list_shipments',
@@ -165,32 +164,6 @@ function shipmentRaw() {
   };
 }
 
-function eventsRaw() {
-  return {
-    data: [
-      {
-        id: 'event-1',
-        type: 'transport_event',
-        attributes: {
-          event: 'container.transport.vessel_departed',
-          timestamp: '2026-07-25T08:00:00Z',
-          timezone: 'Asia/Shanghai',
-        },
-      },
-      {
-        id: 'event-2',
-        type: 'transport_event',
-        attributes: {
-          event: 'container.transport.discharged',
-          timestamp: '2026-08-19T14:00:00Z',
-          timezone: 'America/Los_Angeles',
-        },
-      },
-    ],
-    included: [],
-  };
-}
-
 async function connectClient() {
   const handler = createMcpHandler(
     () => createTerminal49McpServer('fixture-token', 'https://api.test'),
@@ -244,9 +217,6 @@ function configureHappyPath(toolName: ToolName): void {
       return;
     case 'get_shipment_details':
       sdk.shipmentsGet.mockResolvedValue({ raw: shipmentRaw() });
-      return;
-    case 'get_container_transport_events':
-      sdk.containersEvents.mockResolvedValue({ raw: eventsRaw() });
       return;
     case 'get_supported_shipping_lines':
       sdk.shippingLinesList.mockResolvedValue([
@@ -347,7 +317,6 @@ function argumentsFor(toolName: ToolName): Record<string, unknown> {
     case 'track_container':
       return { number: 'CAIU2885402', scac: 'MAEU' };
     case 'get_container':
-    case 'get_container_transport_events':
     case 'get_container_route':
       return { id: CONTAINER_ID };
     case 'get_shipment_details':
@@ -400,15 +369,6 @@ function expectedOutputFor(toolName: ToolName): Record<string, unknown> {
         bill_of_lading: 'MAEU123456789',
         shipping_line: expect.objectContaining({ scac: 'MAEU' }),
         containers: expect.objectContaining({ count: 1 }),
-      };
-    case 'get_container_transport_events':
-      return {
-        total_events: 2,
-        timeline: expect.arrayContaining([
-          expect.objectContaining({
-            event: 'container.transport.vessel_departed',
-          }),
-        ]),
       };
     case 'get_supported_shipping_lines':
       return {
@@ -482,9 +442,6 @@ function configureFailure(toolName: ToolName, error: Error): void {
       return;
     case 'get_shipment_details':
       sdk.shipmentsGet.mockRejectedValue(error);
-      return;
-    case 'get_container_transport_events':
-      sdk.containersEvents.mockRejectedValue(error);
       return;
     case 'get_supported_shipping_lines':
       sdk.shippingLinesList.mockRejectedValue(error);
@@ -601,19 +558,12 @@ describe('all public tools over MCP client transport', () => {
       toolName: 'get_shipment_details' as const,
       expected: `No shipment found with id ${SHIPMENT_ID}.`,
     },
-    {
-      toolName: 'get_container_transport_events' as const,
-      expected: `No container found with id ${CONTAINER_ID}.`,
-    },
   ])(
     '$toolName returns a specific not-found error',
     async ({ toolName, expected }) => {
       const notFound = new Error('private upstream not-found detail');
       notFound.name = 'NotFoundError';
       configureFailure(toolName, notFound);
-      if (toolName === 'get_container_transport_events') {
-        sdk.containersGet.mockRejectedValue(notFound);
-      }
       const { client, handler } = await connectClient();
 
       try {

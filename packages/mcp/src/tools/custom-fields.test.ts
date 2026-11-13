@@ -137,7 +137,7 @@ describe('get_container custom fields', () => {
 
     expect(client.containers.get).toHaveBeenCalledWith(
       'c-1',
-      ['shipment', 'pod_terminal'],
+      ['shipment', 'pod_terminal', 'transport_events'],
       { format: 'raw' },
     );
     expect(client.containers.customFields).toHaveBeenCalledWith('c-1', {
@@ -178,6 +178,7 @@ describe('get_container custom fields', () => {
       expect(result._metadata.includes_loaded).toEqual([
         'shipment',
         'pod_terminal',
+        'transport_events',
       ]);
     },
   );
