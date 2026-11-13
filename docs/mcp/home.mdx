@@ -65,7 +65,7 @@ For the full walkthrough (including local stdio dev, deployment, and SDK example
 
 **Authentication**:
 - **OAuth 2.1 (recommended)** – no API key needed. Add the connector URL, sign in with your Terminal49 credentials in the browser window your client opens, and approve access. Clients discover the authorization server (`https://auth.terminal49.com`) automatically and use authorization code with PKCE and Dynamic Client Registration.
-- **API key (for clients without OAuth support)** – create a key in the [developer portal](https://app.terminal49.com/developers/api-keys) and pass `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys; the `Bearer` scheme is used for OAuth access tokens, which OAuth clients obtain automatically.
+- **API key (for clients without OAuth support)** – create a key in the [developer portal](https://app.terminal49.com/developers/api-keys) and pass `Authorization: Token YOUR_API_KEY`. Use the `Token` scheme for API keys. OAuth clients use the `Bearer` scheme for OAuth access tokens, which they obtain automatically.
 - The [local stdio server](/api-docs/in-depth-guides/mcp#local-stdio-development) reads the `T49_API_TOKEN` environment variable instead.
 
 <Tip>
