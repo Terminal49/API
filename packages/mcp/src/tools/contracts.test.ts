@@ -722,13 +722,19 @@ describe('MCP tool contracts', () => {
 
   it('returns every arrival estimate so a later estimate on another voyage cannot hide the current one', async () => {
     const raw = buildContainerRaw();
-    const estimate = (id: string, timestamp: string, voyage: string) => ({
+    const estimate = (
+      id: string,
+      timestamp: string,
+      voyage: string,
+      created_at: string,
+    ) => ({
       id,
       type: 'transport_event',
       attributes: {
         event: 'container.transport.estimated.vessel_arrived',
         timestamp,
         voyage_number: voyage,
+        created_at,
         data_source: 'shipping_line',
         invalidated_at: null,
       },
@@ -737,8 +743,18 @@ describe('MCP tool contracts', () => {
       ...raw,
       included: [
         ...raw.included,
-        estimate('next-voyage', '2099-12-06T16:00:00Z', 'NEXT02N'),
-        estimate('current-voyage', '2099-11-24T19:00:00Z', 'CURRENT01W'),
+        estimate(
+          'next-voyage',
+          '2099-12-06T16:00:00Z',
+          'NEXT02N',
+          '2099-09-25T00:00:00Z',
+        ),
+        estimate(
+          'current-voyage',
+          '2099-11-24T19:00:00Z',
+          'CURRENT01W',
+          '2099-10-30T00:00:00Z',
+        ),
       ],
     });
 
@@ -750,10 +766,10 @@ describe('MCP tool contracts', () => {
     expect(
       result.events?.timeline
         ?.filter((item) => item.event?.includes('estimated.vessel_arrived'))
-        .map((item) => [item.timestamp, item.voyage_number]),
+        .map((item) => [item.timestamp, item.voyage_number, item.reported_at]),
     ).toEqual([
-      ['2099-11-24T19:00:00.000Z', 'CURRENT01W'],
-      ['2099-12-06T16:00:00.000Z', 'NEXT02N'],
+      ['2099-11-24T19:00:00.000Z', 'CURRENT01W', '2099-10-30T00:00:00.000Z'],
+      ['2099-12-06T16:00:00.000Z', 'NEXT02N', '2099-09-25T00:00:00.000Z'],
     ]);
   });
 

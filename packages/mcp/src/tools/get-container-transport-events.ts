@@ -18,7 +18,7 @@ export const getContainerTransportEventsTool = {
     '(vessel loaded, departed, arrived, discharged, rail movements, delivery). ' +
     'Use this for questions about journey history, "what happened", timeline analysis, rail tracking. ' +
     'For deadline changes, value is the reported deadline; timestamp is when it was reported. ' +
-    'Vessel events carry vessel_id for get_vessel. ' +
+    'Vessel events carry vessel_id for get_vessel. reported_at is when an event was recorded; when estimates conflict, the latest reported_at is current. ' +
     'get_container already returns this timeline; call this only for event categories and milestones without the container snapshot. The result has total_events, event_categories, timeline (each event with timestamp, location, vessel and voyage), and milestones (the vessel loaded, departed, arrived, discharged, rail, and delivered times).',
   inputSchema: {
     type: 'object',
@@ -39,6 +39,9 @@ const milestoneTimestamp = z.string().optional();
 export const timelineEventSchema = z.object({
   event: z.string().optional(),
   timestamp: z.string(),
+  // When Terminal49 recorded the event. For competing estimates of the same
+  // milestone, the latest reported_at is the current one.
+  reported_at: z.string().optional(),
   // The reported value is opaque; deadline events carry the deadline here.
   value: z.unknown(),
   data_source: z.string().nullable(),
@@ -312,6 +315,9 @@ export function formatTimeline(
         // Keep the reported value separate from the event timestamp: deadline
         // changes carry the actual deadline in value, not timestamp.
         timestamp,
+        reported_at: normalizeText(attrs.created_at)
+          ? normalizeTimestamp(attrs.created_at)
+          : undefined,
         value: attrs.value ?? null,
         data_source: attrs.data_source ?? null,
         invalidated_at: attrs.invalidated_at ?? null,

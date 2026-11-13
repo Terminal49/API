@@ -1578,7 +1578,7 @@ export function createTerminal49McpServer(
         description:
           'Get container information with flexible data loading. Returns core container data (status, location, equipment, dates) ' +
           'plus its shipment, terminal and every transport event (events.timeline), so one call answers status, ETA and history questions. ' +
-          'Carriers can report several ETAs; compare voyage and vessel before quoting one. ' +
+          'Carriers report several ETAs: the current one is the estimate with the latest reported_at, not the latest date. ' +
           'The result has status and status_source, equipment, location (current location, availability, POD arrival and discharge times), demurrage (last free days, fees, holds, urgency, days_until_lfd), rail, shipment, pod_terminal, events (count, rail_events_count, timeline), and the custom_fields or party_roles you asked for.',
         inputSchema: z.object({
           id: z
