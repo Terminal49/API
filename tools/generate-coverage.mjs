@@ -456,12 +456,20 @@ const escapeMarkdown = (value) =>
     .replaceAll('\n', ' ');
 const csvCell = (value) =>
   '"' + String(value ?? '').replaceAll('"', '""') + '"';
+const referenceDescriptions = {
+  terminals:
+    "Terminal coverage reference listing each container terminal's UN/LOCODE, SMDG, and FIRMS codes plus support status for availability, holds, and LFD data.",
+  shippingLines:
+    "Shipping line coverage reference listing each ocean carrier's SCAC and support status for bill of lading, booking, container tracking, and milestone data.",
+  railCarriers:
+    "Rail carrier coverage reference listing each railroad's SCAC and support status for rail milestones, availability, and rail last free day (LFD) data.",
+};
 function staticReference(data, type, slug, title) {
   const definitions = data.featureCatalog[type];
   const lines = [
     '---',
     'title: "' + title + ' coverage reference"',
-    'description: "Complete feature coverage with explicit statuses and public integration identifiers."',
+    'description: "' + referenceDescriptions[type] + '"',
     '---',
     '',
     'Last updated ' + updatedOnFor(data, type) + '.',
