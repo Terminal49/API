@@ -302,7 +302,7 @@ Get detailed container information with flexible data loading. Choose what to in
 - `include` *(string[], optional)* – what to load:
   - `shipment` – routing, BOL, line, ref numbers (lightweight)
   - `pod_terminal` – terminal name, location (lightweight)
-  - `transport_events` – adds `events.count`, `events.rail_events_count`, and `events.latest_event`; use `get_container_transport_events` for the full timeline
+  - `transport_events` – always loaded: `events.timeline` (every event, oldest first, with vessel, voyage, and location; withdrawn events carry `invalidated_at`) plus the active `events.count` and `events.rail_events_count`
   - `custom_fields` – account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)
   - `party_roles` – companies assigned to the container by role, such as `customer` or `pickup_dray_carrier`. Each row has the party role `id`, `role`, `party_id`, and `party_name`. `party_name` is the company name, else the party's name, else its nickname. If the credential cannot read party roles, `party_roles` is `null` and `party_roles_note` explains why.
 
