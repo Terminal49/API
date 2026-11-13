@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- `get_container` always returns every transport event in `events.timeline` (oldest first, with vessel, voyage, location, `invalidated_at`, and `reported_at`), instead of a count and the event with the largest timestamp. That event was often a far-out estimate on another voyage, so agents quoted a stale ETA. `events.latest_event` is gone; `include: ["transport_events"]` is accepted and changes nothing. When estimates for the same milestone conflict, the one with the latest `reported_at` is current.
 - `set_party_role` and `set_custom_field` are tier C tools that ask for the user's approval only when a record in the call would lose a party or a value. `add`, a `replace` that detaches nobody, and filling empty fields run at once. `remove`, a `replace` that detaches another party, and overwriting or clearing a value return one preview of every record that changes in the batch, and write after the user approves it on either confirmation channel. The approval is bound to the state of every record read, so a change to any of them re-asks. A `remove` whose `party_id` matches no role while the record holds another party in that role fails with guidance instead of reporting `unchanged`; a `party_id` Terminal49 does not know stops the call as `party_not_found`.
+
+### Removed
+- `get_container_transport_events`. `get_container` returns the same timeline in `events.timeline`.
 
 ### Added
 - Tier C write tools (`stop_shipment_tracking`, `cancel_tracking_request`) confirm with the user through MCP 2026-07-28 form elicitation when the request declares it: the first call returns `input_required` with the preview and a signed `requestState`, the client asks the user, and the write runs only on their accept. A `confirmation_token` on such a request is refused (`token_not_accepted`), and a decline returns `status: "declined"`. Other clients keep the preview-then-token flow. Tier C tools now carry `_meta["anthropic/requiresUserInteraction"]: true`, so Claude Code prompts on every call.

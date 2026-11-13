@@ -413,93 +413,6 @@ The response may also include `_metadata` with factual details such as `includes
 
 ---
 
-### `get_container_transport_events`
-
-Get the full event timeline for a container's journey. Each event has a `vessel_id`, or `null`, that you can pass to `get_vessel`.
-
-**Parameters**
-- `id` *(uuid, required)* – Terminal49 container UUID
-
-<Accordion title="Example response">
-```json
-{
-  "total_events": 4,
-  "event_categories": {
-    "vessel_events": 4,
-    "rail_events": 0,
-    "truck_events": 0,
-    "terminal_events": 0,
-    "other_events": 0
-  },
-  "timeline": [
-    {
-      "event": "container.transport.vessel_loaded",
-      "timestamp": "2024-12-08T10:30:00.000Z",
-      "timezone": "Asia/Shanghai",
-      "voyage_number": "451E",
-      "location": {
-        "name": "Shanghai",
-        "code": "CNSHA",
-        "type": "port"
-      }
-    },
-    {
-      "event": "container.transport.vessel_departed",
-      "timestamp": "2024-12-09T14:00:00.000Z",
-      "timezone": "Asia/Shanghai",
-      "voyage_number": "451E",
-      "location": {
-        "name": "Shanghai",
-        "code": "CNSHA",
-        "type": "port"
-      }
-    },
-    {
-      "event": "container.transport.vessel_arrived",
-      "timestamp": "2024-12-22T08:30:00.000Z",
-      "timezone": "America/Los_Angeles",
-      "voyage_number": "451E",
-      "location": {
-        "name": "Los Angeles",
-        "code": "USLAX",
-        "type": "port"
-      }
-    },
-    {
-      "event": "container.transport.vessel_discharged",
-      "timestamp": "2024-12-23T11:15:00.000Z",
-      "timezone": "America/Los_Angeles",
-      "voyage_number": "451E",
-      "location": {
-        "name": "Los Angeles",
-        "code": "USLAX",
-        "type": "port"
-      }
-    }
-  ],
-  "milestones": {
-    "vessel_loaded_at": "2024-12-08T10:30:00.000Z",
-    "vessel_departed_at": "2024-12-09T14:00:00.000Z",
-    "vessel_arrived_at": "2024-12-22T08:30:00.000Z",
-    "discharged_at": "2024-12-23T11:15:00.000Z"
-  },
-  "_metadata": {
-    "source": "transport_events_subresource",
-    "container_found": true
-  }
-}
-```
-</Accordion>
-
-**Good for**
-- "Show me the journey timeline"
-- "What happened to this container?"
-- "How long was the rail portion?"
-
-**REST equivalent**: [GET /containers/{id}/transport_events](/api-docs/api-reference/containers/get-a-containers-transport-events)
-
----
-
 ### `get_shipment_details`
 
 Get shipment-level information including routing, BOL, and all containers.
@@ -546,7 +459,7 @@ The tool returns:
 If Terminal49 has no route data for the container yet, the tool returns a `NoRouteData` result with a suggested alternative instead of an error.
 
 <Warning>
-This is a **paid feature**. If it is not enabled for your account, the tool returns a `FeatureNotEnabled` result. Use `get_container_transport_events` for historical movement data instead.
+This is a **paid feature**. If it is not enabled for your account, the tool returns a `FeatureNotEnabled` result. Use `get_container`, whose `events.timeline` has the historical movement, instead.
 
 See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for the related Routing Data entitlement.
 </Warning>
@@ -818,7 +731,7 @@ Get a port, terminal, or metro area.
 Get a vessel's name, IMO, MMSI, and last reported position. Optionally project its track to a port and estimate when it arrives.
 
 **Parameters**
-- `id` *(uuid, required)* – vessel UUID, such as `vessel_id` from `get_container_transport_events`
+- `id` *(uuid, required)* – vessel UUID, such as a `vessel_id` from `get_container`'s `events.timeline`
 - `eta_to` *(object, optional)* – project the track to a port:
   - `port_id` *(uuid, required)* – the port the vessel is heading to
   - `previous_port_id` *(uuid, required)* – the port it left before that

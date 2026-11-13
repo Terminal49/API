@@ -17,7 +17,7 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (34 Available)
+### 🛠️ Tools (33 Available)
 
 The default toolsets, `core`, `documents`, `operations` and `trade`, serve these 31:
 
@@ -28,7 +28,6 @@ The default toolsets, `core`, `documents`, `operations` and `trade`, serve these
 | **`identify_tracking_number`** | Predict a number's type and carrier and check whether it is already tracked | Creates nothing |
 | **`get_container`** | Get detailed container info with flexible data loading | Optional custom fields and party roles |
 | **`get_shipment_details`** | Get shipment routing, BOL, containers, ports | Optional custom fields and party roles |
-| **`get_container_transport_events`** | Get full event timeline for a container | Milestone history |
 | **`get_supported_shipping_lines`** | List 40+ major carriers with SCAC codes | Filterable by name/code |
 | **`get_container_route`** | Get ports in route order with ETAs and the current vessel | Premium feature |
 | **`get_location`** | Get a port, terminal, or metro area | FIRMS code, address, time zone |

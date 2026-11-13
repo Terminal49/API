@@ -126,7 +126,6 @@ Search for bill of lading 123456789
 | `identify_tracking_number` | Predict a number's type and carrier without tracking it |
 | `get_container` | Get detailed container information |
 | `get_shipment_details` | Get complete shipment routing and containers |
-| `get_container_transport_events` | Get full event timeline |
 | `get_container_route` | Get ports in route order with ETAs and the current vessel |
 | `get_location` | Get a port, terminal, or metro area |
 | `get_vessel` | Get a vessel's position and projected arrival |
