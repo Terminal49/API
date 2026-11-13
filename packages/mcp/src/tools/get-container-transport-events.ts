@@ -19,7 +19,7 @@ export const getContainerTransportEventsTool = {
     'Use this for questions about journey history, "what happened", timeline analysis, rail tracking. ' +
     'For deadline changes, value is the reported deadline; timestamp is when it was reported. ' +
     'Vessel events carry vessel_id for get_vessel. ' +
-    'More efficient than get_container with transport_events when you only need event data. The result has total_events, event_categories, timeline (each event with timestamp, location, vessel and voyage), and milestones (the vessel loaded, departed, arrived, discharged, rail, and delivered times).',
+    'get_container already returns this timeline; call this only for event categories and milestones without the container snapshot. The result has total_events, event_categories, timeline (each event with timestamp, location, vessel and voyage), and milestones (the vessel loaded, departed, arrived, discharged, rail, and delivered times).',
   inputSchema: {
     type: 'object',
     properties: {
@@ -35,6 +35,28 @@ export const getContainerTransportEventsTool = {
 
 const milestoneTimestamp = z.string().optional();
 
+/** One event as get_container_transport_events and get_container report it. */
+export const timelineEventSchema = z.object({
+  event: z.string().optional(),
+  timestamp: z.string(),
+  // The reported value is opaque; deadline events carry the deadline here.
+  value: z.unknown(),
+  data_source: z.string().nullable(),
+  invalidated_at: z.string().nullable(),
+  timezone: z.string().optional(),
+  voyage_number: z.string().optional(),
+  vessel_id: z.string().nullable(),
+  location: z
+    .object({
+      name: z.string().optional(),
+      code: z.string().optional(),
+      type: z.string().optional(),
+    })
+    .nullable(),
+});
+
+export type TimelineEvent = z.input<typeof timelineEventSchema>;
+
 /**
  * Output contract for get_container_transport_events. Agents that script tool
  * calls read field names from this schema, so every key
@@ -49,26 +71,7 @@ export const transportEventsSchema = z.object({
     terminal_events: z.number(),
     other_events: z.number(),
   }),
-  timeline: z.array(
-    z.object({
-      event: z.string().optional(),
-      timestamp: z.string(),
-      // The reported value is opaque; deadline events carry the deadline here.
-      value: z.unknown(),
-      data_source: z.string().nullable(),
-      invalidated_at: z.string().nullable(),
-      timezone: z.string().optional(),
-      voyage_number: z.string().optional(),
-      vessel_id: z.string().nullable(),
-      location: z
-        .object({
-          name: z.string().optional(),
-          code: z.string().optional(),
-          type: z.string().optional(),
-        })
-        .nullable(),
-    }),
-  ),
+  timeline: z.array(timelineEventSchema),
   milestones: z.object({
     vessel_loaded_at: milestoneTimestamp,
     vessel_departed_at: milestoneTimestamp,
@@ -265,27 +268,7 @@ function formatTransportEventsResponse(
   );
   const categorized = categorizeEvents(activeEvents);
 
-  // Format events with location context
-  const formattedEvents = sortedEvents.map((event: any) => {
-    const attrs = event.attributes || {};
-    const relationships = event.relationships || {};
-    const eventType = normalizeText(attrs.event);
-    const timestamp = normalizeTimestamp(attrs.timestamp);
-
-    return {
-      event: eventType,
-      // Keep the reported value separate from the event timestamp: deadline
-      // changes carry the actual deadline in value, not timestamp.
-      timestamp,
-      value: attrs.value ?? null,
-      data_source: attrs.data_source ?? null,
-      invalidated_at: attrs.invalidated_at ?? null,
-      timezone: normalizeText(attrs.timezone),
-      voyage_number: normalizeText(attrs.voyage_number),
-      vessel_id: relationships.vessel?.data?.id ?? null,
-      location: resolveLocation(attrs, relationships, included),
-    };
-  });
+  const formattedEvents = formatTimeline(sortedEvents, included);
 
   const metadata: TransportEvents['_metadata'] = {
     source: options.source,
@@ -304,11 +287,47 @@ function formatTransportEventsResponse(
   };
 }
 
+/**
+ * Formats events oldest first, keeping withdrawn events (invalidated_at set) so
+ * the full reporting history stays visible.
+ */
+export function formatTimeline(
+  events: any[],
+  included: any[],
+): TimelineEvent[] {
+  return [...events]
+    .sort(
+      (a: any, b: any) =>
+        new Date(a.attributes?.timestamp || 0).getTime() -
+        new Date(b.attributes?.timestamp || 0).getTime(),
+    )
+    .map((event: any) => {
+      const attrs = event.attributes || {};
+      const relationships = event.relationships || {};
+      const eventType = normalizeText(attrs.event);
+      const timestamp = normalizeTimestamp(attrs.timestamp);
+
+      return {
+        event: eventType,
+        // Keep the reported value separate from the event timestamp: deadline
+        // changes carry the actual deadline in value, not timestamp.
+        timestamp,
+        value: attrs.value ?? null,
+        data_source: attrs.data_source ?? null,
+        invalidated_at: attrs.invalidated_at ?? null,
+        timezone: normalizeText(attrs.timezone),
+        voyage_number: normalizeText(attrs.voyage_number),
+        vessel_id: relationships.vessel?.data?.id ?? null,
+        location: resolveLocation(attrs, relationships, included),
+      };
+    });
+}
+
 function resolveLocation(
   attrs: any,
   relationships: any,
   included: any[],
-): TransportEvents['timeline'][number]['location'] {
+): TimelineEvent['location'] {
   // Dedicated sub-resource: location is a related resource in `included`.
   const locationId = relationships.location?.data?.id;
   const includedLocation = locationId

@@ -117,8 +117,15 @@ describe.each(['timeline', 'fallback', 'snapshot'] as const)(
           expect(result.events).toMatchObject({
             count: 2,
             rail_events_count: 0,
-            latest_event: live.attributes,
           });
+          expect(result.events.timeline).toHaveLength(4);
+          expect(result.events.timeline[1]).toMatchObject({
+            ...live.attributes,
+            timestamp: '2099-01-02T00:00:00.000Z',
+          });
+          expect(result.events.timeline[2].invalidated_at).toBe(
+            '2099-01-05T00:00:00Z',
+          );
           expect(result.demurrage.pickup_lfd).toBe('2099-01-10');
         } else {
           expect(result.timeline).toHaveLength(4);
@@ -151,7 +158,11 @@ describe.each(['timeline', 'fallback', 'snapshot'] as const)(
         event('container.transport.discharged', 1, reportedValue, true),
       ]);
       if (mode === 'snapshot') {
-        expect(result.events).toEqual({ count: 0 });
+        expect(result.events).toMatchObject({
+          count: 0,
+          rail_events_count: 0,
+        });
+        expect(result.events.timeline[0].value).toEqual(reportedValue);
       } else {
         expect(result.timeline[0].value).toEqual(reportedValue);
         expect(result.total_events).toBe(1);
@@ -164,7 +175,7 @@ describe.each(['timeline', 'fallback', 'snapshot'] as const)(
 
 it('still removes steering outside the exact reported-value path', async () => {
   vi.spyOn(containerTool, 'executeGetContainer').mockResolvedValue({
-    events: { latest_event: { value: reportedValue } },
+    events: { timeline: [{ value: reportedValue }] },
     _metadata: {
       source: 'fixture',
       recommendations: ['remove'],
@@ -180,7 +191,7 @@ it('still removes steering outside the exact reported-value path', async () => {
     const result = await (server as any)._registeredTools.get_container.handler(
       { id },
     );
-    expect(result.structuredContent.events.latest_event.value).toEqual(
+    expect(result.structuredContent.events.timeline[0].value).toEqual(
       reportedValue,
     );
     expect(result.structuredContent._metadata).toEqual({

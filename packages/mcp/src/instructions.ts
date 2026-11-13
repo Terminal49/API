@@ -46,7 +46,7 @@ const PARAGRAPHS: readonly Paragraph[] = [
     aboutTools: true,
     segments: [
       {
-        text: 'Resolve numbers with search_container; get details with get_container or get_shipment_details, milestones with get_container_transport_events.',
+        text: 'Resolve numbers with search_container; get details, milestones and ETAs with get_container (it includes every event), or shipment details with get_shipment_details.',
       },
       {
         text: ' Get carrier SCACs with get_supported_shipping_lines.',

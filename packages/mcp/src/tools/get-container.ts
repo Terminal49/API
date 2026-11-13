@@ -17,6 +17,10 @@ import {
   evaluateDemurrageUrgency,
 } from '../lib/demurrage.js';
 import { logMcpEvent } from '../logging.js';
+import {
+  formatTimeline,
+  timelineEventSchema,
+} from './get-container-transport-events.js';
 import { dayDeltaInZone, formatInZone } from '../lib/temporal.js';
 import {
   type CustomFieldsResult,
@@ -41,8 +45,15 @@ export type ContainerInclude =
 type SubResourceInclude = 'custom_fields' | 'party_roles';
 type ApiContainerInclude = Exclude<ContainerInclude, SubResourceInclude>;
 
-/** The default sideloads. `include` augments — never replaces — these. */
-const DEFAULT_INCLUDES: ContainerInclude[] = ['shipment', 'pod_terminal'];
+/**
+ * Always loaded. `include` augments, never replaces, these. Transport events are
+ * here because a container question needs them, and a summary was misread.
+ */
+const DEFAULT_INCLUDES: ContainerInclude[] = [
+  'shipment',
+  'pod_terminal',
+  'transport_events',
+];
 
 export interface GetContainerArgs {
   id: string;
@@ -137,17 +148,8 @@ export const containerStatusSchema = z.object({
   events: z
     .object({
       count: z.number(),
-      latest_event: z
-        .object({
-          event: apiString,
-          timestamp: apiString,
-          value: z.unknown(),
-          data_source: z.string().nullable(),
-          invalidated_at: z.string().nullable(),
-          location: apiString,
-        })
-        .optional(),
       rail_events_count: z.number().optional(),
+      timeline: z.array(timelineEventSchema).optional(),
     })
     .optional(),
   created_at: apiString,
@@ -265,7 +267,7 @@ function formatContainerResponse(
   );
 
   const eventsData = includes.includes('transport_events')
-    ? formatEventsData(transportEvents)
+    ? formatEventsData(transportEvents, included)
     : undefined;
 
   const podTimezone: string | null = container.pod_timezone ?? null;
@@ -416,40 +418,28 @@ function isTrackingStopped(shipment: any): boolean {
 
 function formatEventsData(
   events: any[],
+  included: any[],
 ): NonNullable<ContainerStatus['events']> {
-  // Summaries describe active events; the timeline retains withdrawn history.
-  events = events.filter((event: any) => !event.attributes?.invalidated_at);
+  // Counts describe active events; the timeline keeps withdrawn ones, marked by
+  // invalidated_at. Every event is returned: a single "latest" event hid
+  // competing estimates (an ETA on another voyage outranked the current one).
+  const active = events.filter(
+    (event: any) => !event.attributes?.invalidated_at,
+  );
   if (events.length === 0) {
     return { count: 0 };
   }
 
-  const railEvents = events.filter(
+  const railEvents = active.filter(
     (e: any) =>
       e.attributes?.event?.startsWith('rail.') ||
       e.attributes?.event?.includes('rail'),
   );
 
-  const sortedEvents = [...events].sort(
-    (a: any, b: any) =>
-      new Date(b.attributes?.timestamp || 0).getTime() -
-      new Date(a.attributes?.timestamp || 0).getTime(),
-  );
-
-  const latestEvent = sortedEvents[0]?.attributes;
-
   return {
-    count: events.length,
+    count: active.length,
     rail_events_count: railEvents.length,
-    latest_event: latestEvent
-      ? {
-          event: latestEvent.event,
-          timestamp: latestEvent.timestamp,
-          value: latestEvent.value ?? null,
-          data_source: latestEvent.data_source ?? null,
-          invalidated_at: latestEvent.invalidated_at ?? null,
-          location: latestEvent.location_name || latestEvent.port_name,
-        }
-      : undefined,
+    timeline: formatTimeline(events, included),
   };
 }
 

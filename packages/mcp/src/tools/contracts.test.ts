@@ -241,7 +241,7 @@ describe('MCP tool contracts', () => {
     // (raw-sourced) summary only — no _mapped bloat.
     expect(getContainer).toHaveBeenCalledWith(
       'container-1',
-      ['shipment', 'pod_terminal'],
+      ['shipment', 'pod_terminal', 'transport_events'],
       { format: 'raw' },
     );
     expect(result.tracking_request_created).toBe(true);
@@ -283,7 +283,7 @@ describe('MCP tool contracts', () => {
     expect(createFromInfer).not.toHaveBeenCalled();
     expect(getContainer).toHaveBeenCalledWith(
       'container-42',
-      ['shipment', 'pod_terminal'],
+      ['shipment', 'pod_terminal', 'transport_events'],
       { format: 'raw' },
     );
     expect(result.tracking_request_created).toBe(false);
@@ -689,7 +689,7 @@ describe('MCP tool contracts', () => {
     },
   );
 
-  it('preserves latest-event deadline metadata in the compact container snapshot without replacing pickup LFD', async () => {
+  it('keeps reported deadline values in the container timeline without replacing pickup LFD', async () => {
     const raw = buildContainerRaw();
     const event = {
       id: 'deadline',
@@ -709,11 +709,52 @@ describe('MCP tool contracts', () => {
       { id: 'container-1', include: ['transport_events'] },
       asClient({ containers: { get } }),
     );
-    expect(result.events?.latest_event).toMatchObject(event.attributes);
-    expect(result.events?.latest_event?.value).toBe(event.attributes.value);
-    expect(result.events?.latest_event?.data_source).toBe('shipping_line');
-    expect(result.events?.latest_event?.invalidated_at).toBeNull();
+    const deadline = result.events?.timeline?.find(
+      (item) => item.event === event.attributes.event,
+    );
+    expect(deadline).toMatchObject({
+      value: event.attributes.value,
+      data_source: 'shipping_line',
+      invalidated_at: null,
+    });
     expect(result.demurrage.pickup_lfd).toBe('2099-01-10');
+  });
+
+  it('returns every arrival estimate so a later estimate on another voyage cannot hide the current one', async () => {
+    const raw = buildContainerRaw();
+    const estimate = (id: string, timestamp: string, voyage: string) => ({
+      id,
+      type: 'transport_event',
+      attributes: {
+        event: 'container.transport.estimated.vessel_arrived',
+        timestamp,
+        voyage_number: voyage,
+        data_source: 'shipping_line',
+        invalidated_at: null,
+      },
+    });
+    const get = vi.fn().mockResolvedValue({
+      ...raw,
+      included: [
+        ...raw.included,
+        estimate('next-voyage', '2099-12-06T16:00:00Z', 'NEXT02N'),
+        estimate('current-voyage', '2099-11-24T19:00:00Z', 'CURRENT01W'),
+      ],
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-1' },
+      asClient({ containers: { get } }),
+    );
+
+    expect(
+      result.events?.timeline
+        ?.filter((item) => item.event?.includes('estimated.vessel_arrived'))
+        .map((item) => [item.timestamp, item.voyage_number]),
+    ).toEqual([
+      ['2099-11-24T19:00:00.000Z', 'CURRENT01W'],
+      ['2099-12-06T16:00:00.000Z', 'NEXT02N'],
+    ]);
   });
 
   it('get_container_transport_events returns timeline and milestone summary', async () => {

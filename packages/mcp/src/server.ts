@@ -418,14 +418,17 @@ function stripResponseSteering(
   // Only reported values at these tool-owned paths are opaque data.
   // Keep steering cleanup everywhere else, including MCP-owned metadata.
   if (
-    path.length === 3 &&
-    path[2] === 'value' &&
-    ((toolName === 'get_container_transport_events' &&
+    (toolName === 'get_container_transport_events' &&
+      path.length === 3 &&
       path[0] === 'timeline' &&
-      typeof path[1] === 'number') ||
-      (toolName === 'get_container' &&
-        path[0] === 'events' &&
-        path[1] === 'latest_event'))
+      typeof path[1] === 'number' &&
+      path[2] === 'value') ||
+    (toolName === 'get_container' &&
+      path.length === 4 &&
+      path[0] === 'events' &&
+      path[1] === 'timeline' &&
+      typeof path[2] === 'number' &&
+      path[3] === 'value')
   )
     return value;
   // Labeled untrusted already, so dropping keys would only hide what the
@@ -1574,9 +1577,9 @@ export function createTerminal49McpServer(
       {
         description:
           'Get container information with flexible data loading. Returns core container data (status, location, equipment, dates) ' +
-          'plus optional shipment, terminal, or transport-event data. Transport events are excluded by default to keep snapshots compact. ' +
-          'Call get_container_transport_events for the complete milestone timeline. ' +
-          'The result has status and status_source, equipment, location (current location, availability, POD arrival and discharge times), demurrage (last free days, fees, holds, urgency, days_until_lfd), rail, and the shipment, pod_terminal, custom_fields, party_roles, or events you asked for.',
+          'plus its shipment, terminal and every transport event (events.timeline), so one call answers status, ETA and history questions. ' +
+          'Carriers can report several ETAs; compare voyage and vessel before quoting one. ' +
+          'The result has status and status_source, equipment, location (current location, availability, POD arrival and discharge times), demurrage (last free days, fees, holds, urgency, days_until_lfd), rail, shipment, pod_terminal, events (count, rail_events_count, timeline), and the custom_fields or party_roles you asked for.',
         inputSchema: z.object({
           id: z
             .string()
@@ -1597,11 +1600,8 @@ export function createTerminal49McpServer(
             .optional()
             .default(['shipment'])
             .describe(
-              'Related data to load with the container; shipment alone covers most questions. ' +
-                '• shipment: Routing, BOL, line, ref numbers (lightweight, always useful) ' +
-                '• pod_terminal: Terminal name, location, availability (lightweight, needed for demurrage questions) ' +
-                '• transport_events: Active event summary (count, rail event count, and latest event); use get_container_transport_events for the full timeline ' +
-                '• custom_fields: Account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key) ' +
+              'Extra data to load. Shipment, POD terminal and transport events are always loaded, so listing them changes nothing. ' +
+                '• custom_fields: Account-defined fields such as PO number or project manager (needs a signed-in user, not an API key) ' +
                 '• party_roles: Companies assigned to this container by role (customer, shipper, consignee, pickup_dray_carrier, ...), each with its party role id',
             ),
         }),

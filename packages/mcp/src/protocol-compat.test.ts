@@ -158,10 +158,10 @@ describe('MCP protocol compatibility', () => {
     const transportEventsDescription =
       toolSchemas.get('get_container')?.properties?.include?.description;
     expect(transportEventsDescription).toMatch(
-      /transport_events: Active event summary \(count, rail event count, and latest event\); use get_container_transport_events for the full timeline/,
+      /transport events are always loaded/,
     );
     expect(documentedToolSection('get_container')).toMatch(
-      /transport_events.*events\.count.*events\.rail_events_count.*events\.latest_event.*get_container_transport_events.*full timeline/,
+      /transport_events.*always loaded.*events\.timeline.*events\.count.*events\.rail_events_count/,
     );
   });
 
@@ -366,9 +366,7 @@ describe('MCP protocol compatibility', () => {
     });
     expect(
       toolSchemas.get('get_container')?.properties?.include?.description,
-    ).toMatch(
-      /transport_events: Active event summary.*get_container_transport_events/,
-    );
+    ).toMatch(/transport events are always loaded/);
 
     for (const name of [
       'list_shipments',
