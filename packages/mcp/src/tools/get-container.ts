@@ -17,10 +17,7 @@ import {
   evaluateDemurrageUrgency,
 } from '../lib/demurrage.js';
 import { logMcpEvent } from '../logging.js';
-import {
-  formatTimeline,
-  timelineEventSchema,
-} from './get-container-transport-events.js';
+import { formatTimeline, timelineEventSchema } from '../lib/event-timeline.js';
 import { dayDeltaInZone, formatInZone } from '../lib/temporal.js';
 import {
   type CustomFieldsResult,

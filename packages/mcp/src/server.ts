@@ -31,11 +31,6 @@ import {
   executeGetShipmentDetails,
   shipmentDetailsSchema,
 } from './tools/get-shipment-details.js';
-import {
-  executeGetContainerTransportEvents,
-  getContainerTransportEventsTool,
-  transportEventsSchema,
-} from './tools/get-container-transport-events.js';
 import { executeGetSupportedShippingLines } from './tools/get-supported-shipping-lines.js';
 import {
   routeSummaryOrSoftErrorSchema,
@@ -415,20 +410,15 @@ function stripResponseSteering(
   path: (string | number)[] = [],
   toolName?: string,
 ): unknown {
-  // Only reported values at these tool-owned paths are opaque data.
+  // Only reported values at this tool-owned path are opaque data.
   // Keep steering cleanup everywhere else, including MCP-owned metadata.
   if (
-    (toolName === 'get_container_transport_events' &&
-      path.length === 3 &&
-      path[0] === 'timeline' &&
-      typeof path[1] === 'number' &&
-      path[2] === 'value') ||
-    (toolName === 'get_container' &&
-      path.length === 4 &&
-      path[0] === 'events' &&
-      path[1] === 'timeline' &&
-      typeof path[2] === 'number' &&
-      path[3] === 'value')
+    toolName === 'get_container' &&
+    path.length === 4 &&
+    path[0] === 'events' &&
+    path[1] === 'timeline' &&
+    typeof path[2] === 'number' &&
+    path[3] === 'value'
   )
     return value;
   // Labeled untrusted already, so dropping keys would only hide what the
@@ -1158,7 +1148,6 @@ function formatToolError(
   if (err.name === 'NotFoundError' || err.status === 404) {
     switch (toolName) {
       case 'get_container':
-      case 'get_container_transport_events':
         return `No container found with id ${id ?? '(missing)'}.`;
       case 'get_shipment_details':
         return `No shipment found with id ${id ?? '(missing)'}.`;
@@ -1648,21 +1637,6 @@ export function createTerminal49McpServer(
       },
       async (args) => executeGetShipmentDetails(args, client),
     ),
-    get_container_transport_events: tool(
-      {
-        description: getContainerTransportEventsTool.description,
-        inputSchema: z.object({
-          id: z
-            .string()
-            .uuid()
-            .describe(
-              'Terminal49 container ID, from search_container or list_containers.',
-            ),
-        }),
-        outputSchema: transportEventsSchema,
-      },
-      async ({ id }) => executeGetContainerTransportEvents({ id }, client),
-    ),
     get_supported_shipping_lines: tool(
       {
         description:
@@ -1735,7 +1709,7 @@ export function createTerminal49McpServer(
           'With eta_to, also project its track from the previous port to a destination port and estimate when it arrives; ' +
           `the track is cut to at most ${MAX_FUTURE_POSITIONS} evenly spaced points. ` +
           'The projection needs Routing Data, a paid feature. Without it, or when the API cannot project that port pair, the vessel still comes back with eta null and eta_note. ' +
-          'Get vessel_id from get_container_transport_events and port IDs from get_shipment_details. The result has id, name, imo, mmsi, position, and eta with eta_note.',
+          'Get vessel_id from get_container (events.timeline) and port IDs from get_shipment_details. The result has id, name, imo, mmsi, position, and eta with eta_note.',
         inputSchema: getVesselInputSchema,
         outputSchema: getVesselOutputSchema,
       },
