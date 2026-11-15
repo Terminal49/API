@@ -27,6 +27,7 @@ import {
   TrackContainerError,
 } from './tools/track-container.js';
 import { executeSearchContainer } from './tools/search-container.js';
+import { httpStatus, ToolInputError } from './tools/soft-results.js';
 import {
   executeGetShipmentDetails,
   shipmentDetailsSchema,
@@ -997,8 +998,50 @@ const CONFIRMED_WRITE_CLAUSE: Record<ConfirmationScope, string> = {
 const APPROVAL_CHANNELS =
   'On a client that can ask the user (form elicitation), the client shows the user the preview and asks them to confirm, and the tool writes only on their yes; never pass confirmation_token there. On any other client, the first call returns the preview with a confirmation_token: show the preview to the user, and call again with the same arguments and the token only after the user approves it in this turn.';
 
+/**
+ * Terminal49 answers with these statuses when the caller's input or the
+ * caller's own credential is at fault: invalid or expired key, no access, no
+ * such record, invalid input. 408 and 429 are absent on purpose: they are
+ * about load, not the caller.
+ */
+const CALLER_ERROR_STATUSES: ReadonlySet<number> = new Set([
+  400, 401, 403, 404, 409, 410, 422,
+]);
+
+/**
+ * Whether a tool failure is the caller's to fix, and so stays out of Sentry.
+ * The tool still returns it as a tool error and the operator log records it;
+ * Sentry is for faults the server can fix.
+ *
+ * A 401 counts as the caller's only when the caller supplied the credential
+ * Terminal49 rejected. The gateway itself resolves a `user` credential (a
+ * WorkOS grant) and configures a `shared_token`, so a 401 for either means
+ * the gateway and the API disagree about a credential, which is a fault.
+ */
+function isCallerError(
+  error: unknown,
+  credentialType: McpCredentialType,
+): boolean {
+  if (
+    error instanceof ContainerCheckDigitError ||
+    error instanceof TrackContainerError ||
+    error instanceof ToolInputError
+  ) {
+    return true;
+  }
+  // The SDK's HTTP errors carry the response status; an error with none
+  // (network, timeout, a bug) never reached a Terminal49 answer.
+  const status = httpStatus(error);
+  if (status === undefined || !CALLER_ERROR_STATUSES.has(status)) return false;
+  if (status === 401) {
+    return credentialType === 'api_key' || credentialType === 'agent';
+  }
+  return true;
+}
+
 function wrapTool<TArgs>(
   toolName: string,
+  credentialType: McpCredentialType,
   handler: (args: TArgs, ctx: ServerContext) => Promise<unknown>,
   buildResourceLinks?: (result: unknown, args: TArgs) => ResourceLinkContent[],
 ): (
@@ -1040,12 +1083,8 @@ function wrapTool<TArgs>(
       };
     } catch (error) {
       const err = error as Error;
-      const isExpectedTrackingError =
-        toolName === 'track_container' &&
-        (error instanceof ContainerCheckDigitError ||
-          error instanceof TrackContainerError);
-      if (!isExpectedTrackingError) {
-        captureMcpException(error);
+      if (!isCallerError(error, credentialType)) {
+        captureMcpException(error, { tool: toolName, credentialType });
         await flushMcpEvents();
       }
       // Log the real error for operators; never echo internal messages (which
@@ -1366,6 +1405,7 @@ export function createTerminal49McpServer(
         // resolve that conditional type while InputArgs is still generic.
         wrapTool(
           definition.name,
+          session.credentialType,
           (args: StandardSchemaWithJSON.InferOutput<InputArgs>, ctx) =>
             handler(
               args,

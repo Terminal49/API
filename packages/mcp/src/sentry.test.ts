@@ -2,7 +2,11 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import * as Sentry from '@sentry/node';
 import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test';
-import { buildSentryOptions, scrubSensitiveRequestData } from './sentry.js';
+import {
+  buildSentryOptions,
+  captureMcpException,
+  scrubSensitiveRequestData,
+} from './sentry.js';
 
 const SECRET_VALUES = [
   'AUTH-SENTINEL-0000',
@@ -205,5 +209,56 @@ describe('Sentry event pipeline', () => {
     for (const value of SECRET_VALUES) {
       expect(sent).not.toContain(value);
     }
+  });
+
+  it('sends a tool failure with its class, status and tool, but not its text', async () => {
+    sentEnvelopes.length = 0;
+    const upstream = Object.assign(
+      new Error(
+        'Upstream 503 at https://internal.example/v2?token=secret-token',
+      ),
+      { name: 'UpstreamError', status: 503 },
+    );
+    captureMcpException(upstream, {
+      tool: 'get_container',
+      credentialType: 'user',
+    });
+    await Sentry.flush(2000);
+
+    const event = sentEnvelopes
+      .map((envelope) => JSON.parse(envelope)[1][0][1])
+      .find((item) => item.exception);
+    expect(event.exception.values[0]).toMatchObject({
+      type: 'UpstreamError',
+      value: 'The Terminal49 upstream request could not be completed.',
+    });
+    expect(event.tags).toMatchObject({
+      'error.class': 'UpstreamError',
+      'upstream.status_code': '503',
+      'mcp.tool': 'get_container',
+      'mcp.credential_type': 'user',
+    });
+    expect(event.fingerprint).toEqual(['mcp-error', 'UpstreamError', '503']);
+    const sent = sentEnvelopes.join('\n');
+    expect(sent).not.toContain('internal.example');
+    expect(sent).not.toContain('secret-token');
+  });
+
+  it('leaves out a status that is not an HTTP status', async () => {
+    sentEnvelopes.length = 0;
+    captureMcpException(
+      Object.assign(new Error('odd'), { name: 'NetworkError', status: 'x' }),
+    );
+    await Sentry.flush(2000);
+
+    const event = sentEnvelopes
+      .map((envelope) => JSON.parse(envelope)[1][0][1])
+      .find((item) => item.exception);
+    expect(event.tags).not.toHaveProperty('upstream.status_code');
+    expect(event.fingerprint).toEqual([
+      'mcp-error',
+      'NetworkError',
+      'no-status',
+    ]);
   });
 });

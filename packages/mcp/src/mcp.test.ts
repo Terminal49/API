@@ -844,7 +844,12 @@ describe('MCP server wiring', () => {
     const result = await searchTool.handler({ query: 'CAIU1234567' });
 
     expect(result.isError).toBe(true);
-    expect(Sentry.captureException).toHaveBeenCalledWith(expect.any(Error));
+    expect(Sentry.captureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        tags: expect.objectContaining({ 'mcp.tool': 'search_container' }),
+      }),
+    );
     const captured = vi.mocked(Sentry.captureException).mock.calls[0]?.[0];
     expect(captured).toBeInstanceOf(Error);
     expect((captured as Error).message).not.toContain('internal.example');
