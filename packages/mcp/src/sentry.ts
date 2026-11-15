@@ -166,7 +166,35 @@ export function instrumentMcpServer<TServer extends McpServer>(
   });
 }
 
-export function captureMcpException(error: unknown): void {
+/** Where a reported failure happened. Every value is a fixed identifier. */
+export interface McpExceptionContext {
+  tool?: string;
+  credentialType?: string;
+}
+
+function httpStatusOf(error: unknown): number | undefined {
+  const status =
+    error && typeof error === 'object'
+      ? (error as { status?: unknown }).status
+      : undefined;
+  return typeof status === 'number' &&
+    Number.isInteger(status) &&
+    status >= 100 &&
+    status <= 599
+    ? status
+    : undefined;
+}
+
+/**
+ * Reports a failure under a fixed message, so no upstream text, URL or token
+ * reaches Sentry. The error class, the upstream HTTP status and the tool are
+ * tags, and the class and status set the fingerprint: every report has the
+ * same message and stack, so without it Sentry merges unrelated failures.
+ */
+export function captureMcpException(
+  error: unknown,
+  context: McpExceptionContext = {},
+): void {
   if (Sentry.isInitialized()) {
     const safeError = new Error(
       'The Terminal49 upstream request could not be completed.',
@@ -175,7 +203,21 @@ export function captureMcpException(error: unknown): void {
     safeError.name = /^[A-Za-z][A-Za-z0-9_.:-]{0,63}$/.test(name)
       ? name
       : 'Error';
-    Sentry.captureException(safeError);
+    const status = httpStatusOf(error);
+    const tags: Record<string, string> = { 'error.class': safeError.name };
+    if (status !== undefined) tags['upstream.status_code'] = String(status);
+    if (context.tool) tags['mcp.tool'] = context.tool;
+    if (context.credentialType) {
+      tags['mcp.credential_type'] = context.credentialType;
+    }
+    Sentry.captureException(safeError, {
+      tags,
+      fingerprint: [
+        'mcp-error',
+        safeError.name,
+        status === undefined ? 'no-status' : String(status),
+      ],
+    });
   }
 }
 

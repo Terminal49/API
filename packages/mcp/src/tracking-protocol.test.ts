@@ -14,6 +14,7 @@ import {
   vi,
 } from 'vite-plus/test';
 import { createTerminal49McpServer } from './server.js';
+import type { McpCredentialType } from './tools/context.js';
 import { trackContainerAudit } from './tools/track-container.js';
 
 vi.mock('@sentry/node', () => ({
@@ -105,9 +106,14 @@ function apiCalls(requests: RecordedRequest[]): string[] {
     .filter((call) => call !== 'GET /v2/me');
 }
 
-async function connect(): Promise<Client> {
+async function connect(
+  credentialType: McpCredentialType = 'api_key',
+): Promise<Client> {
   const handler = createMcpHandler(
-    () => createTerminal49McpServer('TEST_KEY', 'https://api.test/v2'),
+    () =>
+      createTerminal49McpServer('TEST_KEY', 'https://api.test/v2', undefined, {
+        credentialType,
+      }),
     { legacy: 'stateless', responseMode: 'json' },
   );
   const client = new Client(
@@ -656,29 +662,106 @@ describe('track_container when the API refuses the tracking request', () => {
   });
 });
 
-describe('unexpected tool failures still report exceptions', () => {
+// whoami reads GET /me and nothing else, so its failure is exactly the API's.
+function stubMeStatus(status: number): void {
+  stubApi({
+    'GET /me': () =>
+      new Response(
+        JSON.stringify({ message: 'UPSTREAM_INTERNAL_DIAGNOSTIC' }),
+        {
+          status,
+          headers: { 'content-type': 'application/vnd.api+json' },
+        },
+      ),
+  });
+}
+
+async function callOnce(
+  name: string,
+  args: Record<string, unknown>,
+  credentialType: McpCredentialType = 'api_key',
+): Promise<Awaited<ReturnType<Client['callTool']>>> {
+  const client = await connect(credentialType);
+  try {
+    return await client.callTool({ name, arguments: args });
+  } finally {
+    await client.close();
+  }
+}
+
+const trackOnce = () => callOnce('track_container', { number: 'MSKU4330011' });
+
+describe('caller errors stay out of exception reporting', () => {
   it.each([
-    { status: 401, name: 'AuthenticationError' },
-    { status: 422, name: 'ValidationError' },
-    { status: 500, name: 'UpstreamError' },
-  ])('reports an unhandled $name from tracking', async ({ status, name }) => {
+    { status: 400, credentialType: 'api_key' },
+    { status: 401, credentialType: 'api_key' },
+    { status: 401, credentialType: 'agent' },
+    { status: 403, credentialType: 'user' },
+    { status: 404, credentialType: 'user' },
+    { status: 422, credentialType: 'api_key' },
+  ] as const)(
+    'returns a $status to whoami for a $credentialType credential as a tool error only',
+    async ({ status, credentialType }) => {
+      stubMeStatus(status);
+      const result = await callOnce('whoami', {}, credentialType);
+
+      expect(result.isError).toBe(true);
+      expect(textOf(result)).not.toContain('UPSTREAM_INTERNAL_DIAGNOSTIC');
+      expect(Sentry.captureException).not.toHaveBeenCalled();
+      expect(Sentry.flush).not.toHaveBeenCalled();
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('"event":"mcp.tool.error"'),
+      );
+    },
+  );
+
+  it('does not report a container lookup that finds nothing', async () => {
+    stubApi({});
+    const result = await callOnce('get_container', {
+      id: '11111111-1111-4111-8111-111111111111',
+    });
+
+    expect(result.isError).toBe(true);
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+  });
+
+  it('does not report a tracking request Terminal49 refuses for its input', async () => {
     stubApi({
       'GET /search': () => ({ data: [] }),
       'POST /tracking_requests/infer_number': () =>
         new Response(
           JSON.stringify({ message: 'UPSTREAM_INTERNAL_DIAGNOSTIC' }),
           {
-            status,
+            status: 422,
             headers: { 'content-type': 'application/vnd.api+json' },
           },
         ),
     });
-    const client = await connect();
-    try {
-      const result = await client.callTool({
-        name: 'track_container',
-        arguments: { number: 'MSKU4330011' },
-      });
+    const result = await trackOnce();
+
+    expect(result.isError).toBe(true);
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+  });
+});
+
+describe('server faults still report exceptions', () => {
+  it.each([
+    { status: 500, name: 'UpstreamError', credentialType: 'api_key' },
+    { status: 503, name: 'UpstreamError', credentialType: 'user' },
+    { status: 429, name: 'RateLimitError', credentialType: 'api_key' },
+    // The gateway resolved this credential itself, so Terminal49 rejecting
+    // it is a disagreement between the two, not a bad key from the caller.
+    { status: 401, name: 'AuthenticationError', credentialType: 'user' },
+    {
+      status: 401,
+      name: 'AuthenticationError',
+      credentialType: 'shared_token',
+    },
+  ] as const)(
+    'reports a $status to whoami for a $credentialType credential with its status and tool',
+    async ({ status, name, credentialType }) => {
+      stubMeStatus(status);
+      const result = await callOnce('whoami', {}, credentialType);
 
       expect(result.isError).toBe(true);
       expect(textOf(result)).not.toContain('UPSTREAM_INTERNAL_DIAGNOSTIC');
@@ -687,31 +770,21 @@ describe('unexpected tool failures still report exceptions', () => {
           name,
           message: 'The Terminal49 upstream request could not be completed.',
         }),
+        {
+          tags: {
+            'error.class': name,
+            'upstream.status_code': String(status),
+            'mcp.tool': 'whoami',
+            'mcp.credential_type': credentialType,
+          },
+          fingerprint: ['mcp-error', name, String(status)],
+        },
       );
       expect(Sentry.flush).toHaveBeenCalledExactlyOnceWith(2000);
-    } finally {
-      await client.close();
-    }
-  });
-
-  it('reports a NotFoundError from a container lookup', async () => {
-    stubApi({});
-    const client = await connect();
-    try {
-      const result = await client.callTool({
-        name: 'get_container',
-        arguments: { id: '11111111-1111-4111-8111-111111111111' },
-      });
-
-      expect(result.isError).toBe(true);
-      expect(Sentry.captureException).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({ name: 'NotFoundError' }),
-      );
-      expect(Sentry.flush).toHaveBeenCalledExactlyOnceWith(2000);
-    } finally {
-      await client.close();
-    }
-  });
+    },
+    // A 429 and a 5xx are retried with backoff before they surface.
+    20_000,
+  );
 
   it.each(['TimeoutError', 'TrackContainerError', 'ContainerCheckDigitError'])(
     'reports an SDK error named %s without treating its name as a validation class',
@@ -727,21 +800,16 @@ describe('unexpected tool failures still report exceptions', () => {
           throw error;
         },
       });
-      const client = await connect();
-      try {
-        const result = await client.callTool({
-          name: 'track_container',
-          arguments: { number: 'MSKU4330011' },
-        });
+      const result = await trackOnce();
 
-        expect(result.isError).toBe(true);
-        expect(Sentry.captureException).toHaveBeenCalledExactlyOnceWith(
-          expect.objectContaining({ name }),
-        );
-        expect(Sentry.flush).toHaveBeenCalledExactlyOnceWith(2000);
-      } finally {
-        await client.close();
-      }
+      expect(result.isError).toBe(true);
+      expect(Sentry.captureException).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ name }),
+        expect.objectContaining({
+          fingerprint: ['mcp-error', name, 'no-status'],
+        }),
+      );
+      expect(Sentry.flush).toHaveBeenCalledExactlyOnceWith(2000);
     },
   );
 });
