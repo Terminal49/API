@@ -302,7 +302,7 @@ Get detailed container information with flexible data loading. Choose what to in
 - `include` *(string[], optional)* – what to load:
   - `shipment` – routing, BOL, line, ref numbers (lightweight)
   - `pod_terminal` – terminal name, location (lightweight)
-  - `transport_events` – always loaded: `events.timeline` (every event, oldest first, with vessel, voyage, location, and `reported_at`; withdrawn events carry `invalidated_at`; when estimates conflict, the latest `reported_at` is current) plus the active `events.count` and `events.rail_events_count`
+  - `transport_events` – always loaded, whether or not you pass it. Adds `events.timeline` plus the active `events.count` and `events.rail_events_count`. The timeline lists every event oldest first, with vessel, voyage, location, and `reported_at`. Withdrawn events carry `invalidated_at`. When estimates conflict, the one with the latest `reported_at` is current.
   - `custom_fields` – account-defined fields such as PO number or project manager (lightweight; needs a signed-in user, not an API key)
   - `party_roles` – companies assigned to the container by role, such as `customer` or `pickup_dray_carrier`. Each row has the party role `id`, `role`, `party_id`, and `party_name`. `party_name` is the company name, else the party's name, else its nickname. If the credential cannot read party roles, `party_roles` is `null` and `party_roles_note` explains why.
 
@@ -459,7 +459,7 @@ The tool returns:
 If Terminal49 has no route data for the container yet, the tool returns a `NoRouteData` result with a suggested alternative instead of an error.
 
 <Warning>
-This is a **paid feature**. If it is not enabled for your account, the tool returns a `FeatureNotEnabled` result. Use `get_container`, whose `events.timeline` has the historical movement, instead.
+This is a **paid feature**. If it is not enabled for your account, the tool returns a `FeatureNotEnabled` result. Use the `events.timeline` from `get_container` for historical movement data instead.
 
 See [Entitlements and Paid Features](/api-docs/useful-info/entitlements) for the related Routing Data entitlement.
 </Warning>
