@@ -612,6 +612,84 @@ describe('api/mcp handler lifecycle', () => {
     expect(mockState.servers).toHaveLength(0);
   });
 
+  it.each([
+    [
+      'billing_access_restricted',
+      'Terminal49 access for this account is paused because of a billing issue. An account manager can resolve it at https://app.terminal49.com/settings/billing, then retry.',
+    ],
+    [
+      'account_onboarding_incomplete',
+      'This Terminal49 account has not finished setup. Sign in at https://app.terminal49.com to complete account onboarding, then retry.',
+    ],
+  ])(
+    'explains a %s resolver refusal without echoing upstream text',
+    async (code, message) => {
+      process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
+      process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
+      process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
+      process.env.WORKOS_AUTHORIZATION_SERVER_URL = 'https://auth.workos.test';
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(
+          async () =>
+            new Response(
+              JSON.stringify({ error: 'internal upstream detail', code }),
+              { status: 403 },
+            ),
+        ),
+      );
+
+      const { default: handler } = await import('../../../api/mcp.ts');
+      const req = createRequest({
+        headers: {
+          host: 'localhost',
+          authorization: 'Bearer valid-workos-mcp-token',
+        },
+      });
+      const res = new MockResponse();
+
+      await handler(req as any, res as any);
+
+      expect(res.statusCode).toBe(403);
+      expect(res.payload).toEqual({ error: 'Forbidden', code, message });
+      expect(res.headers['WWW-Authenticate']).toBeUndefined();
+      expect(mockState.servers).toHaveLength(0);
+    },
+  );
+
+  it('keeps an unknown resolver refusal code generic', async () => {
+    process.env.T49_MCP_AUTHKIT_ENABLED = 'true';
+    process.env.T49_CONNECTED_CLIENTS_RESOLVE_SECRET = 'resolve-secret';
+    process.env.WORKOS_MCP_RESOURCE = 'https://mcp.test';
+    process.env.WORKOS_AUTHORIZATION_SERVER_URL = 'https://auth.workos.test';
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: 'nope', code: 'toString' }), {
+            status: 403,
+          }),
+      ),
+    );
+
+    const { default: handler } = await import('../../../api/mcp.ts');
+    const req = createRequest({
+      headers: {
+        host: 'localhost',
+        authorization: 'Bearer valid-workos-mcp-token',
+      },
+    });
+    const res = new MockResponse();
+
+    await handler(req as any, res as any);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.payload).toEqual({
+      error: 'Forbidden',
+      message: 'Terminal49 access is not enabled for this account.',
+    });
+  });
+
   it('omits resource_metadata from the 401 challenge when WorkOS is not configured', async () => {
     // Token / client-secret deployment: no WORKOS_* env. Advertising OAuth
     // discovery would send clients to a PRM endpoint that 500s.
