@@ -1382,7 +1382,6 @@ export function createTerminal49McpServer(
       buildResourceLinks?: (result: unknown) => ResourceLinkContent[],
     ): ToolRegistrar =>
     (definition) => {
-      const confirmed = definition.tier === 'C';
       server.registerTool(
         definition.name,
         {
@@ -1394,11 +1393,6 @@ export function createTerminal49McpServer(
           annotations: definition.annotations,
           inputSchema: spec.inputSchema,
           outputSchema: spec.outputSchema,
-          // Claude Code shows the permission prompt on every call of a tool
-          // with this key, whatever the permission mode.
-          ...((confirmed || definition.requiresUserInteraction) && {
-            _meta: { 'anthropic/requiresUserInteraction': true },
-          }),
         },
         // SAFETY: the callback takes the parsed output of `spec.inputSchema`,
         // which is what ToolCallback<InputArgs> resolves to. TypeScript cannot

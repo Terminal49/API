@@ -30,9 +30,7 @@ it('advertises billing consequences and client interaction for tracking writes',
     for (const tool of tracking) {
       expect(tool.description, tool.name).toMatch(/quota/);
       expect(tool.description, tool.name).toMatch(/pay-as-you-go charges/);
-      expect(tool._meta, tool.name).toMatchObject({
-        'anthropic/requiresUserInteraction': true,
-      });
+      expect(tool._meta, tool.name).toBeUndefined();
       expect(tool.annotations, tool.name).toMatchObject({
         readOnlyHint: false,
         destructiveHint: false,

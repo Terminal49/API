@@ -44,8 +44,6 @@ interface ToolBase {
   title: string;
   toolset: Toolset;
   annotations: ToolAnnotations;
-  /** Ask the client to involve the user even for consequential additive writes. */
-  requiresUserInteraction?: boolean;
 }
 
 export type ToolDefinition =
@@ -76,7 +74,6 @@ export const TOOL_REGISTRY = [
   readTool('search_container', 'Search Containers'),
   {
     name: 'track_container',
-    requiresUserInteraction: true,
     title: 'Track Container',
     toolset: 'core',
     tier: 'A',
@@ -159,7 +156,6 @@ export const TOOL_REGISTRY = [
   },
   {
     name: 'resume_shipment_tracking',
-    requiresUserInteraction: true,
     title: 'Resume Shipment Tracking',
     toolset: 'tracking_lifecycle',
     tier: 'A',

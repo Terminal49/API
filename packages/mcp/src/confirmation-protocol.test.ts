@@ -249,16 +249,12 @@ describe('confirming a tier C write', () => {
     const { tools } = await session.client.listTools();
     const byName = new Map(tools.map((tool) => [tool.name, tool]));
 
-    expect(byName.get('stop_shipment_tracking')?._meta).toEqual({
-      'anthropic/requiresUserInteraction': true,
-    });
-    expect(byName.get('cancel_tracking_request')?._meta).toEqual({
-      'anthropic/requiresUserInteraction': true,
-    });
-    expect(byName.get('resume_shipment_tracking')?._meta).toEqual({
-      'anthropic/requiresUserInteraction': true,
-    });
-    expect(byName.get('search_container')?._meta).toBeUndefined();
+    // No tool may carry anthropic/requiresUserInteraction: Claude then drops
+    // "Always allow", which breaks bulk workflows (DEV-14831). The preview
+    // flow is what guards a write that loses data.
+    for (const tool of tools) {
+      expect(tool._meta, tool.name).toBeUndefined();
+    }
     expect(byName.get('stop_shipment_tracking')?.description).toMatch(
       /On a client that can ask the user \(form elicitation\).*never pass confirmation_token there\. On any other client, the first call returns the preview with a confirmation_token/,
     );

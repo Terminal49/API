@@ -536,9 +536,7 @@ describe('batch record writes', () => {
 
     for (const name of ['set_party_role', 'set_custom_field']) {
       const tool = byName.get(name);
-      expect(tool?._meta, name).toEqual({
-        'anthropic/requiresUserInteraction': true,
-      });
+      expect(tool?._meta, name).toBeUndefined();
       expect(tool?.annotations, name).toMatchObject({
         readOnlyHint: false,
         destructiveHint: true,
