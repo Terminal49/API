@@ -31,7 +31,7 @@ Use the [List Webhook Events](/api-docs/api-reference/webhooks/list-webhook-even
 
 You can create a webhook from the dashboard or API.
 
-To use the dashboard, open [Developer Webhooks](https://app.terminal49.com/developers/webhooks) and click **Create Webhook Endpoint**.
+To use the dashboard, open [Developer Webhooks](https://app.terminal49.com/developers/webhooks) and select **Create Webhook Endpoint**.
 
 To use the API:
 
@@ -172,7 +172,7 @@ curl -s "https://api.terminal49.com/v2/webhook_notifications" \
   -H "Content-Type: application/vnd.api+json"
 ```
 
-Missed notifications cannot be replayed. After you fix the consumer, use [Trigger a Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) to re-test your handler with a sample payload, then re-fetch the affected shipments and containers from the REST API to backfill any missed state changes.
+Missed notifications cannot be replayed. After you fix the consumer, use [Trigger a Webhook](/api-docs/api-reference/webhooks/trigger-a-webhook) to re-test your handler with a sample payload. Then re-fetch the affected shipments and containers from the REST API to backfill any missed state changes.
 
 For more help, see [How to Troubleshoot Missing Webhook Notifications](https://help.terminal49.com/en/articles/7851422-missing-webhook-notifications).
 
