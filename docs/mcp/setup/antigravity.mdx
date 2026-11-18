@@ -44,7 +44,7 @@ Connect Google Antigravity to the Terminal49 MCP server so its Gemini agent can 
     In Antigravity, go to **Customizations → Installed**. `terminal49` appears under **MCP Servers** with an **Unauthorized** error until you sign in. Select **Authenticate**.
   </Step>
   <Step title="Sign in to Terminal49">
-    A browser window opens the Terminal49 sign-in page. Log in, choose your organization under **Organization access**, and select **Allow access**.
+    A browser window opens the Terminal49 sign-in page. Log in, select your organization under **Organization access**, and select **Allow access**.
   </Step>
   <Step title="Paste the authorization code">
     The browser shows an authorization code. Select **Copy to Clipboard**, paste the code into the field under `terminal49` in Antigravity, and select **Submit**.
@@ -69,7 +69,7 @@ Antigravity asks for permission the first time it calls each Terminal49 tool, fo
 | `terminal49` doesn't appear under **MCP Servers** | Check that `~/.gemini/config/mcp_config.json` is valid JSON and uses `serverUrl` (not `url`), then reopen **Customizations → Installed** |
 | `Unauthorized` error on `terminal49` | Select **Authenticate** and complete the sign-in. If it persists, select **Sign out** and authenticate again |
 | Authorization code is rejected | Codes are single-use. Select **Authenticate** again and paste the new code |
-| Tool calls return no data | Check that you chose the right organization when you allowed access. Sign out and authenticate again to pick another one |
+| Tool calls return no data | Check that you selected the right organization when you allowed access. Sign out and authenticate again to pick another one |
 
 ## Related guides
 
