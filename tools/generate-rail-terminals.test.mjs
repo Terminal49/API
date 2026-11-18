@@ -22,17 +22,13 @@ const page = readFileSync(
 
 test('rail directory downloads use published raw assets on every surface', () => {
   const outputs = railTerminalArtifacts(catalog, page);
-  const snippet = readFileSync(
-    new URL(
-      '../docs/snippets/data-sources/rail-terminal-directory.mdx',
-      import.meta.url,
-    ),
-    'utf8',
-  );
+  const humanPage = outputs['docs/coverage/inland-rail-terminals.mdx'].match(
+    /<Visibility for="humans">([\s\S]*?)<\/Visibility>/,
+  )[1];
   for (const source of [
     outputs['docs/coverage/inland-rail-terminals.mdx'],
     outputs['docs/data/coverage/inland-rail-terminals.mdx'],
-    snippet,
+    humanPage,
   ]) {
     for (const extension of ['json', 'csv']) {
       assert.ok(
@@ -47,7 +43,11 @@ test('rail directory downloads use published raw assets on every surface', () =>
       /(?:\]\(|href=")\/data\/coverage\/[^)"\s]+\.(?:json|csv)/,
     );
   }
-  assert.ok(snippet.includes('href="/data/coverage/inland-rail-terminals"'));
+  assert.ok(
+    humanPage.includes(
+      '[Complete table](/data/coverage/inland-rail-terminals)',
+    ),
+  );
 });
 
 test('corrected rail facility locations remain consistent in every export', () => {
