@@ -77,6 +77,126 @@ function convert(specText) {
   });
 }
 
+function resolveReference(spec, value) {
+  const visited = new Set();
+  while (value.$ref) {
+    if (!value.$ref.startsWith('#/') || visited.has(value.$ref)) {
+      throw new Error(`Unsupported OpenAPI reference: ${value.$ref}`);
+    }
+    visited.add(value.$ref);
+    value = value.$ref
+      .slice(2)
+      .split('/')
+      .reduce(
+        (node, key) => node?.[key.replace(/~1/g, '/').replace(/~0/g, '~')],
+        spec,
+      );
+    if (!value) throw new Error('Missing referenced OpenAPI component');
+  }
+  return value;
+}
+
+function requestsByOperation(collection) {
+  const requests = new Map();
+  const collect = (items) => {
+    for (const item of items ?? []) {
+      if (!item.request) {
+        collect(item.item);
+        continue;
+      }
+      const path =
+        '/' +
+        item.request.url.path
+          .map((segment) =>
+            segment.startsWith(':') ? `{${segment.slice(1)}}` : segment,
+          )
+          .join('/');
+      const key = `${item.request.method} ${path}`;
+      requests.set(key, [...(requests.get(key) ?? []), item]);
+    }
+  };
+  collect(collection.item);
+  return requests;
+}
+
+// The converter fakes path values and response bodies from schemas. Overlay
+// the examples the spec declares, so the collection shows real sample values
+// (for example, recursive extraction schemas instead of circular-reference
+// placeholders) while request bodies stay schema-based.
+function applyDeclaredExamples(collection, spec) {
+  const requests = requestsByOperation(collection);
+  for (const [path, operations] of Object.entries(spec.paths)) {
+    for (const [method, operation] of Object.entries(operations)) {
+      if (!operation.responses) continue;
+      const key = `${method.toUpperCase()} ${path}`;
+      const items = requests.get(key) ?? [];
+      const parameters = new Map();
+      for (const input of [
+        ...(operations.parameters ?? []),
+        ...(operation.parameters ?? []),
+      ]) {
+        const parameter = resolveReference(spec, input);
+        parameters.set(`${parameter.in}:${parameter.name}`, parameter);
+      }
+      for (const parameter of parameters.values()) {
+        if (parameter.in !== 'path') continue;
+        const example =
+          parameter.example ??
+          Object.values(parameter.examples ?? {}).find(
+            (value) => 'value' in value,
+          )?.value ??
+          parameter.schema?.example;
+        if (example === undefined) continue;
+        if (!['string', 'number', 'boolean'].includes(typeof example)) {
+          throw new Error(
+            `Unsupported structured path example for ${parameter.name}`,
+          );
+        }
+        for (const item of items) {
+          for (const request of [
+            item.request,
+            ...item.response.map((response) => response.originalRequest),
+          ]) {
+            const variable = request?.url?.variable?.find(
+              (value) => value.key === parameter.name,
+            );
+            if (!variable) {
+              throw new Error(
+                `Missing generated path parameter ${parameter.name} for ${key}`,
+              );
+            }
+            variable.value = String(example);
+          }
+        }
+      }
+      for (const [status, response] of Object.entries(operation.responses)) {
+        const content = response.content?.['application/json'];
+        const example =
+          content && 'example' in content
+            ? content.example
+            : Object.values(content?.examples ?? {}).find(
+                (entry) => 'value' in entry,
+              )?.value;
+        if (example === undefined) continue;
+        if (items.length === 0) {
+          throw new Error(`Missing generated request for ${key}`);
+        }
+        for (const item of items) {
+          const generated = item.response.filter(
+            (entry) => entry.code === Number(status),
+          );
+          if (generated.length !== 1) {
+            throw new Error(
+              `Expected one generated ${status} response for ${key}`,
+            );
+          }
+          generated[0].body = JSON.stringify(example, null, 2);
+        }
+      }
+    }
+  }
+}
+
 export async function generatePostmanCollection(specText) {
   random = seededRandom(SEED);
   let collection;
@@ -85,6 +205,7 @@ export async function generatePostmanCollection(specText) {
   } finally {
     random = nativeRandom;
   }
+  applyDeclaredExamples(collection, JSON.parse(specText));
   collection.info._postman_id = stableId(`info:${collection.info.name}`);
   assignIds(collection.item, '', 'item');
   return JSON.stringify(collection, null, 4);
