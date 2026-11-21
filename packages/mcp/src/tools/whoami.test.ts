@@ -13,7 +13,6 @@ function contextReturning(
   const meFn = vi.fn().mockResolvedValue(me);
   const context: ToolContext = {
     credentialType: 'api_key',
-    toolsets: ['core', 'documents'],
     writeToolsAvailable: true,
     credentialHash: 'hash',
     confirmation: { kind: 'token' },
@@ -79,7 +78,13 @@ describe('executeWhoami', () => {
       other_accounts: [],
       features: { data_out_api: { status: 'requires_paid_plan' } },
       credential_type: 'api_key',
-      enabled_toolsets: ['core', 'documents'],
+      enabled_toolsets: [
+        'core',
+        'documents',
+        'operations',
+        'tracking_lifecycle',
+        'trade',
+      ],
       write_tools_available: true,
     });
   });
@@ -141,7 +146,6 @@ describe('executeWhoami', () => {
       },
       {
         credentialType: 'shared_token',
-        toolsets: ['core'],
         writeToolsAvailable: false,
       },
     );
@@ -150,7 +154,13 @@ describe('executeWhoami', () => {
 
     expect(result).toMatchObject({
       credential_type: 'shared_token',
-      enabled_toolsets: ['core'],
+      enabled_toolsets: [
+        'core',
+        'documents',
+        'operations',
+        'tracking_lifecycle',
+        'trade',
+      ],
       write_tools_available: false,
     });
   });

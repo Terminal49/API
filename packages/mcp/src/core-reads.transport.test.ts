@@ -213,28 +213,40 @@ describe('core reads over the MCP client transport', () => {
     });
   });
 
-  it('whoami reports a read-only session as having no write tools', async () => {
+  it('whoami reports the toolsets every session serves', async () => {
     const result = await callTool(
       'whoami',
       {},
       { 'GET /me': { body: me } },
-      { readOnly: true, credentialType: 'user', toolsets: ['core'] },
+      { credentialType: 'user' },
     );
 
     expect(result.isError).not.toBe(true);
     expect(result.structuredContent).toMatchObject({
       credential_type: 'user',
-      enabled_toolsets: ['core'],
-      write_tools_available: false,
+      enabled_toolsets: [
+        'core',
+        'documents',
+        'operations',
+        'tracking_lifecycle',
+        'trade',
+      ],
+      write_tools_available: true,
     });
   });
 
-  it('whoami reports write tools when the session serves track_container', async () => {
+  it('whoami reports write tools for an api_key session', async () => {
     const result = await callTool('whoami', {}, { 'GET /me': { body: me } });
 
     expect(result.structuredContent).toMatchObject({
       credential_type: 'api_key',
-      enabled_toolsets: ['core', 'documents', 'operations', 'trade'],
+      enabled_toolsets: [
+        'core',
+        'documents',
+        'operations',
+        'tracking_lifecycle',
+        'trade',
+      ],
       write_tools_available: true,
     });
   });

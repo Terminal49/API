@@ -63,7 +63,6 @@ async function callStop(args: Record<string, unknown>) {
         TEST_ACCOUNT_ID,
         {
           transport: 'http',
-          toolsets: ['tracking_lifecycle'],
           confirmationSecret: TEST_CONFIRMATION_SECRET,
         },
       ),

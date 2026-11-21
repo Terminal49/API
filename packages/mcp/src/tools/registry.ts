@@ -205,30 +205,12 @@ export type RegisteredTool = (typeof TOOL_REGISTRY)[number];
 
 export type ToolName = RegisteredTool['name'];
 
-/** Toolsets served when the operator sets no `T49_MCP_TOOLSETS`. */
-export const DEFAULT_TOOLSETS: readonly Toolset[] = [
-  'core',
-  'documents',
-  'operations',
-  'trade',
-];
-
-export interface ToolSelection {
-  toolsets: readonly Toolset[];
-  /** Drop every tool whose readOnlyHint is false. */
-  readOnly: boolean;
-}
-
-/** The registry entries a server with this selection registers, in order. */
-export function selectTools(selection: ToolSelection): RegisteredTool[] {
-  return TOOL_REGISTRY.filter(
-    (tool) =>
-      selection.toolsets.includes(tool.toolset) &&
-      (tool.annotations.readOnlyHint || !selection.readOnly),
+/**
+ * Toolsets with at least one registered tool, in TOOLSETS order. The server
+ * serves every tool in the registry; this reports what `whoami` advertises.
+ */
+export function populatedToolsets(): Toolset[] {
+  return TOOLSETS.filter((toolset) =>
+    TOOL_REGISTRY.some((tool) => tool.toolset === toolset),
   );
-}
-
-/** The tools a server registers with the default toolsets. */
-export function defaultTools(): RegisteredTool[] {
-  return selectTools({ toolsets: DEFAULT_TOOLSETS, readOnly: false });
 }

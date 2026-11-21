@@ -30,7 +30,6 @@ vi.mock('@sentry/node', () => ({
 }));
 
 const CONFIRMING = {
-  toolsets: ['operations'] as const,
   confirmationSecret: TEST_CONFIRMATION_SECRET,
 };
 describe('update_record over the MCP client transport', () => {

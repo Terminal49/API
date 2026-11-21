@@ -2,9 +2,9 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **33 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 30 of them; the three tracking lifecycle tools are opt-in.
+The Terminal49 MCP Server provides **33 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. Every session serves all 33.
 
-`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role`, `set_custom_field` and `update_record` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
+`packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers the whole registry for every session, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role`, `set_custom_field` and `update_record` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset. The trade intelligence tools are in `trade`. Every other tool below is in `core`. Toolsets are grouping labels, not switches — see [Toolsets](README.md#toolsets).
 
 ### Design Philosophy
 

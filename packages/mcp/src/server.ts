@@ -139,14 +139,10 @@ import {
 } from './tools/context.js';
 import {
   type ConfirmationScope,
-  DEFAULT_TOOLSETS,
-  defaultTools,
-  selectTools,
+  TOOL_REGISTRY,
   type ToolDefinition,
   type ToolName,
   TOOLSETS,
-  type ToolSelection,
-  type Toolset,
 } from './tools/registry.js';
 import {
   type ContentAnnotations,
@@ -198,7 +194,6 @@ import {
   instrumentMcpServer,
 } from './sentry.js';
 import { logMcpEvent } from './logging.js';
-import { resolveToolSelection } from './toolsets.js';
 import { buildServerInstructions } from './instructions.js';
 
 type TextContent = {
@@ -242,9 +237,9 @@ export const SERVER_IDENTITY = {
   ],
 } satisfies Omit<Implementation, 'name' | 'version'>;
 
-/** The instructions a server with the default toolsets sends. */
+/** The instructions every server sends. */
 export const TERMINAL49_SERVER_INSTRUCTIONS =
-  buildServerInstructions(defaultTools());
+  buildServerInstructions(TOOL_REGISTRY);
 
 type ResponseDisplayColumn = {
   key: string;
@@ -1282,10 +1277,6 @@ function createCarrierScacCompleter(
 export interface Terminal49McpServerOptions {
   transport?: McpTransportKind;
   authSource?: McpAuthSource;
-  /** Toolsets to register. Defaults to DEFAULT_TOOLSETS. */
-  toolsets?: readonly Toolset[];
-  /** Register only tools whose readOnlyHint is true. */
-  readOnly?: boolean;
   /** How the caller authenticated. Defaults to api_key. */
   credentialType?: McpCredentialType;
   /**
@@ -1315,14 +1306,11 @@ export function createTerminal49McpServer(
     defaultFormat: 'mapped',
   });
 
-  const toolsets = options.toolsets ?? DEFAULT_TOOLSETS;
-  const selectedTools = selectTools({
-    toolsets,
-    readOnly: options.readOnly ?? false,
-  });
+  // Every session serves the whole registry. Write safety comes from the
+  // tier A/C confirmation protocol, not from hiding tools.
+  const selectedTools = TOOL_REGISTRY;
   const session: ToolSession = {
     credentialType: options.credentialType ?? 'api_key',
-    toolsets,
     writeToolsAvailable: selectedTools.some(
       (tool) => !tool.annotations.readOnlyHint,
     ),
@@ -1349,7 +1337,7 @@ export function createTerminal49McpServer(
         {
           instructions: buildServerInstructions(selectedTools),
           // Answer tools/list with an empty list, not "method not found",
-          // when the selected toolsets have no tools.
+          // when the registry has no tools.
           capabilities: { tools: { listChanged: true } },
         },
       ),
@@ -1676,9 +1664,7 @@ export function createTerminal49McpServer(
         description:
           'Get list of shipping lines (carriers) supported by Terminal49 for container tracking. ' +
           'Returns SCAC codes, full names, and common abbreviations, with optional name or SCAC filtering. ' +
-          (selectedTools.some((tool) => tool.name === 'track_container')
-            ? 'Pass the returned four-letter SCAC to track_container when carrier inference is ambiguous. The result has total_lines and shipping_lines, each with scac, name, short_name, bol_prefix, and notes.'
-            : 'Use the returned four-letter SCAC when a carrier code is needed.'),
+          'Pass the returned four-letter SCAC to track_container when carrier inference is ambiguous. The result has total_lines and shipping_lines, each with scac, name, short_name, bol_prefix, and notes.',
         inputSchema: z.object({
           search: z
             .string()
@@ -2056,7 +2042,7 @@ export function createTerminal49McpServer(
           'the user asks who they are or which account is connected, when another tool returns ' +
           'nothing or an authorization error, or before relying on a gated feature. ' +
           'It also reports how this MCP session signed in (credential_type: user, agent, api_key, or shared_token), ' +
-          'its enabled_toolsets, and write_tools_available, which is false when the session serves only read-only tools. The other fields are kind, channel, credential_name, account, user, other_accounts, and features. Takes no arguments.',
+          'its enabled_toolsets, and write_tools_available. The other fields are kind, channel, credential_name, account, user, other_accounts, and features. Takes no arguments.',
         inputSchema: z.object({}),
         outputSchema: z.object({
           kind: z.enum(['api_key', 'user']),
@@ -2440,19 +2426,6 @@ export async function runStdioServer(
   // registers no listener at all) when PostHog is unconfigured.
   registerPostHogExitHook();
 
-  let toolSelection: ToolSelection;
-  try {
-    toolSelection = resolveToolSelection({
-      env: process.env,
-      credentialType: 'api_key',
-    });
-  } catch (error) {
-    console.error(
-      `ERROR: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    process.exit(1);
-  }
-
   // One stdio process serves one user, so a secret made at startup is enough.
   // Tokens from an earlier process stop working, which costs one re-preview.
   const envSecret = process.env.T49_MCP_CONFIRMATION_SECRET?.trim();
@@ -2467,7 +2440,7 @@ export async function runStdioServer(
   if (process.env.T49_MCP_STDIO_BANNER === '1') {
     console.error(`Terminal49 MCP Server v${SERVER_VERSION} running on stdio`);
     console.error(
-      `Available: ${selectTools(toolSelection).length} tools | 3 prompts | 4 resources`,
+      `Available: ${TOOL_REGISTRY.length} tools | 3 prompts | 4 resources`,
     );
     console.error('SDK: @modelcontextprotocol/server v2 (McpServer API)');
   }
@@ -2477,7 +2450,6 @@ export async function runStdioServer(
       transport: 'stdio',
       credentialType: 'api_key',
       confirmationSecret,
-      ...toolSelection,
     }),
   );
 }
