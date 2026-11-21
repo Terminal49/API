@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { CLIENT_CAPABILITIES_META_KEY } from '@modelcontextprotocol/server';
 import type { CurrentCredential, Terminal49Client } from '@terminal49/sdk';
 import { z } from 'zod';
-import type { Toolset } from './registry.js';
 
 /**
  * How the caller authenticated. `shared_token` is the gateway's env-token
@@ -20,8 +19,6 @@ export type McpCredentialType = (typeof MCP_CREDENTIAL_TYPES)[number];
 /** What one MCP session serves, fixed when its server is created. */
 export interface ToolSession {
   credentialType: McpCredentialType;
-  /** The toolsets after the operator allowlist and any request header. */
-  toolsets: readonly Toolset[];
   /** Whether any registered tool can change account data. */
   writeToolsAvailable: boolean;
   /** sha256 of the API token the session calls Terminal49 with. */

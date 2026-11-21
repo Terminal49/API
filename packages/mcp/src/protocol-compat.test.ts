@@ -9,7 +9,7 @@ import {
   createTerminal49McpServer,
   TERMINAL49_SERVER_INSTRUCTIONS,
 } from './server.js';
-import { defaultTools, selectTools, TOOLSETS } from './tools/registry.js';
+import { TOOL_REGISTRY } from './tools/registry.js';
 
 const LEGACY_PROTOCOL_VERSIONS = [
   '2025-11-25',
@@ -292,7 +292,7 @@ describe('MCP protocol compatibility', () => {
     };
 
     // A doc counts either the default tools/list or every registered tool.
-    const allTools = selectTools({ toolsets: TOOLSETS, readOnly: false });
+    const allTools = [...TOOL_REGISTRY];
     for (const [path, text] of Object.entries(docs)) {
       const counts = [
         ...text.matchAll(
@@ -305,7 +305,7 @@ describe('MCP protocol compatibility', () => {
       }
     }
 
-    // The README's first tool table lists the default tools.
+    // The README's first tool table lists every registered tool.
     const readme = docs['packages/mcp/README.md'];
     const defaultTable = readme.slice(
       readme.indexOf('| Tool |'),
@@ -327,7 +327,7 @@ describe('MCP protocol compatibility', () => {
       ]),
     );
 
-    expect(tools).toHaveLength(defaultTools().length);
+    expect(tools).toHaveLength(TOOL_REGISTRY.length);
     for (const tool of tools) {
       expect(tool.name.length, tool.name).toBeLessThanOrEqual(64);
       expect(tool.inputSchema.properties, tool.name).not.toHaveProperty(
@@ -458,7 +458,7 @@ describe('MCP protocol compatibility', () => {
           client.listResourceTemplates(),
         ]);
 
-      expect(tools).toHaveLength(defaultTools().length);
+      expect(tools).toHaveLength(TOOL_REGISTRY.length);
       expect(prompts).toHaveLength(3);
       expect(resources).toHaveLength(3);
       expect(resourceTemplates).toHaveLength(1);

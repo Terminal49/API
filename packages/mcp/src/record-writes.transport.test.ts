@@ -554,18 +554,15 @@ describe('batch record writes', () => {
     );
   });
 
-  it('is left out of a read-only server', async () => {
-    const readOnly = createTerminal49McpServer('token', undefined, undefined, {
-      readOnly: true,
-    });
+  it('serves the write tools to every session', async () => {
+    const server = createTerminal49McpServer('token');
     // SAFETY: the test reads the SDK's private tool table by name only.
-    const names = (server: unknown) =>
-      Object.keys(
-        (server as { _registeredTools: Record<string, unknown> })
-          ._registeredTools,
-      );
-    expect(names(readOnly)).not.toContain('set_party_role');
-    expect(names(readOnly)).not.toContain('set_custom_field');
-    expect(names(readOnly)).toContain('search_container');
+    const names = Object.keys(
+      ((server as unknown) as { _registeredTools: Record<string, unknown> })
+        ._registeredTools,
+    );
+    expect(names).toContain('set_party_role');
+    expect(names).toContain('set_custom_field');
+    expect(names).toContain('search_container');
   });
 });

@@ -2,13 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { z } from 'zod';
 import { createTerminal49McpServer } from './server.js';
-import {
-  DEFAULT_TOOLSETS,
-  TOOL_REGISTRY,
-  type ToolDefinition,
-  TOOLSETS,
-  type Toolset,
-} from './tools/registry.js';
+import { TOOL_REGISTRY, type ToolDefinition } from './tools/registry.js';
 
 /** The registry with each tier widened, so checks for any tier compile. */
 const REGISTRY: readonly ToolDefinition[] = TOOL_REGISTRY;
@@ -92,12 +86,8 @@ type RegisteredTool = {
   inputSchema?: z.ZodType;
 };
 
-function getRegisteredTools(
-  toolsets: readonly Toolset[] = DEFAULT_TOOLSETS,
-): Record<string, RegisteredTool> {
-  const server = createTerminal49McpServer('token', undefined, undefined, {
-    toolsets,
-  });
+function getRegisteredTools(): Record<string, RegisteredTool> {
+  const server = createTerminal49McpServer('token');
   // SAFETY: McpServer keeps registered tools in this map. The size check in
   // 'annotates every registered tool' fails if the SDK renames it.
   return (server as any)._registeredTools as Record<string, RegisteredTool>;
@@ -105,7 +95,7 @@ function getRegisteredTools(
 
 describe('MCP tool annotations', () => {
   it('annotates every registered tool with a title and boolean hints', () => {
-    const tools = getRegisteredTools(TOOLSETS);
+    const tools = getRegisteredTools();
 
     expect(Object.keys(tools)).toHaveLength(TOOL_REGISTRY.length);
     for (const [name, tool] of Object.entries(tools)) {
@@ -145,7 +135,7 @@ describe('MCP tool annotations', () => {
     // MCP: destructiveHint false means the tool only adds. set_party_role
     // detaches parties (remove, replace) and set_custom_field overwrites or
     // clears values, so both must say true. track_container only creates.
-    const tools = getRegisteredTools(TOOLSETS);
+    const tools = getRegisteredTools();
     const writes = Object.entries(tools)
       .filter(([, tool]) => tool.annotations?.readOnlyHint === false)
       .map(([name]) => name);
@@ -180,7 +170,7 @@ describe('MCP tool annotations', () => {
   });
 
   it('marks every read-only tool as idempotent', () => {
-    const tools = getRegisteredTools(TOOLSETS);
+    const tools = getRegisteredTools();
     const reads = Object.entries(tools).filter(
       ([, tool]) => tool.annotations?.readOnlyHint,
     );
@@ -192,7 +182,7 @@ describe('MCP tool annotations', () => {
   });
 
   it('gives every tier C tool an optional confirmation_token input', () => {
-    const tools = getRegisteredTools(TOOLSETS);
+    const tools = getRegisteredTools();
 
     for (const definition of REGISTRY.filter((tool) => tool.tier === 'C')) {
       const schema = tools[definition.name]?.inputSchema;
@@ -218,7 +208,7 @@ describe('MCP tool annotations', () => {
     ).toEqual(['search_docs']);
   });
 
-  it('lists exactly the default toolset tools, with live annotations, in the store submissions', () => {
+  it('lists every registered tool, with live annotations, in the store submissions', () => {
     const tools = getRegisteredTools();
     const chatGpt = JSON.parse(
       readFileSync(

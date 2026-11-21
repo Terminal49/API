@@ -7,7 +7,7 @@
 
 import type { CurrentAccount } from '@terminal49/sdk';
 import type { McpCredentialType, ToolContext } from './context.js';
-import type { Toolset } from './registry.js';
+import { populatedToolsets, type Toolset } from './registry.js';
 
 export interface WhoamiTrackingSlots {
   limit: number;
@@ -57,6 +57,7 @@ export interface WhoamiResponse {
   features: Record<string, WhoamiFeature>;
   /** How this MCP session signed in. */
   credential_type: McpCredentialType;
+  /** The toolsets whose tools this session serves. Every session serves every registered tool. */
   enabled_toolsets: Toolset[];
   /** False when the session serves only read-only tools. */
   write_tools_available: boolean;
@@ -129,7 +130,7 @@ export async function executeWhoami(
     other_accounts: otherAccounts,
     features: me.features ?? {},
     credential_type: context.credentialType,
-    enabled_toolsets: [...context.toolsets],
+    enabled_toolsets: populatedToolsets(),
     write_tools_available: context.writeToolsAvailable,
   };
 }

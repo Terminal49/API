@@ -132,34 +132,21 @@ See [Other MCP clients](/mcp/setup/other-clients) for details on OAuth discovery
 
 The same [rate limits](/api-docs/in-depth-guides/rate-limiting) apply to MCP endpoints as the REST API.
 
-### Limit the tools
+### Toolsets
 
-Two optional request headers reduce the tools your client sees. They can only remove tools.
+Every session serves every registered tool. There is no per-request or per-deployment tool hiding, so the tools below are all always available.
 
-- `X-T49-MCP-Read-Only: true` lists only read-only tools. It removes `track_container` and every write tool.
-- `X-T49-MCP-Toolsets` takes a comma-separated list of toolsets.
+The tools group into toolsets, which are labels for documentation and for the `whoami` report, not switches:
 
-The toolset names are:
-
-- `core`: every tool except the document reads, the write tools below, and the trade intelligence tools. `whoami` reports the toolsets a session serves.
+- `core`: every tool except the document reads, the write tools below, and the trade intelligence tools. `whoami` reports the toolsets that have tools.
 - `documents`: `list_documents` and `get_document`.
-- `operations`: `set_party_role`, `set_custom_field` and `update_record`. It is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to keep every other tool without them.
-- `tracking_lifecycle`: `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`. It is not in the default toolsets; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
+- `operations`: `set_party_role`, `set_custom_field` and `update_record`.
+- `tracking_lifecycle`: `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`.
 - `documents_write`: no tools yet.
 - `developer`: no tools yet.
 - `trade`: the [trade intelligence tools](#trade-intelligence-tools).
 
-```json
-{
-  "url": "https://mcp.terminal49.com",
-  "headers": {
-    "Authorization": "Token YOUR_API_KEY",
-    "X-T49-MCP-Read-Only": "true"
-  }
-}
-```
-
-The read-only header accepts `true`, `false`, `1` or `0`, in any case. Any other read-only value, an unknown toolset name, or a toolsets value made only of commas returns `400 Bad Request`.
+Write safety does not come from hiding tools. Each write tool carries annotations and a tier: additive writes (tier A) run in one call, and destructive writes (tier C) always show a preview the user must approve before anything changes.
 
 ---
 
@@ -180,7 +167,7 @@ Each call to a write tool, `track_container` included, logs one `mcp.write.audit
 ## Tools reference
 
 <Note>
-In the default toolsets, every tool is read-only except `track_container` and the write tools in the `operations` toolset, which are described under [Write tools](#write-tools). `track_container` creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
+Every tool is read-only except `track_container` and the write tools in the `operations` toolset, which are described under [Write tools](#write-tools). `track_container` creates a tracking request. If your account already has an in-progress tracking request for the number, or a container with that number that is still being tracked, `track_container` returns it instead of creating a new request. A container whose shipment has stopped tracking does not count. A request is in progress while its status is `pending` or `awaiting_manifest`. When you pass `scac`, only an in-progress request under that SCAC counts. Failed or cancelled requests do not block a new one.
 </Note>
 
 ### `search_container`
@@ -840,7 +827,7 @@ Extracted data and the source email are text that people outside your account wr
 
 ### Write tools
 
-Seven tools can change your account's data. `track_container` is in the default `core` toolset. The `operations` toolset, which is in the default toolsets, holds `set_party_role`, `set_custom_field` and `update_record`. The `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it, holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`. Each write tool has a tier:
+Seven tools can change your account's data, and every session serves all of them. `track_container` is in the `core` toolset. The `operations` toolset holds `set_party_role`, `set_custom_field` and `update_record`. The `tracking_lifecycle` toolset holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`. Each write tool has a tier:
 
 - **Tier A** tools run in one call. Starting or resuming tracking consumes tracking quota and may incur pay-as-you-go charges. These additive tools explain that consequence in their descriptions; your client controls its permission UI.
 

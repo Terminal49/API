@@ -42,7 +42,6 @@ function context(
     { me },
     {
       credentialType: 'api_key',
-      toolsets: ['core'],
       writeToolsAvailable: true,
       credentialHash: 'credential-1',
       confirmationSecret: SECRET,
