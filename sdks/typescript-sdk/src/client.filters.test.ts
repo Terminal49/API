@@ -403,6 +403,27 @@ describe('invalid queries fail before any network request', () => {
       );
       expect(fetchImpl).not.toHaveBeenCalled();
     });
+  it('explains a pair of exact dates instead of reporting reversed bounds', () => {
+    for (const pair of [
+      ['2026-11-16', '2026-11-22'],
+      ['2026-11-22', '2026-11-16'],
+      ['=2026-11-16', '2026-11-22'],
+    ]) {
+      const build = () => buildShipmentListQuery({ pod_arrival: pair });
+      expect(build).toThrow('For a range write [">=START", "<=END"]');
+      expect(build).toThrow('for either date write "DATE1,DATE2"');
+      expect(build).not.toThrow('upper bound must be after');
+    }
+    expect(() =>
+      buildShipmentListQuery({ pod_arrival: ['>=2026-11-16', '<=2026-11-22'] }),
+    ).not.toThrow();
+    expect(() =>
+      buildShipmentListQuery({ pod_arrival: ['2026-11-16', '2026-11-16'] }),
+    ).not.toThrow();
+    expect(() =>
+      buildShipmentListQuery({ pod_arrival: ['>=2026-11-22', '<=2026-11-16'] }),
+    ).toThrow('upper bound must be after');
+  });
   it('identifies the invalid filter without echoing the supplied value', () => {
     expect(() =>
       buildContainerListQuery({ current_status: 'SECRET_INPUT' as any }),

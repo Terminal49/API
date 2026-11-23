@@ -166,6 +166,17 @@ function validateDates(key: string, input: unknown, datetime: boolean): void {
   );
   if (key === 'pod_eta_changed_at' && lower.length === 0)
     invalid(key, 'requires a lower timestamp bound (=, >, or >=)');
+  // Two exact dates in an array can never both match. Callers mean a range or
+  // either date, so name both forms instead of the generic bound-order error.
+  const exact = new Set(
+    bounds.filter((b) => b.operator === '=').map((b) => b.time),
+  );
+  exact.delete(undefined);
+  if (exact.size > 1)
+    invalid(
+      key,
+      'array items combine with AND and a date without an operator is one exact date, so two different exact dates never match. For a range write [">=START", "<=END"]; for either date write "DATE1,DATE2"',
+    );
   for (const l of lower)
     for (const u of upper) {
       const strict =
