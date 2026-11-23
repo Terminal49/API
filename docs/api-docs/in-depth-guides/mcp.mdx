@@ -163,7 +163,7 @@ Once configured, verify everything works:
   <Step title="Ask Claude to list tools">
     > "List the tools available in the Terminal49 MCP server."
 
-    Claude should respond with a list of 30 tools including `search_container`, `track_container`, the list tools, and the trade intelligence tools.
+    Claude should respond with a list of 33 tools including `search_container`, `track_container`, the list tools, and the trade intelligence tools.
   </Step>
   <Step title="Search for a test container">
     > "Using the Terminal49 MCP server, search for container TCLU1234567 and summarize its status."
@@ -236,7 +236,7 @@ printf '%s\n' \
 | `search_docs` | Search the public Terminal49 documentation | `query: string`, `limit?` (1-10, default 5) |
 | `whoami` | Identify the credential, its account, available features, and the session's toolsets | none |
 
-The `operations` toolset adds `set_party_role` and `set_custom_field` and is in the default toolsets. Send `X-T49-MCP-Toolsets: core,documents,trade` to leave them out. The `tracking_lifecycle` toolset adds `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`; a deployment serves it only when `T49_MCP_TOOLSETS` lists it.
+The `operations` toolset holds `set_party_role`, `set_custom_field` and `update_record`. The `tracking_lifecycle` toolset holds `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request`. Every session serves every registered tool; toolsets are grouping labels, not switches.
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
@@ -366,9 +366,6 @@ The `vercel.json` configures the MCP server (excerpt):
 | `T49_API_BASE_URL` | No | Override API URL (default: `https://api.terminal49.com/v2`) |
 | `T49_MCP_ALLOWED_HOSTS` | No | Comma-separated host allowlist for request Host validation |
 | `T49_MCP_ALLOWED_ORIGINS` | No | Comma-separated origin allowlist for request Origin validation |
-| `T49_MCP_TOOLSETS` | No | Comma-separated toolsets the server allows; defaults to `core,documents,operations,trade`. An unknown name or a value made only of commas stops stdio and fails HTTP requests |
-| `T49_MCP_READ_ONLY` | No | Serves only read-only tools when set to `true` or `1`; defaults to `false` |
-| `T49_MCP_ALLOW_SHARED_TOKEN_WRITES` | No | Serves toolsets other than `core` and `trade` when callers share `T49_API_TOKEN`; defaults to `false` |
 | `T49_MCP_CONFIRMATION_SECRET` | For write tools over HTTP | Signs the preview approvals that `stop_shipment_tracking`, `cancel_tracking_request`, and a destructive `set_party_role` or `set_custom_field` call need, on both the elicitation and the token channel. Use at least 32 random characters. Without it, those tools change nothing over HTTP. Local stdio makes a random secret when it is unset |
 | `SENTRY_DSN` | No | Enables Sentry MCP Monitoring |
 | `SENTRY_ENVIRONMENT` | No | Sentry environment name; defaults to `NODE_ENV` |
@@ -378,7 +375,7 @@ The `vercel.json` configures the MCP server (excerpt):
 | `SENTRY_MCP_RECORD_OUTPUTS` | No | Records MCP outputs in Sentry when set to `true`; defaults to `false` |
 | `SENTRY_SEND_DEFAULT_PII` | No | Enables Sentry default PII behavior; defaults to `false` |
 
-Clients can remove tools per request with the `X-T49-MCP-Toolsets` and `X-T49-MCP-Read-Only` headers. A header can only narrow what the env allows. See [Limit the tools](/mcp/home#limit-the-tools).
+Every session serves every registered tool, so there are no per-request or per-deployment switches that hide tools. Write safety comes from the write tiers and their preview approvals. See [Toolsets](/mcp/home#toolsets).
 
 ---
 

@@ -32,11 +32,7 @@ vi.mock('@sentry/node', () => ({
 
 const SHIPMENT_ID = '0b5e3a1c-7d2f-4e6a-8b9c-1d2e3f4a5b6c';
 const REQUEST_ID = '6c1f0d52-8a3e-4b9f-9d21-0e5f4a7b8c90';
-const OPERATIONS = {
-  toolsets: ['operations', 'tracking_lifecycle'] as const,
-};
 const CONFIRMING = {
-  ...OPERATIONS,
   confirmationSecret: TEST_CONFIRMATION_SECRET,
 };
 
@@ -138,7 +134,7 @@ describe('tracking lifecycle tools over the MCP client transport', () => {
       'stop_shipment_tracking',
       { shipment_id: SHIPMENT_ID },
       shipmentRoutes(),
-      OPERATIONS,
+      {},
     );
 
     expect(result.isError).not.toBe(true);
@@ -163,7 +159,6 @@ describe('tracking lifecycle tools over the MCP client transport', () => {
       },
       routes,
       {
-        ...OPERATIONS,
         confirmationSecret: `${TEST_CONFIRMATION_SECRET}-rotated`,
       },
     );

@@ -5,14 +5,10 @@ import {
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import { expect, it } from 'vite-plus/test';
 import { createTerminal49McpServer } from './server.js';
-import { TOOLSETS } from './tools/registry.js';
-
 it('advertises billing consequences and client interaction for tracking writes', async () => {
   const handler = createMcpHandler(
     () =>
-      createTerminal49McpServer('fixture-token', undefined, undefined, {
-        toolsets: TOOLSETS,
-      }),
+      createTerminal49McpServer('fixture-token'),
     { legacy: 'stateless', responseMode: 'json' },
   );
   const client = new Client({ name: 'billing-signals-test', version: '1.0.0' });

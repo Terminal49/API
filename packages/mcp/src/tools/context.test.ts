@@ -5,7 +5,6 @@ const session = (
   credentialType: ToolSession['credentialType'],
 ): ToolSession => ({
   credentialType,
-  toolsets: ['core'],
   writeToolsAvailable: false,
   credentialHash: 'hash',
 });
@@ -48,13 +47,11 @@ describe('createToolContext', () => {
     expect(
       createToolContext(client, {
         credentialType: 'agent',
-        toolsets: ['core', 'documents'],
         writeToolsAvailable: true,
         credentialHash: 'hash',
       }),
     ).toMatchObject({
       credentialType: 'agent',
-      toolsets: ['core', 'documents'],
       writeToolsAvailable: true,
     });
   });

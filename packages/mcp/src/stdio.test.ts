@@ -10,7 +10,7 @@ import {
 import { runStdioServer } from './server.js';
 import { fakeApiFetch } from './test/fake-api.js';
 import { meBody, tokenOf } from './test/write-context.js';
-import { defaultTools } from './tools/registry.js';
+import { TOOL_REGISTRY } from './tools/registry.js';
 
 class ExitError extends Error {
   constructor(readonly code: string | number | null | undefined) {
@@ -37,8 +37,6 @@ function toolNames(factories: Array<() => McpServer>): string[] {
 describe('runStdioServer', () => {
   beforeEach(() => {
     vi.stubEnv('T49_API_TOKEN', 'token');
-    vi.stubEnv('T49_MCP_TOOLSETS', '');
-    vi.stubEnv('T49_MCP_READ_ONLY', '');
     vi.stubEnv('T49_MCP_CONFIRMATION_SECRET', '');
     vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new ExitError(code);
@@ -51,45 +49,11 @@ describe('runStdioServer', () => {
     vi.restoreAllMocks();
   });
 
-  it('serves the default toolsets when the env sets none', async () => {
+  it('serves every registry tool', async () => {
     expect(toolNames(await startStdio())).toEqual(
-      defaultTools().map((tool) => tool.name),
+      TOOL_REGISTRY.map((tool) => tool.name),
     );
   });
-
-  it('serves only the toolsets named in T49_MCP_TOOLSETS', async () => {
-    vi.stubEnv('T49_MCP_TOOLSETS', 'documents');
-
-    expect(toolNames(await startStdio())).toEqual([
-      'list_documents',
-      'get_document',
-    ]);
-  });
-
-  it('applies T49_MCP_READ_ONLY', async () => {
-    vi.stubEnv('T49_MCP_READ_ONLY', 'true');
-
-    const names = toolNames(await startStdio());
-
-    expect(names).not.toContain('track_container');
-    expect(names).toContain('search_container');
-  });
-
-  it.each(['core,admin', ','])(
-    'exits with a config error that names a malformed env var: %j',
-    async (value) => {
-      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const serve = vi.fn();
-      vi.stubEnv('T49_MCP_TOOLSETS', value);
-
-      await expect(runStdioServer(serve)).rejects.toEqual(new ExitError(1));
-
-      expect(error).toHaveBeenCalledWith(
-        expect.stringMatching(/^ERROR: T49_MCP_TOOLSETS must list only/),
-      );
-      expect(serve).not.toHaveBeenCalled();
-    },
-  );
 
   describe('confirmation secret', () => {
     const REQUEST_ID = '6c1f0d52-8a3e-4b9f-9d21-0e5f4a7b8c90';
@@ -110,7 +74,6 @@ describe('runStdioServer', () => {
     }
 
     beforeEach(() => {
-      vi.stubEnv('T49_MCP_TOOLSETS', 'tracking_lifecycle');
       vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.stubGlobal(
         'fetch',

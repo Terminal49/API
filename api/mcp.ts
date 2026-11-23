@@ -21,13 +21,6 @@ import { captureMcpException } from '../packages/mcp/src/sentry.js';
 import { protectedResourceMetadataUrl } from '../packages/mcp/src/resource.js';
 import { logMcpEvent } from '../packages/mcp/src/logging.js';
 import type { McpCredentialType } from '../packages/mcp/src/tools/context.js';
-import type { ToolSelection } from '../packages/mcp/src/tools/registry.js';
-import {
-  READ_ONLY_HEADER,
-  resolveToolSelection,
-  ToolSelectionRequestError,
-  TOOLSETS_HEADER,
-} from '../packages/mcp/src/toolsets.js';
 
 type RequestLike = {
   method?: string;
@@ -58,7 +51,7 @@ function setCorsHeaders(res: ResponseLike): void {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    `Content-Type, Authorization, X-Account-ID, X-T49-Credential-Type, ${TOOLSETS_HEADER}, ${READ_ONLY_HEADER}, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id`,
+    'Content-Type, Authorization, X-Account-ID, X-T49-Credential-Type, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id',
   );
 }
 
@@ -678,30 +671,9 @@ export default async function handler(
       };
     }
 
-    let toolSelection: ToolSelection;
-    try {
-      toolSelection = resolveToolSelection({
-        env: process.env,
-        credentialType: resolvedTerminal49Auth.credentialType,
-        toolsetsHeader: getHeaderValue(req.headers['x-t49-mcp-toolsets']),
-        readOnlyHeader: getHeaderValue(req.headers['x-t49-mcp-read-only']),
-      });
-    } catch (error) {
-      if (!(error instanceof ToolSelectionRequestError)) {
-        throw error;
-      }
-      res.status(400).json({ error: 'Bad Request', message: error.message });
-      logLifecycle('mcp.request.complete', requestId, {
-        reason: 'invalid_tool_selection',
-      });
-      return;
-    }
-
     logLifecycle('mcp.request.auth', requestId, {
       auth_source: resolvedTerminal49Auth.authSource,
       credential_type: resolvedTerminal49Auth.credentialType,
-      toolsets: [...toolSelection.toolsets],
-      read_only: String(toolSelection.readOnly),
     });
 
     setCorsHeaders(res);
@@ -727,8 +699,6 @@ export default async function handler(
             transport: 'http',
             authSource: resolvedTerminal49Auth.authSource,
             credentialType: resolvedTerminal49Auth.credentialType,
-            toolsets: toolSelection.toolsets,
-            readOnly: toolSelection.readOnly,
             // Serverless instances share no memory, so HTTP has no fallback
             // secret: without this env var, tier C tools refuse to write.
             confirmationSecret: process.env.T49_MCP_CONFIRMATION_SECRET,

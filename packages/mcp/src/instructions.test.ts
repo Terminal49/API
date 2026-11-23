@@ -15,10 +15,9 @@ import {
   type Terminal49McpServerOptions,
 } from './server.js';
 import {
-  defaultTools,
-  selectTools,
   TOOL_REGISTRY,
   TOOLSETS,
+  type RegisteredTool,
   type Toolset,
 } from './tools/registry.js';
 
@@ -63,6 +62,18 @@ function mentionedTools(instructions: string): string[] {
   );
 }
 
+/** The registry entries a hypothetical session with these settings would serve. */
+function selectFromRegistry(
+  toolsets: readonly Toolset[],
+  readOnly: boolean,
+): RegisteredTool[] {
+  return TOOL_REGISTRY.filter(
+    (tool) =>
+      toolsets.includes(tool.toolset) &&
+      (tool.annotations.readOnlyHint || !readOnly),
+  );
+}
+
 function toolsetSubsets(): Toolset[][] {
   return Array.from({ length: 2 ** TOOLSETS.length }, (_, mask) =>
     TOOLSETS.filter((_toolset, index) => mask & (1 << index)),
@@ -84,14 +95,16 @@ describe('server identity', () => {
 });
 
 describe('server instructions', () => {
-  it('sends the full guide with the default toolsets', async () => {
+  it('sends the full guide at initialize', async () => {
     await expect(initializeInstructions({})).resolves.toBe(
       TERMINAL49_SERVER_INSTRUCTIONS,
     );
   });
 
-  it('does not describe track_container in read-only mode', async () => {
-    const instructions = await initializeInstructions({ readOnly: true });
+  it('does not describe track_container when the list has no write tools', () => {
+    const instructions = buildServerInstructions(
+      TOOL_REGISTRY.filter((tool) => tool.annotations.readOnlyHint),
+    );
 
     expect(instructions).not.toMatch(/track_container/);
     expect(instructions).toMatch(/search_container/);
@@ -99,7 +112,7 @@ describe('server instructions', () => {
   });
 
   it('names every write tool it registers, and which of them ask the user', () => {
-    const tools = selectTools({ toolsets: TOOLSETS, readOnly: false });
+    const tools = [...TOOL_REGISTRY];
     const [, writes = ''] = buildServerInstructions(tools).split('\n\n');
     const asks = writes.slice(
       writes.indexOf('The other tools only fetch data.'),
@@ -121,25 +134,23 @@ describe('server instructions', () => {
   it('gives the confirmation rule only when a tool needs a confirmed preview', () => {
     const rule =
       /Show the user every preview; never pass a confirmation_token they have not approved in this turn\./;
-    const all = buildServerInstructions(
-      selectTools({ toolsets: TOOLSETS, readOnly: false }),
-    );
+    const all = buildServerInstructions([...TOOL_REGISTRY]);
     const operations = buildServerInstructions(
-      selectTools({ toolsets: ['operations'], readOnly: false }),
+      TOOL_REGISTRY.filter((tool) => tool.toolset === 'operations'),
     );
     expect(all).toMatch(rule);
     expect(operations).toMatch(rule);
-    expect(buildServerInstructions(defaultTools())).toMatch(rule);
 
     const withoutTierC = [
       buildServerInstructions(
-        selectTools({ toolsets: TOOLSETS, readOnly: true }),
+        TOOL_REGISTRY.filter((tool) => tool.annotations.readOnlyHint),
       ),
       buildServerInstructions(
-        selectTools({
-          toolsets: ['core', 'operations'],
-          readOnly: false,
-        }).filter((tool) => tool.tier !== 'C'),
+        TOOL_REGISTRY.filter(
+          (tool) =>
+            ['core', 'operations'].includes(tool.toolset) &&
+            tool.tier !== 'C',
+        ),
       ),
     ];
     for (const instructions of withoutTierC) {
@@ -147,12 +158,11 @@ describe('server instructions', () => {
     }
   });
 
-  it('marks tool output untrusted in every mode', async () => {
-    const full = await initializeInstructions({ toolsets: TOOLSETS });
-    const readOnly = await initializeInstructions({
-      toolsets: TOOLSETS,
-      readOnly: true,
-    });
+  it('marks tool output untrusted in every mode', () => {
+    const full = buildServerInstructions([...TOOL_REGISTRY]);
+    const readOnly = buildServerInstructions(
+      TOOL_REGISTRY.filter((tool) => tool.annotations.readOnlyHint),
+    );
 
     for (const instructions of [full, readOnly]) {
       expect(instructions).toMatch(
@@ -163,16 +173,16 @@ describe('server instructions', () => {
     expect(readOnly).not.toMatch(/only when the user asks/);
   });
 
-  it('describes no tools when no toolset has tools', async () => {
-    const instructions = await initializeInstructions({ toolsets: [] });
+  it('describes no tools when the list is empty', () => {
+    const instructions = buildServerInstructions([]);
 
-    expect(mentionedTools(instructions ?? '')).toEqual([]);
+    expect(mentionedTools(instructions)).toEqual([]);
   });
 
   it('mentions only the tools a selection registers', () => {
     for (const toolsets of toolsetSubsets()) {
       for (const readOnly of [false, true]) {
-        const tools = selectTools({ toolsets, readOnly });
+        const tools = selectFromRegistry(toolsets, readOnly);
         const instructions = buildServerInstructions(tools);
 
         expect(
@@ -189,7 +199,7 @@ describe('server instructions', () => {
 
   it('keeps the explicit-request rule wherever track_container is described', () => {
     for (const toolsets of toolsetSubsets()) {
-      const tools = selectTools({ toolsets, readOnly: false });
+      const tools = selectFromRegistry(toolsets, false);
       const instructions = buildServerInstructions(tools);
 
       if (tools.some((tool) => tool.name === 'track_container')) {
@@ -204,7 +214,7 @@ describe('server instructions', () => {
     for (const toolsets of toolsetSubsets()) {
       for (const readOnly of [false, true]) {
         const instructions = buildServerInstructions(
-          selectTools({ toolsets, readOnly }),
+          selectFromRegistry(toolsets, readOnly),
         );
 
         expect(
@@ -214,36 +224,4 @@ describe('server instructions', () => {
       }
     }
   });
-
-  it('never mentions a tool that is left out', () => {
-    for (const omitted of TOOL_REGISTRY) {
-      const tools = TOOL_REGISTRY.filter((tool) => tool !== omitted);
-
-      expect(mentionedTools(buildServerInstructions(tools))).not.toContain(
-        omitted.name,
-      );
-    }
-  });
-});
-
-describe('tool descriptions', () => {
-  it('never name a tool the session does not register', async () => {
-    for (const toolsets of toolsetSubsets()) {
-      for (const readOnly of [false, true]) {
-        const { tools } = await connect({ toolsets, readOnly }, (client) =>
-          client.listTools(),
-        );
-        const registered = tools.map((tool) => tool.name);
-
-        for (const tool of tools) {
-          expect(
-            mentionedTools(JSON.stringify(tool)).filter(
-              (name) => !registered.includes(name),
-            ),
-            `${tool.name} with ${toolsets.join(',')} readOnly=${readOnly}`,
-          ).toEqual([]);
-        }
-      }
-    }
-  }, 60_000);
 });
