@@ -40,7 +40,7 @@ test('only approved public entities and complete feature assessments are exporte
   assert.equal(data.terminals.length, 161);
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'public').length,
-    34,
+    35,
   );
   assert.equal(
     data.shippingLines.filter((row) => row.access === 'account').length,
@@ -138,7 +138,7 @@ test('static references include every feature and preserve credential requiremen
   const files = generateFiles(data);
   const shipping = files.get('docs/data/coverage/shipping-lines.mdx');
   const rail = files.get('docs/data/coverage/rail-carriers.mdx');
-  assert.equal((shipping.match(/^\| (?!---|Section)/gm) ?? []).length, 35 * 61);
+  assert.equal((shipping.match(/^\| (?!---|Section)/gm) ?? []).length, 36 * 61);
   assert.equal((rail.match(/^\| (?!---|Section)/gm) ?? []).length, 6 * 13);
   assert.ok(rail.includes('Carrier credentials required'));
   assert.ok(rail.includes('requires the Rail Plan'));
