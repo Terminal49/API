@@ -7,6 +7,7 @@ import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 import { assertNoIgnoredFilters } from './ignored-filters.js';
 import { compactContainer } from './compact-rows.js';
+import { statusLabel } from '../lib/container-status.js';
 
 const MAX_PAGE_SIZE = 25;
 
@@ -15,6 +16,7 @@ import {
   containerListInputSchema,
   getContainerFilters,
   getListResponseMetadata,
+  labelStatusFilter,
   type ListContainersArgs,
 } from './list-filters.js';
 
@@ -70,14 +72,19 @@ export async function executeListContainers(
       timestamp: new Date().toISOString(),
     });
 
-    const items =
-      compact && Array.isArray((result as any)?.items)
-        ? (result as any).items.map(compactContainer)
-        : (result as any)?.items;
+    const rawItems = (result as any)?.items;
+    const items = Array.isArray(rawItems)
+      ? rawItems.map(compact ? compactContainer : labelFullRow)
+      : rawItems;
     return {
       ...result,
       items,
-      _metadata: getListResponseMetadata(result, filters, args, pageSize),
+      _metadata: getListResponseMetadata(
+        result,
+        labelStatusFilter(filters),
+        args,
+        pageSize,
+      ),
     };
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -91,4 +98,14 @@ export async function executeListContainers(
     });
     throw error;
   }
+}
+
+/** Full rows show the dashboard status label in place of the code. */
+function labelFullRow(container: any) {
+  return {
+    ...container,
+    status: statusLabel(container.status) ?? container.status,
+    currentStatus:
+      statusLabel(container.currentStatus) ?? container.currentStatus,
+  };
 }

@@ -93,7 +93,7 @@ describe('container resource', () => {
     expect(resource.text).not.toContain('LFD Urgency:** Unavailable');
   });
 
-  it('renders the authoritative current_status in the headline', async () => {
+  it('renders the dashboard label of current_status in the headline', async () => {
     const client = {
       getContainer: vi.fn().mockResolvedValue({
         data: {
@@ -108,7 +108,7 @@ describe('container resource', () => {
     const uri = 'terminal49://container/123e4567-e89b-12d3-a456-426614174000';
     const resource = await readContainerResource(uri, client);
 
-    expect(resource.text).toContain('**Status:** available');
+    expect(resource.text).toContain('**Status:** Available');
   });
 
   it('renders reported demurrage fees with their total and currency', async () => {

@@ -5,6 +5,7 @@
 
 import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
+import { statusLabel } from '../lib/container-status.js';
 
 export interface SearchContainerArgs {
   query: string;
@@ -14,7 +15,8 @@ export interface SearchResult {
   containers: Array<{
     id: string;
     container_number: string;
-    status: string;
+    /** Dashboard status label; omitted when the result carries no status. */
+    status?: string;
     shipping_line: string;
     pod_terminal?: string;
     pol_terminal?: string;
@@ -31,6 +33,7 @@ export interface SearchResult {
   tracking_requests: Array<{
     id: string;
     request_number: string;
+    /** Tracking request status (pending, failed, ...), not a container status. */
     status: string;
     failed_reason?: string;
     scac?: string;
@@ -212,10 +215,7 @@ function formatSearchResult(searchResult: any): SearchResult['containers'][0] {
   return {
     id: String(searchResult.id),
     container_number: toText(attrs.number),
-    // Honor an explicit status when the search API supplies one; otherwise
-    // derive a real status from availability/timestamp signals instead of
-    // labeling every result "unknown".
-    status: toTextOrUndefined(attrs.status) ?? determineContainerStatus(attrs),
+    status: containerStatus(attrs),
     shipping_line: toText(attrs.scac || attrs.carrier_scac || attrs.carrier),
     pod_terminal: toTextOrUndefined(attrs.port_of_discharge_name),
     pol_terminal: toTextOrUndefined(attrs.port_of_lading_name),
@@ -283,7 +283,7 @@ function formatContainer(
   return {
     id: String(container.id),
     container_number: toText(attrs.number),
-    status: determineContainerStatus(attrs),
+    status: containerStatus(attrs),
     shipping_line: toText(
       shipment?.attributes?.line_name || attrs.shipping_line_name,
     ),
@@ -314,47 +314,7 @@ function formatShipment(
   };
 }
 
-/**
- * Derive a coarse container status from lifecycle signals.
- *
- * NOTE: these fields (`available_for_pickup`, `pod_*_at`, `pol_loaded_at`)
- * originate on the full container resource. The lightweight `/search` payload
- * is not guaranteed to carry them, and their exact presence/shape there is
- * unverified — so this stays deliberately defensive: it never throws on a
- * missing or oddly-typed `attrs`, treats only meaningful signals as set, and
- * falls back to `'unknown'` rather than guessing. When an explicit
- * `attrs.status` is present the caller prefers it over this derivation.
- */
-function determineContainerStatus(attrs: any): string {
-  if (!attrs || typeof attrs !== 'object') {
-    return 'unknown';
-  }
-  if (isTruthySignal(attrs.available_for_pickup)) {
-    return 'available_for_pickup';
-  } else if (isTruthySignal(attrs.pod_full_out_at)) {
-    return 'full_out';
-  } else if (isTruthySignal(attrs.pod_discharged_at)) {
-    return 'discharged';
-  } else if (isTruthySignal(attrs.pod_arrived_at)) {
-    return 'arrived';
-  } else if (isTruthySignal(attrs.pol_loaded_at)) {
-    return 'in_transit';
-  }
-  return 'unknown';
-}
-
-/**
- * A lifecycle signal is "set" only when it carries real information. Guards
- * against the API serializing absent timestamps as `null`/empty string and
- * against a boolean-ish flag arriving as the string `'false'`.
- */
-function isTruthySignal(value: unknown): boolean {
-  if (value === undefined || value === null || value === false) {
-    return false;
-  }
-  if (typeof value === 'string') {
-    const text = value.trim().toLowerCase();
-    return text.length > 0 && text !== 'false';
-  }
-  return Boolean(value);
+/** The dashboard label of the container's current_status, if it has one. */
+function containerStatus(attrs: any): string | undefined {
+  return statusLabel(toTextOrUndefined(attrs?.current_status)) ?? undefined;
 }

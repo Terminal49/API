@@ -79,7 +79,7 @@ function containerRaw() {
       type: 'container',
       attributes: {
         number: 'CAIU1234567',
-        current_status: 'available_for_pickup',
+        current_status: 'available',
         available_for_pickup: true,
         equipment_type: 'dry',
         equipment_length: 40,
@@ -271,7 +271,7 @@ function configureHappyPath(toolName: ToolName): void {
           {
             id: CONTAINER_ID,
             number: 'CAIU1234567',
-            currentStatus: 'available_for_pickup',
+            currentStatus: 'available',
             podDischargedAt: '2026-08-19T14:00:00Z',
             availableForPickup: true,
             pickupLfd: '2026-08-24',
@@ -360,7 +360,7 @@ function expectedOutputFor(toolName: ToolName): Record<string, unknown> {
       return {
         id: CONTAINER_ID,
         container_number: 'CAIU1234567',
-        status: 'available_for_pickup',
+        status: 'Available',
         shipment: expect.objectContaining({ id: SHIPMENT_ID, line: 'MAEU' }),
       };
     case 'get_shipment_details':

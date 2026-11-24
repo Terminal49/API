@@ -342,3 +342,68 @@ describe('filter value grammar', () => {
     );
   });
 });
+
+describe('container status filter', () => {
+  it('accepts dashboard labels in any case and sends the codes', async () => {
+    expect(
+      getContainerFilters({
+        current_status: 'At Terminal, not available,=Available',
+        include_stopped_tracking: true,
+      }),
+    ).toEqual({ current_status: 'grounded,not_available,=available' });
+    expect(
+      getContainerFilters({
+        advanced_filters: { current_status: ['available at shippers'] },
+        include_stopped_tracking: true,
+      }),
+    ).toEqual({ current_status: ['off_dock'] });
+
+    const { client, fetchImpl } = fakeClient();
+    const result = await executeListContainers(
+      { current_status: 'At Terminal' },
+      client,
+    );
+    const url = new URL(
+      (fetchImpl.mock.calls[0] as unknown as [Request])[0].url,
+    );
+    expect(url.searchParams.get('filter[current_status]')).toBe('grounded');
+    expect(result._metadata.applied_filters.current_status).toBe('At Terminal');
+  });
+
+  it('still accepts the status codes', () => {
+    expect(
+      getContainerFilters({
+        current_status: 'grounded,picked_up',
+        include_stopped_tracking: true,
+      }),
+    ).toEqual({ current_status: 'grounded,picked_up' });
+    expect(
+      getContainerFilters({
+        current_status: '@not_exists',
+        include_stopped_tracking: true,
+      }),
+    ).toEqual({ current_status: '@not_exists' });
+  });
+
+  it('rejects an unknown status', () => {
+    expect(() => getContainerFilters({ current_status: 'Ready' })).toThrow(
+      'Unknown container status',
+    );
+  });
+
+  it('names statuses by label in the LFD range filter too', () => {
+    const advanced = containerListInputSchema.shape.advanced_filters.unwrap();
+    const description =
+      advanced.shape.last_free_day_on.unwrap().description ?? '';
+    expect(description).toContain('Available at Shippers containers');
+    expect(description).not.toContain('not_available');
+  });
+
+  it('lists the labels, not the codes, in its description', () => {
+    const description =
+      containerListInputSchema.shape.current_status.unwrap().description ?? '';
+    expect(description).toContain('At Terminal');
+    expect(description).toContain('Available at Shippers means');
+    expect(description).not.toContain('grounded');
+  });
+});

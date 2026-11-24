@@ -1,86 +1,119 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { resolveContainerStatus } from './container-status.js';
+import {
+  CONTAINER_STATUS_LABELS,
+  resolveContainerStatus,
+  statusCode,
+  statusLabel,
+} from './container-status.js';
+
+describe('statusLabel', () => {
+  it('maps every code to the dashboard label', () => {
+    expect(CONTAINER_STATUS_LABELS).toEqual({
+      new: 'No Status',
+      loaded: 'Loaded',
+      available: 'Available',
+      not_available: 'Not available',
+      on_ship: 'On Ship',
+      on_rail: 'On Rail',
+      grounded: 'At Terminal',
+      picked_up: 'Picked up',
+      dropped: 'Dropped',
+      delivered: 'Delivered',
+      off_dock: 'Available at Shippers',
+      empty_returned: 'Empty Returned',
+      awaiting_inland_transfer: 'Awaiting Inland Transfer',
+    });
+    expect(statusLabel('grounded')).toBe('At Terminal');
+    expect(statusLabel('off_dock')).toBe('Available at Shippers');
+  });
+
+  it('humanizes an unknown code like the dashboard export', () => {
+    expect(statusLabel('held_at_customs')).toBe('Held at customs');
+    expect(statusLabel('transferred')).toBe('Transferred');
+  });
+
+  it('returns null for a missing or blank code', () => {
+    expect(statusLabel(null)).toBeNull();
+    expect(statusLabel(undefined)).toBeNull();
+    expect(statusLabel('  ')).toBeNull();
+  });
+});
+
+describe('statusCode', () => {
+  it('reads a label or a code, ignoring case', () => {
+    expect(statusCode('At Terminal')).toBe('grounded');
+    expect(statusCode('at terminal')).toBe('grounded');
+    expect(statusCode(' NOT AVAILABLE ')).toBe('not_available');
+    expect(statusCode('grounded')).toBe('grounded');
+    expect(statusCode('Picked_Up')).toBe('picked_up');
+  });
+
+  it('returns undefined for an unknown status', () => {
+    expect(statusCode('Ready')).toBeUndefined();
+    expect(statusCode('')).toBeUndefined();
+  });
+});
 
 describe('resolveContainerStatus', () => {
-  it('uses the API current_status verbatim as the headline status', () => {
+  it('shows the label of the API current_status', () => {
     const result = resolveContainerStatus({
-      current_status: 'available',
+      current_status: 'grounded',
       pod_arrived_at: '2026-01-01T00:00:00Z',
       pod_discharged_at: '2026-01-02T00:00:00Z',
       available_for_pickup: true,
     });
 
-    expect(result.status).toBe('available');
-    expect(result.status_source).toBe('current_status');
-  });
-
-  it('falls back to a derived lifecycle label only when current_status is absent', () => {
-    const result = resolveContainerStatus({
-      pod_arrived_at: null,
-      pod_discharged_at: null,
+    expect(result).toEqual({
+      status: 'At Terminal',
+      status_source: 'current_status',
     });
-
-    // No API status to surface, so the headline is the derived label.
-    expect(result.status).toBe('in_transit');
-    expect(result.status_source).toBe('derived');
   });
 
-  it('never reports a delivered lifecycle when delivered_at is null', () => {
-    // pod_full_out_at is set but the API has NOT confirmed delivery.
-    const result = resolveContainerStatus({
-      current_status: 'picked_up',
+  it('derives a dashboard label only when current_status is absent', () => {
+    expect(resolveContainerStatus({})).toEqual({
+      status: 'On Ship',
+      status_source: 'derived',
+    });
+    expect(
+      resolveContainerStatus({ pod_arrived_at: '2026-01-01T00:00:00Z' }).status,
+    ).toBe('On Ship');
+  });
+
+  it('derives Available or Not available from availability after discharge', () => {
+    const discharged = {
       pod_arrived_at: '2026-01-01T00:00:00Z',
       pod_discharged_at: '2026-01-02T00:00:00Z',
-      pod_full_out_at: '2026-01-06T00:00:00Z',
-      delivered_at: null,
-    });
-
-    expect(result.status).toBe('picked_up');
-    expect(result.derived_lifecycle).not.toBe('delivered');
+    };
+    expect(
+      resolveContainerStatus({ ...discharged, available_for_pickup: true })
+        .status,
+    ).toBe('Available');
+    expect(
+      resolveContainerStatus({ ...discharged, available_for_pickup: false })
+        .status,
+    ).toBe('Not available');
+    expect(resolveContainerStatus(discharged).status).toBe('At Terminal');
+    expect(
+      resolveContainerStatus({
+        ...discharged,
+        pod_rail_loaded_at: '2026-01-03T00:00:00Z',
+      }).status,
+    ).toBe('On Rail');
   });
 
-  it('reports a delivered lifecycle only when delivered_at is present', () => {
-    const result = resolveContainerStatus({
-      current_status: 'delivered',
+  it('derives Delivered only when delivered_at is present', () => {
+    const discharged = {
       pod_arrived_at: '2026-01-01T00:00:00Z',
       pod_discharged_at: '2026-01-02T00:00:00Z',
-      delivered_at: '2026-01-07T00:00:00Z',
-    });
-
-    expect(result.derived_lifecycle).toBe('delivered');
-  });
-
-  it('marks the derived lifecycle as non-authoritative steering metadata', () => {
-    const result = resolveContainerStatus({
-      current_status: 'on_rail',
-      pod_arrived_at: '2026-01-01T00:00:00Z',
-      pod_discharged_at: '2026-01-02T00:00:00Z',
-      pod_rail_loaded_at: '2026-01-03T00:00:00Z',
-    });
-
-    expect(result.lifecycle_is_authoritative).toBe(false);
-    expect(result.derived_lifecycle).toBe('on_rail');
-  });
-
-  it('derives discharged vs available_for_pickup from availability', () => {
-    const discharged = resolveContainerStatus({
-      pod_arrived_at: '2026-01-01T00:00:00Z',
-      pod_discharged_at: '2026-01-02T00:00:00Z',
-      available_for_pickup: false,
-    });
-    expect(discharged.derived_lifecycle).toBe('discharged');
-
-    const available = resolveContainerStatus({
-      pod_arrived_at: '2026-01-01T00:00:00Z',
-      pod_discharged_at: '2026-01-02T00:00:00Z',
-      available_for_pickup: true,
-    });
-    expect(available.derived_lifecycle).toBe('available_for_pickup');
-  });
-
-  it('handles a completely empty attribute object without throwing', () => {
-    const result = resolveContainerStatus({});
-    expect(result.status).toBe('in_transit');
-    expect(result.status_source).toBe('derived');
+    };
+    expect(
+      resolveContainerStatus({ ...discharged, delivered_at: null }).status,
+    ).not.toBe('Delivered');
+    expect(
+      resolveContainerStatus({
+        ...discharged,
+        delivered_at: '2026-01-07T00:00:00Z',
+      }).status,
+    ).toBe('Delivered');
   });
 });
