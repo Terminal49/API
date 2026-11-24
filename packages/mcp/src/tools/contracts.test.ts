@@ -431,6 +431,7 @@ describe('MCP tool contracts', () => {
       pol_atd_at: '2024-11-11T03:00:00Z',
       pol_timezone: 'Asia/Ho_Chi_Minh',
       pod_ata_at: '2025-01-01T00:00:00Z',
+      destination_name: 'Chicago',
     });
     const client = asClient({
       containers: {
@@ -445,6 +446,10 @@ describe('MCP tool contracts', () => {
 
     // The POD yard slot is not where a container is after it railed out.
     expect(result.location.current_location).toBeNull();
+    expect(result.location.current_place).toEqual({
+      kind: 'inland_destination',
+      name: 'Chicago',
+    });
     expect(result.rail.pod_rail_departed_at).toBe('2025-01-04T00:00:00Z');
     expect(result.rail.destination_rail_unloaded_at).toBe(
       '2025-01-09T00:00:00Z',

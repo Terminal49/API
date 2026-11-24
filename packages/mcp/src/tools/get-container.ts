@@ -84,6 +84,17 @@ export const containerStatusSchema = z.object({
     weight_lbs: z.number().nullable(),
   }),
   location: z.object({
+    // Where the container (and so its status) is now, from its milestones.
+    current_place: z.object({
+      kind: z.enum([
+        'before_pod',
+        'pod_terminal',
+        'left_pod_terminal',
+        'on_rail',
+        'inland_destination',
+      ]),
+      name: z.string().nullable(),
+    }),
     current_location: z.string().nullable(),
     available_for_pickup: z.boolean().nullable(),
     availability_known: z.boolean().nullable(),
@@ -325,6 +336,11 @@ function formatContainerResponse(
           : null,
     },
     location: {
+      current_place: currentPlace(
+        container,
+        podTerminal?.attributes?.name ?? null,
+        shipment?.attributes?.destination_name ?? null,
+      ),
       // The yard slot at the POD terminal; once the container leaves that
       // terminal (pickup or rail departure) it no longer says where it is.
       current_location: leftPodTerminal(container)
@@ -481,6 +497,24 @@ function generateMetadata(
       : { container_state: lifecycle, derived_lifecycle: lifecycle }),
     includes_loaded: includes,
   };
+}
+
+function currentPlace(
+  container: any,
+  podTerminalName: string | null,
+  destinationName: string | null,
+): ContainerStatus['location']['current_place'] {
+  if (container.ind_rail_unloaded_at || container.ind_ata_at) {
+    return { kind: 'inland_destination', name: destinationName };
+  }
+  if (container.pod_rail_departed_at) {
+    return { kind: 'on_rail', name: destinationName };
+  }
+  if (container.pod_full_out_at) {
+    return { kind: 'left_pod_terminal', name: null };
+  }
+  if (!container.pod_arrived_at) return { kind: 'before_pod', name: null };
+  return { kind: 'pod_terminal', name: podTerminalName };
 }
 
 function leftPodTerminal(container: any): boolean {
