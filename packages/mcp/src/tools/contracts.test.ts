@@ -452,6 +452,8 @@ describe('MCP tool contracts', () => {
       name: 'Chicago',
     });
     expect(result.rail.pod_rail_departed_at).toBe('2025-01-04T00:00:00Z');
+    expect(result.rail.access).toBe('included');
+    expect(result.rail.upgrade).toBeNull();
     expect(result.rail.destination_rail_unloaded_at).toBe(
       '2025-01-09T00:00:00Z',
     );
@@ -464,6 +466,24 @@ describe('MCP tool contracts', () => {
       '11/11/2024, 10:00 AM GMT+7',
     );
     expect(result.shipment?.pod_ata_at).toBe('2025-01-01T00:00:00Z');
+  });
+
+  it('get_container says rail data is not on the plan when the API withholds the rail keys', async () => {
+    const rawContainer = buildContainerRaw('container-no-rail');
+    const attrs = rawContainer.data.attributes as any;
+    for (const key of ['pod_rail_loaded_at', 'pod_rail_departed_at', 'ind_rail_unloaded_at']) delete attrs[key];
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({ raw: rawContainer, mapped: {} }),
+      },
+    });
+
+    const result = await executeGetContainer({ id: 'container-no-rail' }, client);
+
+    expect(result.rail.access).toBe('not_on_plan');
+    expect(result.rail.pod_rail_departed_at).toBeNull();
+    expect(result.rail.upgrade?.product).toBe('Rail Data');
+    expect(result.rail.upgrade?.learn_more_url).toMatch(/^https:\/\//);
   });
 
   it('get_container augments the default includes instead of replacing them', async () => {

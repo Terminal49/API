@@ -129,6 +129,10 @@ export const containerStatusSchema = z.object({
     destination_rail_unloaded_at: z.string().nullable(),
     destination_eta: z.string().nullable(),
     destination_ata: z.string().nullable(),
+    access: z.enum(['included', 'not_on_plan']),
+    upgrade: z
+      .object({ product: z.string(), note: z.string(), learn_more_url: z.string() })
+      .nullable(),
   }),
   shipment: z
     .object({
@@ -390,6 +394,7 @@ function formatContainerResponse(
       destination_rail_unloaded_at: container.ind_rail_unloaded_at ?? null,
       destination_eta: container.ind_eta_at ?? null,
       destination_ata: container.ind_ata_at ?? null,
+      ...railAccess(container),
     },
     shipment: shipment
       ? {
@@ -522,6 +527,29 @@ function currentPlace(
   }
   if (!container.pod_arrived_at) return { kind: 'before_pod', name: null };
   return { kind: 'pod_terminal', name: podTerminalName };
+}
+
+// The API omits rail milestone keys (not null, absent) when the shipment's
+// account lacks Rail Data, so absent keys mean "not on plan", not "no rail move".
+const RAIL_DATA_URL =
+  'https://www.terminal49.com/blog/launching-north-american-intermodal-rail-visibility-on-terminal49/';
+
+function railAccess(container: any): {
+  access: 'included' | 'not_on_plan';
+  upgrade: { product: string; note: string; learn_more_url: string } | null;
+} {
+  if ('pod_rail_departed_at' in container) return { access: 'included', upgrade: null };
+  return {
+    access: 'not_on_plan',
+    upgrade: {
+      product: 'Rail Data',
+      note:
+        'Rail milestones (rail loaded, departed, unloaded at the inland destination) are not on this ' +
+        "account's plan, so null rail fields here do not mean the container has no rail move. " +
+        'Rail Data is an add-on; the account can ask its Terminal49 contact or support to enable it.',
+      learn_more_url: RAIL_DATA_URL,
+    },
+  };
 }
 
 function leftPodTerminal(container: any): boolean {
