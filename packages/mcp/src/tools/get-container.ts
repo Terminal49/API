@@ -143,6 +143,7 @@ export const containerStatusSchema = z.object({
         product: z.string(),
         note: z.string(),
         learn_more_url: z.string(),
+        book_demo_url: z.string(),
       })
       .nullable(),
   }),
@@ -533,12 +534,18 @@ function currentPlace(
 
 // The API omits rail milestone keys (not null, absent) when the shipment's
 // account lacks Rail Data, so absent keys mean "not on plan", not "no rail move".
-const RAIL_DATA_URL =
-  'https://www.terminal49.com/blog/launching-north-american-intermodal-rail-visibility-on-terminal49/';
+// Same links as the dashboard's rail upsell (tnt-ui components/rail-upsell).
+const RAIL_DATA_URL = 'https://terminal49.com/rail/';
+const RAIL_DEMO_URL = 'https://content.terminal49.com/meetings/t49/rail';
 
 function railAccess(container: any): {
   access: 'included' | 'not_on_plan';
-  upgrade: { product: string; note: string; learn_more_url: string } | null;
+  upgrade: {
+    product: string;
+    note: string;
+    learn_more_url: string;
+    book_demo_url: string;
+  } | null;
 } {
   if ('pod_rail_departed_at' in container)
     return { access: 'included', upgrade: null };
@@ -549,8 +556,9 @@ function railAccess(container: any): {
       note:
         'Rail milestones (rail loaded, departed, unloaded at the inland destination) are not on this ' +
         "account's plan, so null rail fields here do not mean the container has no rail move. " +
-        'Rail Data is an add-on; the account can ask its Terminal49 contact or support to enable it.',
+        'Rail Data is an add-on: offer learn_more_url to read about it and book_demo_url to talk to Terminal49 about adding it.',
       learn_more_url: RAIL_DATA_URL,
+      book_demo_url: RAIL_DEMO_URL,
     },
   };
 }

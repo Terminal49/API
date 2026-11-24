@@ -494,6 +494,7 @@ describe('MCP tool contracts', () => {
     expect(result.rail.pod_rail_departed_at).toBeNull();
     expect(result.rail.upgrade?.product).toBe('Rail Data');
     expect(result.rail.upgrade?.learn_more_url).toMatch(/^https:\/\//);
+    expect(result.rail.upgrade?.book_demo_url).toMatch(/^https:\/\//);
   });
 
   it('get_container augments the default includes instead of replacing them', async () => {
