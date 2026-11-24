@@ -417,6 +417,49 @@ describe('MCP tool contracts', () => {
     expect(result._metadata.derived_lifecycle).toBe('discharged');
   });
 
+  it('get_container states where a railed container is, and when its shipment sailed', async () => {
+    const rawContainer = buildContainerRaw('container-railed');
+    Object.assign(rawContainer.data.attributes as any, {
+      current_status: 'grounded',
+      location_at_pod_terminal: 'YARD',
+      pod_rail_loaded_at: '2025-01-03T00:00:00Z',
+      pod_rail_departed_at: '2025-01-04T00:00:00Z',
+      ind_rail_unloaded_at: '2025-01-09T00:00:00Z',
+      terminal_checked_at: null,
+    });
+    Object.assign(rawContainer.included[0]!.attributes as any, {
+      pol_atd_at: '2024-11-11T03:00:00Z',
+      pol_timezone: 'Asia/Ho_Chi_Minh',
+      pod_ata_at: '2025-01-01T00:00:00Z',
+    });
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({ raw: rawContainer, mapped: {} }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-railed' },
+      client,
+    );
+
+    // The POD yard slot is not where a container is after it railed out.
+    expect(result.location.current_location).toBeNull();
+    expect(result.rail.pod_rail_departed_at).toBe('2025-01-04T00:00:00Z');
+    expect(result.rail.destination_rail_unloaded_at).toBe(
+      '2025-01-09T00:00:00Z',
+    );
+    // An authoritative status comes without a second, heuristic one.
+    expect(result._metadata).not.toHaveProperty('derived_lifecycle');
+    expect(result._metadata).not.toHaveProperty('container_state');
+    expect(result.demurrage.urgency_reason).not.toMatch(/never been checked/);
+    expect(result.shipment?.pol_atd_at).toBe('2024-11-11T03:00:00Z');
+    expect(result.shipment?.pol_atd_at_local).toBe(
+      '11/11/2024, 10:00 AM GMT+7',
+    );
+    expect(result.shipment?.pod_ata_at).toBe('2025-01-01T00:00:00Z');
+  });
+
   it('get_container augments the default includes instead of replacing them', async () => {
     const get = vi.fn().mockResolvedValue({
       raw: buildContainerRaw('container-augment'),

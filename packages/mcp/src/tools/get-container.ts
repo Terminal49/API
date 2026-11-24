@@ -114,6 +114,8 @@ export const containerStatusSchema = z.object({
   rail: z.object({
     pod_rail_carrier: z.string().nullable(),
     pod_rail_loaded_at: z.string().nullable(),
+    pod_rail_departed_at: z.string().nullable(),
+    destination_rail_unloaded_at: z.string().nullable(),
     destination_eta: z.string().nullable(),
     destination_ata: z.string().nullable(),
   }),
@@ -127,6 +129,13 @@ export const containerStatusSchema = z.object({
       port_of_lading_name: apiString,
       port_of_discharge_name: apiString,
       destination_name: apiString,
+      pol_etd_at: z.string().nullable(),
+      pol_atd_at: z.string().nullable(),
+      pol_atd_at_local: z.string(),
+      pod_eta_at: z.string().nullable(),
+      pod_ata_at: z.string().nullable(),
+      pod_vessel_name: apiString,
+      pod_voyage_number: apiString,
       line_tracking_stopped_at: z.string().nullable(),
     })
     .nullable(),
@@ -151,9 +160,11 @@ export const containerStatusSchema = z.object({
     .optional(),
   created_at: apiString,
   _metadata: z.object({
-    container_state: z.string(),
     status_is_authoritative: z.boolean(),
-    derived_lifecycle: z.string(),
+    // Present only when `status` itself is derived; next to an authoritative
+    // status the heuristic read as a second, conflicting status.
+    container_state: z.string().optional(),
+    derived_lifecycle: z.string().optional(),
     includes_loaded: z.array(z.string()),
   }),
 });
@@ -314,7 +325,11 @@ function formatContainerResponse(
           : null,
     },
     location: {
-      current_location: container.location_at_pod_terminal ?? null,
+      // The yard slot at the POD terminal; once the container leaves that
+      // terminal (pickup or rail departure) it no longer says where it is.
+      current_location: leftPodTerminal(container)
+        ? null
+        : (container.location_at_pod_terminal ?? null),
       available_for_pickup: container.available_for_pickup ?? null,
       availability_known: container.availability_known ?? null,
       pod_arrived_at: container.pod_arrived_at ?? null,
@@ -348,6 +363,8 @@ function formatContainerResponse(
     rail: {
       pod_rail_carrier: container.pod_rail_carrier_scac ?? null,
       pod_rail_loaded_at: container.pod_rail_loaded_at ?? null,
+      pod_rail_departed_at: container.pod_rail_departed_at ?? null,
+      destination_rail_unloaded_at: container.ind_rail_unloaded_at ?? null,
       destination_eta: container.ind_eta_at ?? null,
       destination_ata: container.ind_ata_at ?? null,
     },
@@ -360,6 +377,16 @@ function formatContainerResponse(
           port_of_lading_name: shipment.attributes?.port_of_lading_name,
           port_of_discharge_name: shipment.attributes?.port_of_discharge_name,
           destination_name: shipment.attributes?.destination_name,
+          pol_etd_at: shipment.attributes?.pol_etd_at ?? null,
+          pol_atd_at: shipment.attributes?.pol_atd_at ?? null,
+          pol_atd_at_local: formatInZone(
+            shipment.attributes?.pol_atd_at,
+            shipment.attributes?.pol_timezone ?? null,
+          ),
+          pod_eta_at: shipment.attributes?.pod_eta_at ?? null,
+          pod_ata_at: shipment.attributes?.pod_ata_at ?? null,
+          pod_vessel_name: shipment.attributes?.pod_vessel_name,
+          pod_voyage_number: shipment.attributes?.pod_voyage_number,
           line_tracking_stopped_at:
             shipment.attributes?.line_tracking_stopped_at ?? null,
         }
@@ -444,12 +471,18 @@ function generateMetadata(
   statusResult: ContainerStatusResult,
   includes: string[],
 ): ContainerStatus['_metadata'] {
+  const authoritative = statusResult.status_source === 'current_status';
   const lifecycle = statusResult.derived_lifecycle;
 
   return {
-    container_state: lifecycle,
-    status_is_authoritative: statusResult.status_source === 'current_status',
-    derived_lifecycle: lifecycle,
+    status_is_authoritative: authoritative,
+    ...(authoritative
+      ? {}
+      : { container_state: lifecycle, derived_lifecycle: lifecycle }),
     includes_loaded: includes,
   };
+}
+
+function leftPodTerminal(container: any): boolean {
+  return Boolean(container.pod_full_out_at || container.pod_rail_departed_at);
 }
