@@ -60,6 +60,37 @@ describe('summarize_containers', () => {
     );
   });
 
+  it('keys status groups and the status filter by the dashboard label', async () => {
+    const { client, summaryFn } = fakeClient({
+      groups: [
+        { key: 'grounded', label: 'grounded', count: 7 },
+        { key: 'off_dock', label: 'off_dock', count: 2 },
+        { key: null, label: null, count: 1 },
+      ],
+      total: 10,
+      truncated: false,
+    });
+    const result = await executeSummarizeContainers(
+      { group_by: 'current_status', current_status: 'At Terminal,off_dock' },
+      client,
+    );
+    expect((summaryFn.mock.calls[0] as any)[1]).toMatchObject({
+      current_status: 'grounded,off_dock',
+    });
+    expect(result.groups).toEqual([
+      { key: 'At Terminal', label: 'At Terminal', count: 7 },
+      {
+        key: 'Available at Shippers',
+        label: 'Available at Shippers',
+        count: 2,
+      },
+      { key: null, label: null, count: 1 },
+    ]);
+    expect(result.applied_filters.current_status).toBe(
+      'At Terminal,Available at Shippers',
+    );
+  });
+
   it('passes truncation through', async () => {
     const { client } = fakeClient({ groups: [], total: 9000, truncated: true });
     const result = await executeSummarizeContainers(

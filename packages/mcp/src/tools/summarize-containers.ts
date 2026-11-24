@@ -12,7 +12,9 @@ import { logMcpEvent } from '../logging.js';
 import {
   containerListInputSchema,
   getContainerFilters,
+  labelStatusFilter,
 } from './list-filters.js';
+import { statusLabel } from '../lib/container-status.js';
 
 export const GROUP_BY = [
   'pod_terminal',
@@ -78,8 +80,11 @@ export async function executeSummarizeContainers(
       total: summary.total,
       group_by: groupBy,
       truncated: summary.truncated,
-      groups: summary.groups,
-      applied_filters: filters,
+      groups:
+        groupBy === 'current_status'
+          ? summary.groups.map(labelStatusGroup)
+          : summary.groups,
+      applied_filters: labelStatusFilter(filters),
     };
   } catch (error) {
     logMcpEvent({
@@ -91,4 +96,12 @@ export async function executeSummarizeContainers(
     });
     throw error;
   }
+}
+
+type SummaryGroup = { key: string | null; label: string | null; count: number };
+
+/** Status groups are keyed and labeled by the dashboard label. */
+function labelStatusGroup(group: SummaryGroup): SummaryGroup {
+  const label = statusLabel(group.key);
+  return { ...group, key: label, label };
 }

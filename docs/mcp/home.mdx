@@ -213,7 +213,6 @@ Find containers by container number, BL, booking, or your own reference. This is
     {
       "id": "abc-123-uuid",
       "container_number": "MSKU4330011",
-      "status": "unknown",
       "shipping_line": "MAEU"
     }
   ],
@@ -237,7 +236,7 @@ Find containers by container number, BL, booking, or your own reference. This is
 }
 ```
 
-`total_results` counts containers, shipments, and tracking requests. The search API returns no status for a container hit, so `status` is `unknown`. Use `get_container` for the current status. `pod_terminal`, `pol_terminal`, and `destination` appear only when the search API returns them. Only a request whose tracking was stopped (status `tracking_stopped`) has `shipment_id`. A failed request has `failed_reason`. `not_found` and `invalid_number` mean the carrier rejected the number, so check the number and carrier before you track it again. `retries_exhausted` and `expired` can succeed on a later request with the same values. `duplicate` means the shipment already exists. See [failed reasons](/api-docs/in-depth-guides/tracking-request-lifecycle#permanent-reasons) for the full list. Requests that succeeded (status `created`) never appear in `tracking_requests`. Search returns the tracked container under `containers`, or the tracked shipment under `shipments` for a bill of lading or booking number. A tracking request whose number matches a returned shipment's number is left out.
+`total_results` counts containers, shipments, and tracking requests. The search API returns no status for a container hit, so `status` is left out. Use `get_container` for the current status. `pod_terminal`, `pol_terminal`, and `destination` appear only when the search API returns them. Only a request whose tracking was stopped (status `tracking_stopped`) has `shipment_id`. A failed request has `failed_reason`. `not_found` and `invalid_number` mean the carrier rejected the number, so check the number and carrier before you track it again. `retries_exhausted` and `expired` can succeed on a later request with the same values. `duplicate` means the shipment already exists. See [failed reasons](/api-docs/in-depth-guides/tracking-request-lifecycle#permanent-reasons) for the full list. Requests that succeeded (status `created`) never appear in `tracking_requests`. Search returns the tracked container under `containers`, or the tracked shipment under `shipments` for a bill of lading or booking number. A tracking request whose number matches a returned shipment's number is left out.
 </Accordion>
 
 **Good for**
@@ -330,7 +329,7 @@ The response may also include `_metadata` with factual details such as `includes
 {
   "id": "abc-123-uuid",
   "container_number": "CAIU1234567",
-  "status": "available",
+  "status": "Available",
   "status_source": "current_status",
   "equipment": {
     "type": "dry",
@@ -392,9 +391,7 @@ The response may also include `_metadata` with factual details such as `includes
   "custom_fields": null,
   "created_at": "2026-09-01T12:00:00Z",
   "_metadata": {
-    "container_state": "available_for_pickup",
     "status_is_authoritative": true,
-    "derived_lifecycle": "available_for_pickup",
     "includes_loaded": [
       "shipment",
       "pod_terminal"
@@ -520,7 +517,7 @@ Use the typed `advanced_filters` object for the full container filter catalog. U
 **Parameters**
 
 - `number` *(string or string[], optional)* - exact container number. Comma-separated numbers match any; arrays require all.
-- `current_status` *(string or string[], optional)* - container status from the schema's finite vocabulary.
+- `current_status` *(string or string[], optional)* - container status as the dashboard shows it, such as `At Terminal` or `Available`. Case does not matter. The API status codes, such as `grounded`, are still accepted.
 - `pod_code` *(string or string[], optional)* - Port of Discharge UN/LOCODE.
 - `pol_code` *(string or string[], optional)* - Port of Lading UN/LOCODE.
 - `shipping_line_scac` *(string or string[], optional)* - carrier Standard Carrier Alpha Code.
@@ -557,7 +554,7 @@ Count containers grouped by one dimension, using the same filters as `list_conta
 **Parameters**
 
 - The filters accepted by `list_containers` (including `advanced_filters` and `include_stopped_tracking`).
-- `group_by` *(string, required)* - `pod_terminal`, `current_status`, `shipping_line`, `port_of_discharge`, `hold_type`, `pickup_lfd_date` or `pod_arrival_date`.
+- `group_by` *(string, required)* - `pod_terminal`, `current_status`, `shipping_line`, `port_of_discharge`, `hold_type`, `pickup_lfd_date` or `pod_arrival_date`. `current_status` groups are keyed by the dashboard status label.
 
 Counts come from `GET /v2/containers/summary` in one request. `hold_type` counts each distinct current POD hold name, including pending holds, so a container with two holds counts twice; dates follow dashboard display timezones, falling back to UTC when missing or invalid. Groups are ordered by count and capped at 200; `truncated` is true when there are more.
 

@@ -83,8 +83,7 @@ function resolveSideloadedShipment(rawResult: any): any {
 }
 
 function generateSummary(id: string, container: any, shipment?: any): string {
-  // Headline status comes from the API current_status (shared resolver), ending
-  // the divergence between this resource and the get_container tool.
+  // Same dashboard label as the get_container tool.
   const { status } = resolveContainerStatus(container);
   const podTimezone: string | null = container.pod_timezone ?? null;
   const railSection = container.pod_rail_carrier_scac

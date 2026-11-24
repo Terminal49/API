@@ -66,7 +66,7 @@ get_container({
 ```
 
 **Returns**:
-- Core container data (status, equipment, location)
+- Core container data (status, equipment, location). `status` is the dashboard label, such as `At Terminal`. `status_source` is `derived` when Terminal49 has no status and it was worked out from the milestones.
 - Demurrage info (LFD, holds, fees)
 - Rail tracking (if applicable)
 - Shipment context
@@ -79,7 +79,6 @@ get_container({
 ```json
 {
   "_metadata": {
-    "container_state": "at_terminal",
     "includes_loaded": ["shipment"],
     "can_answer": ["availability status", "demurrage/LFD", ...],
     "needs_more_data_for": ["journey timeline → include: ['transport_events']"],
@@ -214,7 +213,7 @@ list_shipments({
 **Usage**:
 ```typescript
 list_containers({
-  current_status: "available",
+  current_status: "Available",
   pod_code: "USLAX",
   shipping_line_scac: "MAEU",
   include: ["shipment", "pod_terminal"]
@@ -712,7 +711,7 @@ update_record({ ...sameArguments, confirmation_token: "t49ct1...." })
 
 ### User asks: "Where is container CAIU1234567?"
 → Use `get_container` with default includes
-→ Check `container_state` and present location
+→ Check `status` (the dashboard label) and present location
 
 ### User asks: "Show me the journey of CAIU1234567"
 → Use `get_container`: `events.timeline` has every event
@@ -760,15 +759,15 @@ update_record({ ...sameArguments, confirmation_token: "t49ct1...." })
 
 ## Lifecycle State Handling
 
-The `get_container` tool automatically detects container state and provides guidance:
+Every tool shows container statuses as the dashboard labels, never the API codes:
 
-| State | Relevant Data | Presentation Focus |
+| Status | Relevant Data | Presentation Focus |
 |-------|---------------|-------------------|
-| **in_transit** | ETA, vessel, route | When arriving, where going |
-| **arrived** | Arrival time, discharge status | When will discharge |
-| **at_terminal** | Availability, LFD, holds, location | Can I pick up? Any issues? |
-| **on_rail** | Rail carrier, destination ETA | Where going, when arriving |
-| **delivered** | Delivery time, full journey | Summary of complete trip |
+| **On Ship** | ETA, vessel, route | When arriving, where going |
+| **At Terminal**, **Available**, **Not available** | Availability, LFD, holds, location | Can I pick up? Any issues? |
+| **Available at Shippers** | Off-dock yard, LFD | The terminal moved the container to an off-dock yard outside it, where it waits for pickup |
+| **On Rail** | Rail carrier, destination ETA | Where going, when arriving |
+| **Delivered** | Delivery time, full journey | Summary of complete trip |
 
 ---
 
@@ -787,7 +786,7 @@ get_container({ id: "abc-123" })
 **Step 2**: LLM reads metadata
 ```json
 {
-  "container_state": "delivered",
+  "status": "Delivered",
   "suggestions": {
     "recommended_follow_up": "transport_events"
   }
@@ -850,7 +849,7 @@ get_container({ id: "abc-123" })
 ```
 1. User: "Status of CAIU1234567?"
 2. LLM: get_container(id)
-3. Response includes state="at_terminal", presentation_guidance
+3. Response includes status "Available"
 4. LLM: "Container is at WBCT Terminal, available for pickup. LFD is in 5 days."
 ```
 

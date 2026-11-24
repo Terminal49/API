@@ -40,7 +40,7 @@ describe('compact container rows', () => {
     expect(row).toEqual({
       id: 'MSCU1234567',
       number: 'MSCU1234567',
-      status: 'available',
+      status: 'Available',
       available_for_pickup: true,
       pod_terminal: 'APM Terminals',
       pickup_lfd: '2026-10-08T00:00:00Z',

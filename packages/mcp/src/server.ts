@@ -1436,7 +1436,7 @@ export function createTerminal49McpServer(
           'booking number, bill of lading, or reference number. Returns matching private-account containers, shipments, and tracking requests. Only a request whose tracking was stopped (status tracking_stopped) carries shipment_id. Succeeded requests appear as their container or shipment, and a request whose number matches a returned shipment is omitted. ' +
           'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
           'Pass exactly one identifier, never a user message or conversation history. ' +
-          'Examples: CAIU2885402, MAEU123456789, or a customer reference number. The result has containers (id, container_number, status, shipping_line, terminals), shipments (id, ref_numbers, shipping_line, container_count), tracking_requests (id, request_number, status, failed_reason, scac), and total_results.',
+          'Examples: CAIU2885402, MAEU123456789, or a customer reference number. The result has containers (id, container_number, status when known, shipping_line, terminals), shipments (id, ref_numbers, shipping_line, container_count), tracking_requests (id, request_number, status of the request, failed_reason, scac), and total_results. A container status is the dashboard label, such as At Terminal; use get_container when it is missing.',
         inputSchema: z.object({
           query: z
             .string()
@@ -1452,7 +1452,12 @@ export function createTerminal49McpServer(
             z.object({
               id: z.string(),
               container_number: z.string(),
-              status: z.string(),
+              status: z
+                .string()
+                .optional()
+                .describe(
+                  'Container status as the dashboard shows it, such as At Terminal.',
+                ),
               shipping_line: z.string(),
               pod_terminal: z.string().optional(),
               pol_terminal: z.string().optional(),
@@ -1472,7 +1477,11 @@ export function createTerminal49McpServer(
             z.object({
               id: z.string(),
               request_number: z.string(),
-              status: z.string(),
+              status: z
+                .string()
+                .describe(
+                  'Tracking request status, such as pending or failed. Not a container status.',
+                ),
               failed_reason: z.string().optional(),
               scac: z.string().optional(),
               shipment_id: z.string().optional(),
@@ -1602,7 +1611,7 @@ export function createTerminal49McpServer(
           'Get container information with flexible data loading. Returns core container data (status, location, equipment, dates) ' +
           'plus its shipment, terminal and every transport event (events.timeline), so one call answers status, ETA and history questions. ' +
           'Carriers report several ETAs: the current one is the estimate with the latest reported_at, not the latest date. ' +
-          'The result has status and status_source, equipment, location (current location, availability, POD arrival and discharge times), demurrage (last free days, fees, holds, urgency, days_until_lfd), rail, shipment, pod_terminal, events (count, rail_events_count, timeline), and the custom_fields or party_roles you asked for.',
+          'The result has status (as the dashboard shows it, such as At Terminal) and status_source, equipment, location (current location, availability, POD arrival and discharge times), demurrage (last free days, fees, holds, urgency, days_until_lfd), rail, shipment, pod_terminal, events (count, rail_events_count, timeline), and the custom_fields or party_roles you asked for.',
         inputSchema: z.object({
           id: z
             .string()
@@ -1771,7 +1780,7 @@ export function createTerminal49McpServer(
         description:
           'Return one requested page of containers using common status, port, carrier, milestone, hold and fee filters, or advanced_filters for the confirmed public API catalog. Page size is capped at 25. ' +
           'Like the dashboard, only actively tracked containers are returned unless include_stopped_tracking is true (use it for history such as pickups or dwell over a past period). ' +
-          'Use the dashboard definitions and report meta.total for that set before any narrowing: ready for pickup = current_status available; at risk of demurrage or needs attention = requires_attention true with sort attention_priority (the Containers at Risk view); discharged but not picked up = current_status available,not_available,grounded,awaiting_inland_transfer. ' +
+          'Use the dashboard definitions and report meta.total for that set before any narrowing: ready for pickup = current_status Available; at risk of demurrage or needs attention = requires_attention true with sort attention_priority (the Containers at Risk view); discharged but not picked up = current_status "Available,Not available,At Terminal,Awaiting Inland Transfer". Row status values are the dashboard labels. ' +
           'Add extra conditions such as LFD windows, fees or holds only when the user asks, and present them as a subset of that total. ' +
           'Use schema values and resolve UUIDs from authorized records. If links.next exists, results are partial: continue with the same filters and sort and the next page. A last page does not mean earlier pages were retrieved. Use get_container with a returned UUID for a detailed snapshot. The result has items (one row per container), links, meta (with total), and _metadata (applied_filters, sort, page, page_size, has_more, next_page). Do not pass conversation text into filters.',
         inputSchema: z.preprocess(stripLegacyIntent, containerListInputSchema),
@@ -1792,7 +1801,7 @@ export function createTerminal49McpServer(
     summarize_containers: tool(
       {
         description:
-          'Count containers grouped by POD terminal, status, shipping line, port of discharge, hold type, LFD date or POD arrival date, using the same filters as list_containers. ' +
+          'Count containers grouped by POD terminal, status (keyed by the dashboard label, such as At Terminal), shipping line, port of discharge, hold type, LFD date or POD arrival date, using the same filters as list_containers. ' +
           'Use it for "how many" and "break down by" questions; use list_containers for "which ones". ' +
           'Like the dashboard, only actively tracked containers are counted unless include_stopped_tracking is true. ' +
           'hold_type counts each distinct current POD hold name, including pending holds, so a container with two holds counts twice; dates follow dashboard display timezones, falling back to UTC when missing or invalid. A null key means the container has no value (no hold, no LFD, no arrival). ' +

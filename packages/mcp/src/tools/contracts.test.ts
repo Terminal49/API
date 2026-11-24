@@ -177,7 +177,7 @@ describe('MCP tool contracts', () => {
     });
   });
 
-  it('search_container prioritizes full_out over discharged/arrived status', async () => {
+  it('search_container shows the dashboard label of a container current_status', async () => {
     const client = asClient({
       search: vi.fn().mockResolvedValue({
         data: [
@@ -187,6 +187,7 @@ describe('MCP tool contracts', () => {
             attributes: {
               number: 'TIIU1234567',
               shipping_line_name: 'MSCU',
+              current_status: 'grounded',
               pod_full_out_at: '2026-02-17T01:00:00Z',
               pod_discharged_at: '2026-02-16T01:00:00Z',
               pod_arrived_at: '2026-02-15T01:00:00Z',
@@ -203,7 +204,7 @@ describe('MCP tool contracts', () => {
 
     expect(result.containers[0]).toMatchObject({
       id: 'container-legacy-1',
-      status: 'full_out',
+      status: 'At Terminal',
     });
   });
 
@@ -381,13 +382,13 @@ describe('MCP tool contracts', () => {
       client,
     );
 
-    // Headline status is the API value verbatim, not a re-derived label.
-    expect(result.status).toBe('grounded');
+    // The dashboard label of the API status, never the code.
+    expect(result.status).toBe('At Terminal');
     expect(result.status_source).toBe('current_status');
     expect(result._metadata.status_is_authoritative).toBe(true);
   });
 
-  it('get_container derives a discharged lifecycle only as steering metadata when API status is absent', async () => {
+  it('get_container derives a dashboard label when the API status is absent', async () => {
     const rawContainer = buildContainerRaw('container-discharged');
     delete (rawContainer.data.attributes as any).current_status;
     rawContainer.data.attributes.available_for_pickup = false;
@@ -412,9 +413,10 @@ describe('MCP tool contracts', () => {
       client,
     );
 
-    expect(result.status).toBe('discharged');
+    expect(result.status).toBe('Not available');
     expect(result.status_source).toBe('derived');
-    expect(result._metadata.derived_lifecycle).toBe('discharged');
+    expect(result._metadata.status_is_authoritative).toBe(false);
+    expect(result._metadata).not.toHaveProperty('derived_lifecycle');
   });
 
   it('get_container states where a railed container is, and when its shipment sailed', async () => {
@@ -471,14 +473,22 @@ describe('MCP tool contracts', () => {
   it('get_container says rail data is not on the plan when the API withholds the rail keys', async () => {
     const rawContainer = buildContainerRaw('container-no-rail');
     const attrs = rawContainer.data.attributes as any;
-    for (const key of ['pod_rail_loaded_at', 'pod_rail_departed_at', 'ind_rail_unloaded_at']) delete attrs[key];
+    for (const key of [
+      'pod_rail_loaded_at',
+      'pod_rail_departed_at',
+      'ind_rail_unloaded_at',
+    ])
+      delete attrs[key];
     const client = asClient({
       containers: {
         get: vi.fn().mockResolvedValue({ raw: rawContainer, mapped: {} }),
       },
     });
 
-    const result = await executeGetContainer({ id: 'container-no-rail' }, client);
+    const result = await executeGetContainer(
+      { id: 'container-no-rail' },
+      client,
+    );
 
     expect(result.rail.access).toBe('not_on_plan');
     expect(result.rail.pod_rail_departed_at).toBeNull();
@@ -818,9 +828,9 @@ describe('MCP tool contracts', () => {
     expect(result.containers[0]).toMatchObject({
       id: 'sr-3',
       container_number: 'Unknown',
-      status: 'unknown',
       shipping_line: 'Unknown',
     });
+    expect(result.containers[0].status).toBeUndefined();
     expect(result.shipments[0]).toMatchObject({
       id: 'sr-4',
       ref_numbers: [],
@@ -1622,7 +1632,7 @@ describe('MCP tool contracts', () => {
     expect(result.total_lines).toBe(1);
   });
 
-  it('search_container derives a real status instead of returning "unknown" blindly', async () => {
+  it('search_container never invents a status from milestones', async () => {
     const client = asClient({
       search: vi.fn().mockResolvedValue({
         data: [
@@ -1647,8 +1657,7 @@ describe('MCP tool contracts', () => {
       client,
     );
 
-    expect(result.containers[0].status).not.toBe('unknown');
-    expect(result.containers[0].status).toBe('available_for_pickup');
+    expect(result.containers[0].status).toBeUndefined();
   });
 
   it('search_container disambiguates duplicate container numbers', async () => {

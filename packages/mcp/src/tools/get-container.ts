@@ -75,8 +75,16 @@ const terminalFeeSchema = z.looseObject({
 export const containerStatusSchema = z.object({
   id: z.string(),
   container_number: z.string(),
-  status: z.string(),
-  status_source: z.enum(['current_status', 'derived']),
+  status: z
+    .string()
+    .describe(
+      'Container status as the dashboard shows it, such as At Terminal.',
+    ),
+  status_source: z
+    .enum(['current_status', 'derived'])
+    .describe(
+      'derived when Terminal49 has no status for the container and it was worked out from the milestones.',
+    ),
   equipment: z.object({
     type: z.string().nullable(),
     length: z.number().nullable(),
@@ -131,7 +139,11 @@ export const containerStatusSchema = z.object({
     destination_ata: z.string().nullable(),
     access: z.enum(['included', 'not_on_plan']),
     upgrade: z
-      .object({ product: z.string(), note: z.string(), learn_more_url: z.string() })
+      .object({
+        product: z.string(),
+        note: z.string(),
+        learn_more_url: z.string(),
+      })
       .nullable(),
   }),
   shipment: z
@@ -176,10 +188,6 @@ export const containerStatusSchema = z.object({
   created_at: apiString,
   _metadata: z.object({
     status_is_authoritative: z.boolean(),
-    // Present only when `status` itself is derived; next to an authoritative
-    // status the heuristic read as a second, conflicting status.
-    container_state: z.string().optional(),
-    derived_lifecycle: z.string().optional(),
     includes_loaded: z.array(z.string()),
   }),
 });
@@ -499,14 +507,8 @@ function generateMetadata(
   statusResult: ContainerStatusResult,
   includes: string[],
 ): ContainerStatus['_metadata'] {
-  const authoritative = statusResult.status_source === 'current_status';
-  const lifecycle = statusResult.derived_lifecycle;
-
   return {
-    status_is_authoritative: authoritative,
-    ...(authoritative
-      ? {}
-      : { container_state: lifecycle, derived_lifecycle: lifecycle }),
+    status_is_authoritative: statusResult.status_source === 'current_status',
     includes_loaded: includes,
   };
 }
@@ -538,7 +540,8 @@ function railAccess(container: any): {
   access: 'included' | 'not_on_plan';
   upgrade: { product: string; note: string; learn_more_url: string } | null;
 } {
-  if ('pod_rail_departed_at' in container) return { access: 'included', upgrade: null };
+  if ('pod_rail_departed_at' in container)
+    return { access: 'included', upgrade: null };
   return {
     access: 'not_on_plan',
     upgrade: {

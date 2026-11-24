@@ -16,6 +16,12 @@ import {
   SHIPMENT_FILTER_GRAMMAR,
   CONTAINER_FILTER_GRAMMAR,
 } from '../generated/list-filter-schemas.js';
+import {
+  CONTAINER_STATUS_LABEL_LIST,
+  OFF_DOCK_EXPLANATION,
+  statusCode,
+  statusLabel,
+} from '../lib/container-status.js';
 export { SHIPMENT_FILTER_KEYS, CONTAINER_FILTER_KEYS };
 
 /**
@@ -51,6 +57,65 @@ const shipmentTop = <Key extends keyof typeof shipmentFilterShape & string>(
 const containerTop = <Key extends keyof typeof containerFilterShape & string>(
   key: Key,
 ) => topLevel(containerFilterShape, CONTAINER_FILTER_GRAMMAR, key);
+
+const PRESENCE_OPERATORS = new Set(['@exists', '@not_exists']);
+
+/** Maps each status in a filter value to its code; undefined if one is unknown. */
+function statusFilterToCodes(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (PRESENCE_OPERATORS.has(trimmed)) return trimmed;
+  const codes: string[] = [];
+  for (const part of trimmed.split(',')) {
+    const token = part.trim();
+    const exact = token.startsWith('=');
+    const code = statusCode(exact ? token.slice(1) : token);
+    if (!code) return undefined;
+    codes.push(exact ? `=${code}` : code);
+  }
+  return codes.join(',');
+}
+
+/** Maps each status code in a filter value to its dashboard label. */
+function statusFilterToLabels(value: string): string {
+  if (PRESENCE_OPERATORS.has(value)) return value;
+  return value
+    .split(',')
+    .map((token) =>
+      token.startsWith('=')
+        ? `=${statusLabel(token.slice(1))}`
+        : statusLabel(token),
+    )
+    .join(',');
+}
+
+const statusFilterValue = z
+  .string()
+  .refine((value) => statusFilterToCodes(value) !== undefined, {
+    message: `Unknown container status. Use one of: ${CONTAINER_STATUS_LABEL_LIST.join(', ')}.`,
+  });
+
+// Accepts the dashboard labels, and the API codes for older clients.
+const currentStatusFilter = z
+  .union([statusFilterValue, z.array(statusFilterValue).min(1)])
+  .describe(
+    `Container status as the dashboard shows it: ${CONTAINER_STATUS_LABEL_LIST.join(', ')}. Case does not matter. ${OFF_DOCK_EXPLANATION} Comma-separated statuses mean OR; arrays mean AND. Use @exists or @not_exists for presence.`,
+  )
+  .optional();
+
+const lastFreeDayOn = containerFilterShape.last_free_day_on.unwrap();
+
+const containerFiltersWithLabels = {
+  ...containerFilterShape,
+  current_status: currentStatusFilter,
+  last_free_day_on: lastFreeDayOn
+    .describe(
+      (lastFreeDayOn.description ?? '').replace(
+        'available/not_available/off_dock containers',
+        'Available, Not available and Available at Shippers containers',
+      ),
+    )
+    .optional(),
+};
 
 const paginationShape = {
   page: z
@@ -104,7 +169,7 @@ export const shipmentListInputSchema = z.strictObject({
 
 export const containerListInputSchema = z.strictObject({
   number: containerTop('number'),
-  current_status: containerTop('current_status'),
+  current_status: currentStatusFilter,
   pod_code: containerTop('pod_code'),
   pol_code: containerTop('pol_code'),
   shipping_line_scac: containerTop('shipping_line_scac'),
@@ -116,7 +181,7 @@ export const containerListInputSchema = z.strictObject({
   pickup_lfd: containerTop('pickup_lfd'),
   tags: containerTop('tags'),
   advanced_filters: z
-    .strictObject(containerFilterShape)
+    .strictObject(containerFiltersWithLabels)
     .describe(
       `All confirmed public container filters. Supply a filter here or at the top level, never both. Different filters combine with AND. Dynamic IDs and carrier codes must come from visible resources. ${FILTER_VALUE_GUIDE}`,
     )
@@ -200,10 +265,37 @@ export function getContainerFilters(
   args: ListContainersArgs,
 ): ContainerListFilters {
   const parsed = containerListInputSchema.parse(args);
+  const filters = canonicalFilters(parsed, CONTAINER_FILTER_KEYS);
+  if (filters.current_status !== undefined) {
+    filters.current_status = mapStatusFilter(
+      filters.current_status as string | string[],
+      (value) => statusFilterToCodes(value) ?? value,
+    );
+  }
   return withTrackingDefault(
-    canonicalFilters(parsed, CONTAINER_FILTER_KEYS),
+    filters,
     parsed.include_stopped_tracking,
   ) as ContainerListFilters;
+}
+
+function mapStatusFilter(
+  value: string | string[],
+  map: (value: string) => string,
+): string | string[] {
+  return Array.isArray(value) ? value.map(map) : map(value);
+}
+
+/** Applied filters with the status filter shown as dashboard labels. */
+export function labelStatusFilter<T extends object>(filters: T): T {
+  const status = (filters as Record<string, unknown>).current_status;
+  if (typeof status !== 'string' && !Array.isArray(status)) return filters;
+  return {
+    ...filters,
+    current_status: mapStatusFilter(
+      status as string | string[],
+      statusFilterToLabels,
+    ),
+  };
 }
 
 export const listResponseMetadataSchema = z.strictObject({
