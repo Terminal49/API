@@ -446,6 +446,7 @@ describe('MCP tool contracts', () => {
 
     // The POD yard slot is not where a container is after it railed out.
     expect(result.location.current_location).toBeNull();
+    expect(result.location.available_for_pickup).toBeNull();
     expect(result.location.current_place).toEqual({
       kind: 'inland_destination',
       name: 'Chicago',

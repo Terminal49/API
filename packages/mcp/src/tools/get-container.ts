@@ -289,6 +289,7 @@ function formatContainerResponse(
     ? formatEventsData(transportEvents, included)
     : undefined;
 
+  const leftPod = leftPodTerminal(container);
   const podTimezone: string | null = container.pod_timezone ?? null;
   // Compute the LFD countdown in terminal-local days so "N days until LFD" never
   // lands on the wrong calendar day near a UTC midnight boundary, then feed that
@@ -343,11 +344,17 @@ function formatContainerResponse(
       ),
       // The yard slot at the POD terminal; once the container leaves that
       // terminal (pickup or rail departure) it no longer says where it is.
-      current_location: leftPodTerminal(container)
+      current_location: leftPod
         ? null
         : (container.location_at_pod_terminal ?? null),
-      available_for_pickup: container.available_for_pickup ?? null,
-      availability_known: container.availability_known ?? null,
+      // POD terminal availability, so it describes nothing once the
+      // container left that terminal.
+      available_for_pickup: leftPod
+        ? null
+        : (container.available_for_pickup ?? null),
+      availability_known: leftPod
+        ? null
+        : (container.availability_known ?? null),
       pod_arrived_at: container.pod_arrived_at ?? null,
       pod_arrived_at_local: formatInZone(container.pod_arrived_at, podTimezone),
       pod_discharged_at: container.pod_discharged_at ?? null,
