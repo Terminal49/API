@@ -28,7 +28,7 @@ For example, call `list_containers` with these arguments to select actively trac
 
 ```json
 {
-  "current_status": "available",
+  "current_status": "Available",
   "pod_code": "USLAX",
   "has_holds": true,
   "actively_tracked": true,
@@ -57,7 +57,7 @@ Use your account's tag names. Comma-separated values and arrays have different s
 
 ## Choose valid values and combinations
 
-Container `current_status` and shipment `voyage_status` are different vocabularies. The tool schemas enumerate their accepted values. Use `voyage_status` values `arrived` or `on_ship` for shipments. Container states include `available`, `on_ship`, `on_rail`, `picked_up`, and `empty_returned`; use the schema for the full list.
+Container `current_status` and shipment `voyage_status` are different vocabularies. Use `voyage_status` values `arrived` or `on_ship` for shipments. Container statuses are the labels the dashboard shows: No Status, Loaded, On Ship, On Rail, At Terminal, Available, Not available, Awaiting Inland Transfer, Available at Shippers, Picked up, Dropped, Delivered, and Empty Returned. Case does not matter. Available at Shippers means the terminal moved the container to an off-dock yard outside the terminal, where it waits for pickup. The MCP tools also return container statuses as these labels. The API status codes, such as `grounded`, are still accepted in filters.
 
 Date-only filters compare stored calendar dates. Shipment `created_at` and `pod_eta_changed_at` require timestamps with `Z` or a timezone offset. For a local-port date question, query overlapping dates and refine using returned timestamps and the port timezone. See [date precision and combinations](/api-docs/in-depth-guides/filtering-shipments-and-containers).
 
