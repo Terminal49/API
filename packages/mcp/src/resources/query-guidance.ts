@@ -2,6 +2,11 @@
  * Query guidance resource for MCP clients and LLMs
  */
 
+import {
+  CONTAINER_STATUS_LABEL_LIST,
+  OFF_DOCK_EXPLANATION,
+} from '../lib/container-status.js';
+
 export const queryGuidanceResource = {
   uri: 'terminal49://docs/mcp-query-guidance',
   name: 'MCP Query Guidance',
@@ -74,6 +79,7 @@ export function readQueryGuidanceResource(): string {
     '### 7) Shipment list filtering',
     '- list_shipments supports common filters directly and all confirmed shipment filters in typed advanced_filters. Use voyage_status for arrived/on_ship; it is not a container lifecycle status.',
     '- list_containers supports current_status, pod_code, shipping_line_scac, holds, fees, dates, tags, and advanced_filters. Resolve carrier SCAC with get_supported_shipping_lines. Obtain account-visible IDs from authorized records; never invent UUIDs.',
+    `- Container statuses are the dashboard labels: ${CONTAINER_STATUS_LABEL_LIST.join(', ')}. Use them in current_status filters and when you answer. ${OFF_DOCK_EXPLANATION}`,
     '- Supply each filter at the top level or in advanced_filters, never both. Sort and pagination belong at the top level.',
     '- Container pod_eta_at, pod_ata_at, and custom_fields filters are unavailable. Reading custom-field values with detail tools is separate.',
     '',

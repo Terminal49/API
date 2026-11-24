@@ -115,7 +115,7 @@ The MCP server returns formatted container data:
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
   "container_number": "CAIU2885402",
-  "status": "available_for_pickup",
+  "status": "Available",
   "equipment": {
     "type": "40HC",
     "length": "40",
@@ -183,7 +183,7 @@ Claude formats this into a natural language response:
     {
       "id": "uuid",
       "container_number": "SLVU3015627",
-      "status": "available_for_pickup",
+      "status": "Available",
       "shipping_line": "CMA CGM",
       "pod_terminal": "APM Terminals",
       "destination": "Los Angeles"

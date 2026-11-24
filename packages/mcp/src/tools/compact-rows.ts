@@ -3,6 +3,8 @@
  * without the full attribute set the SDK maps (about 500 tokens a container).
  */
 
+import { statusLabel } from '../lib/container-status.js';
+
 type Hold = { name?: string; status?: string; description?: string };
 type Fee = {
   type?: string;
@@ -32,7 +34,7 @@ export function compactContainer(container: any) {
   const row = withoutEmpty({
     id: container?.id,
     number: container?.number,
-    status: container?.currentStatus ?? container?.status,
+    status: statusLabel(container?.currentStatus ?? container?.status),
     availability_known: container?.availabilityKnown,
     available_for_pickup: container?.location?.availableForPickup,
     pod_terminal: container?.terminals?.podTerminal?.name,

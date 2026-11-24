@@ -26,7 +26,12 @@ export const listDisplayColumnsResource = {
 
 const CONTAINER_LIST_COLUMNS: ListDisplayColumn[] = [
   { key: 'number', label: 'Container', path: 'number' },
-  { key: 'currentStatus', label: 'Status', path: 'currentStatus' },
+  {
+    key: 'currentStatus',
+    label: 'Status',
+    path: 'currentStatus',
+    description: 'Dashboard status label, such as At Terminal',
+  },
   { key: 'podDischargedAt', label: 'Discharged', path: 'podDischargedAt' },
   { key: 'podFullOutAt', label: 'Picked Up', path: 'podFullOutAt' },
   { key: 'availableForPickup', label: 'Ready', path: 'availableForPickup' },

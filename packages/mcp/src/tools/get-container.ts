@@ -75,8 +75,16 @@ const terminalFeeSchema = z.looseObject({
 export const containerStatusSchema = z.object({
   id: z.string(),
   container_number: z.string(),
-  status: z.string(),
-  status_source: z.enum(['current_status', 'derived']),
+  status: z
+    .string()
+    .describe(
+      'Container status as the dashboard shows it, such as At Terminal.',
+    ),
+  status_source: z
+    .enum(['current_status', 'derived'])
+    .describe(
+      'derived when Terminal49 has no status for the container and it was worked out from the milestones.',
+    ),
   equipment: z.object({
     type: z.string().nullable(),
     length: z.number().nullable(),
@@ -151,9 +159,7 @@ export const containerStatusSchema = z.object({
     .optional(),
   created_at: apiString,
   _metadata: z.object({
-    container_state: z.string(),
     status_is_authoritative: z.boolean(),
-    derived_lifecycle: z.string(),
     includes_loaded: z.array(z.string()),
   }),
 });
@@ -444,12 +450,8 @@ function generateMetadata(
   statusResult: ContainerStatusResult,
   includes: string[],
 ): ContainerStatus['_metadata'] {
-  const lifecycle = statusResult.derived_lifecycle;
-
   return {
-    container_state: lifecycle,
     status_is_authoritative: statusResult.status_source === 'current_status',
-    derived_lifecycle: lifecycle,
     includes_loaded: includes,
   };
 }

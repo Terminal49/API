@@ -1312,7 +1312,6 @@ describe('search_container', () => {
           {
             id: 'cargo-1',
             container_number: 'TSTU4330035',
-            status: 'unknown',
             shipping_line: 'HLCU',
           },
         ],

@@ -989,6 +989,8 @@ describe('MCP server wiring', () => {
         meta: { total: 42 },
         unsupportedFilters: [],
       },
+      // Full rows show the dashboard label in place of the status code.
+      expectedItem: { currentStatus: 'Available' },
     },
     {
       name: 'list_shipments',
@@ -1022,14 +1024,21 @@ describe('MCP server wiring', () => {
     },
   ])(
     '$name structured content validates with mapped list sidecars',
-    async ({ name, args, listMock, payload }) => {
+    async ({ name, args, listMock, payload, expectedItem }) => {
       listMock.mockResolvedValue(payload);
       const { client, handler } = await connectClientForToolCall();
 
       try {
         const result = await client.callTool({ name, arguments: args });
 
-        expect(result.structuredContent).toMatchObject(payload);
+        expect(result.structuredContent).toMatchObject(
+          expectedItem
+            ? {
+                ...payload,
+                items: [{ ...payload.items[0], ...expectedItem }],
+              }
+            : payload,
+        );
         expect(JSON.stringify(result)).not.toMatch(
           /_agent_steering|_response_contract|presentation_guidance|suggested_follow_ups|suggested_tools/,
         );
