@@ -6,6 +6,7 @@
 import { Terminal49Client } from '@terminal49/sdk';
 import { logMcpEvent } from '../logging.js';
 import { statusLabel } from '../lib/container-status.js';
+import { executeGetShipmentDetails } from './get-shipment-details.js';
 
 export interface SearchContainerArgs {
   query: string;
@@ -317,4 +318,231 @@ function formatShipment(
 /** The dashboard label of the container's current_status, if it has one. */
 function containerStatus(attrs: any): string | undefined {
   return statusLabel(toTextOrUndefined(attrs?.current_status)) ?? undefined;
+}
+
+/** The most identifiers one batch call resolves. */
+export const MAX_BATCH_QUERIES = 50;
+const BATCH_CONCURRENCY = 8;
+
+export interface SearchContainersArgs {
+  queries: string[];
+}
+
+/** How a batch input matched: the identifier itself, only by prefix, or nothing. */
+export type BatchMatch = 'exact' | 'partial' | 'not_found';
+
+export interface BatchShipment {
+  id: string;
+  bill_of_lading: string | null;
+  ref_numbers: string[];
+  shipping_line: string;
+  status: string;
+  container_numbers: string[];
+  port_of_discharge: {
+    name: string | null;
+    locode: string | null;
+    terminal: string | null;
+    eta: string | null;
+    ata: string | null;
+    timezone: string | null;
+  };
+}
+
+export interface BatchResult {
+  query: string;
+  match: BatchMatch;
+  containers: SearchResult['containers'];
+  shipments: BatchShipment[];
+  tracking_requests: SearchResult['tracking_requests'];
+}
+
+export interface SearchContainersResult {
+  results: BatchResult[];
+  total_results: number;
+}
+
+/** Case and whitespace never distinguish two identifiers; every other character does. */
+function normalizeIdentifier(value: string | null | undefined): string {
+  return (value ?? '').replace(/\s+/g, '').toUpperCase();
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const index = next++;
+        results[index] = await fn(items[index]);
+      }
+    }),
+  );
+  return results;
+}
+
+/**
+ * Resolves many identifiers in one call. Each runs the same search as
+ * search_container; matched shipments are fetched once each for status, POD
+ * and ETA, so a pasted list needs no per-number follow-up calls. A hit counts
+ * as exact only when its own number or a reference equals the input, so a
+ * prefix match (SO/7407-58 for SO/7407-5) is reported as partial.
+ */
+export async function executeSearchContainers(
+  args: SearchContainersArgs,
+  client: Terminal49Client,
+): Promise<SearchContainersResult> {
+  const queries = [
+    ...new Set(args.queries.map((query) => query.trim()).filter(Boolean)),
+  ];
+  if (queries.length === 0) {
+    throw new Error('At least one search query is required');
+  }
+  if (queries.length > MAX_BATCH_QUERIES) {
+    throw new Error(`Pass at most ${MAX_BATCH_QUERIES} identifiers per call`);
+  }
+
+  const startTime = Date.now();
+  logMcpEvent({
+    event: 'tool.execute.start',
+    tool: 'search_container',
+    query_count: queries.length,
+    timestamp: new Date().toISOString(),
+  });
+
+  try {
+    const searches = await mapWithConcurrency(
+      queries,
+      BATCH_CONCURRENCY,
+      async (query) => formatSearchResponse(await client.search(query)),
+    );
+
+    const shipmentIds = [
+      ...new Set(searches.flatMap((s) => s.shipments.map((sh) => sh.id))),
+    ];
+    const details = new Map<string, LoadedShipment>();
+    await mapWithConcurrency(shipmentIds, BATCH_CONCURRENCY, async (id) => {
+      const hit = searches
+        .flatMap((s) => s.shipments)
+        .find((sh) => sh.id === id)!;
+      details.set(id, await loadBatchShipment(hit, client));
+    });
+
+    const results = queries.map((query, index) =>
+      toBatchResult(query, searches[index], details),
+    );
+
+    logMcpEvent({
+      event: 'tool.execute.complete',
+      tool: 'search_container',
+      query_count: queries.length,
+      exact: results.filter((r) => r.match === 'exact').length,
+      partial: results.filter((r) => r.match === 'partial').length,
+      not_found: results.filter((r) => r.match === 'not_found').length,
+      duration_ms: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+
+    return {
+      results,
+      total_results: results.filter((r) => r.match !== 'not_found').length,
+    };
+  } catch (error) {
+    logMcpEvent({
+      event: 'tool.execute.error',
+      tool: 'search_container',
+      query_count: queries.length,
+      error: (error as Error).name,
+      message: (error as Error).message,
+      duration_ms: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+    throw error;
+  }
+}
+
+type LoadedShipment = BatchShipment & { normalized_number: string | null };
+
+function withoutNormalized({
+  normalized_number: _,
+  ...rest
+}: LoadedShipment): BatchShipment {
+  return rest;
+}
+
+async function loadBatchShipment(
+  hit: SearchResult['shipments'][0],
+  client: Terminal49Client,
+): Promise<LoadedShipment> {
+  const d = await executeGetShipmentDetails(
+    { id: hit.id, include_containers: true },
+    client,
+  );
+  const pod = d.routing.port_of_discharge;
+  return {
+    id: hit.id,
+    bill_of_lading: d.bill_of_lading ?? null,
+    normalized_number: d.normalized_number ?? null,
+    ref_numbers: toStringList(d.reference_numbers),
+    shipping_line: toText(d.shipping_line.scac ?? hit.shipping_line),
+    status: d.status,
+    container_numbers: (d.containers?.containers ?? [])
+      .map((c) => toTextOrUndefined(c.number))
+      .filter((n): n is string => Boolean(n)),
+    port_of_discharge: {
+      name: pod.name ?? null,
+      locode: pod.locode ?? null,
+      terminal: pod.terminal?.name ?? null,
+      eta: pod.eta ?? null,
+      ata: pod.ata ?? null,
+      timezone: pod.timezone ?? null,
+    },
+  };
+}
+
+function toBatchResult(
+  query: string,
+  search: SearchResult,
+  details: Map<string, LoadedShipment>,
+): BatchResult {
+  const target = normalizeIdentifier(query);
+  const loaded = search.shipments.map((hit) => details.get(hit.id)!);
+  const isExact = (...values: Array<string | null | undefined>) =>
+    values.some((value) => normalizeIdentifier(value) === target);
+
+  const exactContainers = search.containers.filter((c) =>
+    isExact(c.container_number),
+  );
+  const exactShipments = loaded
+    .filter((s) =>
+      isExact(s.bill_of_lading, s.normalized_number, ...s.ref_numbers),
+    )
+    .map(withoutNormalized);
+  const shipments = loaded.map(withoutNormalized);
+  const exactRequests = search.tracking_requests.filter((r) =>
+    isExact(r.request_number),
+  );
+  const exactCount =
+    exactContainers.length + exactShipments.length + exactRequests.length;
+
+  if (exactCount > 0) {
+    return {
+      query,
+      match: 'exact',
+      containers: exactContainers,
+      shipments: exactShipments,
+      tracking_requests: exactRequests,
+    };
+  }
+  const anyHit = search.total_results > 0;
+  return {
+    query,
+    match: anyHit ? 'partial' : 'not_found',
+    containers: search.containers,
+    shipments,
+    tracking_requests: search.tracking_requests,
+  };
 }

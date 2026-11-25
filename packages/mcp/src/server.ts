@@ -26,7 +26,11 @@ import {
   executeTrackContainer,
   TrackContainerError,
 } from './tools/track-container.js';
-import { executeSearchContainer } from './tools/search-container.js';
+import {
+  executeSearchContainer,
+  executeSearchContainers,
+  MAX_BATCH_QUERIES,
+} from './tools/search-container.js';
 import { httpStatus, ToolInputError } from './tools/soft-results.js';
 import {
   executeGetShipmentDetails,
@@ -1435,16 +1439,26 @@ export function createTerminal49McpServer(
           'Search for containers, shipments, and tracking information by container number, ' +
           'booking number, bill of lading, or reference number. Returns matching private-account containers, shipments, and tracking requests. Only a request whose tracking was stopped (status tracking_stopped) carries shipment_id. Succeeded requests appear as their container or shipment, and a request whose number matches a returned shipment is omitted. ' +
           'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
-          'Pass exactly one identifier, never a user message or conversation history. ' +
-          'Examples: CAIU2885402, MAEU123456789, or a customer reference number. The result has containers (id, container_number, status when known, shipping_line, terminals), shipments (id, ref_numbers, shipping_line, container_count), tracking_requests (id, request_number, status of the request, failed_reason, scac), and total_results. A container status is the dashboard label, such as At Terminal; use get_container when it is missing.',
+          'Pass one identifier as query, never a user message or conversation history. ' +
+          'Examples: CAIU2885402, MAEU123456789, or a customer reference number. The result has containers (id, container_number, status when known, shipping_line, terminals), shipments (id, ref_numbers, shipping_line, container_count), tracking_requests (id, request_number, status of the request, failed_reason, scac), and total_results. A container status is the dashboard label, such as At Terminal; use get_container when it is missing. ' +
+          `For two or more identifiers, pass them all in one call as queries (up to ${MAX_BATCH_QUERIES}) instead of calling once per identifier. A batch returns results: one row per input with match (exact; partial when only a longer identifier starts with it; not_found), and its containers, tracking_requests, and shipments with bill_of_lading, status, container_numbers and port_of_discharge (name, terminal, eta, ata, timezone), so no get_shipment_details call is needed for status, POD or ETA.`,
         inputSchema: z.object({
           query: z
             .string()
             .trim()
             .min(1)
             .max(128)
+            .optional()
             .describe(
-              'One container number, booking number, Bill of Lading number, or customer reference. Identifier only; never pass conversation text, a user message, or full history.',
+              'One container number, booking number, Bill of Lading number, or customer reference. Identifier only; never pass conversation text, a user message, or full history. Pass query or queries, not both.',
+            ),
+          queries: z
+            .array(z.string().trim().min(1).max(128))
+            .min(1)
+            .max(MAX_BATCH_QUERIES)
+            .optional()
+            .describe(
+              'Several identifiers (container, booking, Bill of Lading, or reference numbers), one per entry, resolved in one call.',
             ),
         }),
         outputSchema: z.object({
@@ -1488,9 +1502,55 @@ export function createTerminal49McpServer(
             }),
           ),
           total_results: z.number(),
+          results: z
+            .array(
+              z.object({
+                query: z.string(),
+                match: z.enum(['exact', 'partial', 'not_found']),
+                containers: z.array(z.record(z.string(), z.unknown())),
+                shipments: z.array(
+                  z.object({
+                    id: z.string(),
+                    bill_of_lading: z.string().nullable(),
+                    ref_numbers: z.array(z.string()),
+                    shipping_line: z.string(),
+                    status: z.string(),
+                    container_numbers: z.array(z.string()),
+                    port_of_discharge: z.object({
+                      name: z.string().nullable(),
+                      locode: z.string().nullable(),
+                      terminal: z.string().nullable(),
+                      eta: z.string().nullable(),
+                      ata: z.string().nullable(),
+                      timezone: z.string().nullable(),
+                    }),
+                  }),
+                ),
+                tracking_requests: z.array(z.record(z.string(), z.unknown())),
+              }),
+            )
+            .optional()
+            .describe('Batch calls only: one row per input identifier.'),
         }),
       },
-      async ({ query }) => executeSearchContainer({ query }, client),
+      async ({ query, queries }) => {
+        if (queries && query) {
+          throw new Error('Pass query or queries, not both');
+        }
+        if (queries) {
+          const batch = await executeSearchContainers({ queries }, client);
+          return {
+            containers: [],
+            shipments: [],
+            tracking_requests: [],
+            ...batch,
+          };
+        }
+        if (!query) {
+          throw new Error('Pass query or queries');
+        }
+        return executeSearchContainer({ query }, client);
+      },
     ),
     track_container: tool(
       {
