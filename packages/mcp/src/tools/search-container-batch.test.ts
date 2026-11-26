@@ -134,6 +134,87 @@ describe('search_container batch', () => {
     expect(get).toHaveBeenCalledTimes(1);
   });
 
+  it('returns the other rows when one search fails, marking that row error', async () => {
+    const search = vi.fn(async (query: string) => {
+      if (query === 'BAD1' || query === 'BAD2')
+        throw new Error('429 Too Many Requests');
+      return { data: [shipmentHit('s1', ['PO/26484-1'])] };
+    });
+    const get = vi.fn(async () =>
+      rawShipment('s1', 'MAEU721767351', ['PO/26484-1']),
+    );
+    const result = await executeSearchContainers(
+      { queries: ['BAD1', 'PO/26484-1', 'BAD2'] },
+      asClient({ search, shipments: { get } }),
+    );
+    expect(result.results.map((r) => [r.query, r.match])).toEqual([
+      ['BAD1', 'error'],
+      ['PO/26484-1', 'exact'],
+      ['BAD2', 'error'],
+    ]);
+    expect(result.results[0].error).toBe(
+      'Search failed: 429 Too Many Requests',
+    );
+    expect(result.results[1].shipments[0].port_of_discharge.eta).toBe(
+      '2026-11-27T12:00:00Z',
+    );
+    expect(result.failed).toBe(2);
+    expect(result.total_results).toBe(1);
+  });
+
+  it('keeps a row when its shipment details fail, naming the shipment', async () => {
+    const search = vi.fn(async () => ({
+      data: [shipmentHit('s1', ['PO/1']), shipmentHit('s2', ['PO/1'])],
+    }));
+    const get = vi.fn(async (id: string) => {
+      if (id === 's2') throw new Error('404 Not Found');
+      return rawShipment('s1', 'MAEU1', ['PO/1']);
+    });
+    const result = await executeSearchContainers(
+      { queries: ['PO/1'] },
+      asClient({ search, shipments: { get } }),
+    );
+    expect(result.results[0].match).toBe('exact');
+    expect(result.results[0].shipments.map((s) => s.id)).toEqual(['s1']);
+    expect(result.results[0].error).toBe(
+      'Could not load details for shipment s2: 404 Not Found',
+    );
+    expect(result.failed).toBe(0);
+  });
+
+  it('includes the shipment, with its ETA, for an exact container match', async () => {
+    const search = vi.fn(async () => ({
+      data: [
+        {
+          id: 'c1',
+          type: 'search_result',
+          attributes: {
+            entity_type: 'cargo',
+            number: 'MSKU1234565',
+            scac: 'MAEU',
+            shipment_id: 's1',
+          },
+        },
+      ],
+    }));
+    const get = vi.fn(async () =>
+      rawShipment('s1', 'MAEU721767351', ['PO/26484-1']),
+    );
+    const result = await executeSearchContainers(
+      { queries: ['MSKU1234565'] },
+      asClient({ search, shipments: { get } }),
+    );
+    const row = result.results[0];
+    expect(row.match).toBe('exact');
+    expect(row.containers.map((c) => c.container_number)).toEqual([
+      'MSKU1234565',
+    ]);
+    expect(row.shipments.map((s) => [s.id, s.port_of_discharge.eta])).toEqual([
+      ['s1', '2026-11-27T12:00:00Z'],
+    ]);
+    expect(get).toHaveBeenCalledTimes(1);
+  });
+
   it(`rejects more than ${MAX_BATCH_QUERIES} identifiers`, async () => {
     const queries = Array.from(
       { length: MAX_BATCH_QUERIES + 1 },

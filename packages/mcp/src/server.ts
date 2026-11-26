@@ -1441,7 +1441,7 @@ export function createTerminal49McpServer(
           'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
           'Pass one identifier as query, never a user message or conversation history. ' +
           'Examples: CAIU2885402, MAEU123456789, or a customer reference number. The result has containers (id, container_number, status when known, shipping_line, terminals), shipments (id, ref_numbers, shipping_line, container_count), tracking_requests (id, request_number, status of the request, failed_reason, scac), and total_results. A container status is the dashboard label, such as At Terminal; use get_container when it is missing. ' +
-          `For two or more identifiers, pass them all in one call as queries (up to ${MAX_BATCH_QUERIES}) instead of calling once per identifier. A batch returns results: one row per input with match (exact; partial when only a longer identifier starts with it; not_found), and its containers, tracking_requests, and shipments with bill_of_lading, status, container_numbers and port_of_discharge (name, terminal, eta, ata, timezone), so no get_shipment_details call is needed for status, POD or ETA.`,
+          `For two or more identifiers, pass them all in one call as queries (up to ${MAX_BATCH_QUERIES}) instead of calling once per identifier. A batch returns results: one row per input with match (exact; partial when only a longer identifier starts with it; not_found; error when that input's search failed, with error saying why), and its containers, tracking_requests, and shipments with bill_of_lading, status, container_numbers and port_of_discharge (name, terminal, eta, ata, timezone), so no get_shipment_details call is needed for status, POD or ETA. An exact container match includes the shipment carrying it. A failed lookup never fails the batch: its row has match error, a row whose shipment details failed to load has error naming them, and failed counts error rows.`,
         inputSchema: z.object({
           query: z
             .string()
@@ -1502,11 +1502,13 @@ export function createTerminal49McpServer(
             }),
           ),
           total_results: z.number(),
+          failed: z.number().optional(),
           results: z
             .array(
               z.object({
                 query: z.string(),
-                match: z.enum(['exact', 'partial', 'not_found']),
+                match: z.enum(['exact', 'partial', 'not_found', 'error']),
+                error: z.string().optional(),
                 containers: z.array(z.record(z.string(), z.unknown())),
                 shipments: z.array(
                   z.object({
@@ -2099,6 +2101,7 @@ export function createTerminal49McpServer(
         outputSchema: z.object({
           query: z.string(),
           total_results: z.number(),
+          failed: z.number().optional(),
           results: z.array(
             z.object({
               title: z.string(),
