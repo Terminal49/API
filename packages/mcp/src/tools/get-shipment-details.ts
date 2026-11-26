@@ -208,7 +208,7 @@ export async function executeGetShipmentDetails(
   }
 }
 
-function formatShipmentResponse(
+export function formatShipmentResponse(
   apiResponse: any,
   includeContainers: boolean,
   customFields: CustomFieldsResult | null,

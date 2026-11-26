@@ -1,7 +1,9 @@
 import type { Terminal49Client } from '@terminal49/sdk';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import {
+  type BatchShipment,
   executeSearchContainers,
+  MAX_BATCH_DETAIL_FETCHES,
   MAX_BATCH_QUERIES,
 } from './search-container.js';
 
@@ -15,7 +17,12 @@ function shipmentHit(id: string, refs: string[]) {
   };
 }
 
-function rawShipment(id: string, bol: string, refs: string[]) {
+function rawShipment(
+  id: string,
+  bol: string,
+  refs: string[],
+  extra: Record<string, string> = {},
+) {
   return {
     raw: {
       data: {
@@ -31,6 +38,7 @@ function rawShipment(id: string, bol: string, refs: string[]) {
           pod_eta_at: '2026-11-27T12:00:00Z',
           pod_timezone: 'America/New_York',
           pol_atd_at: '2026-10-20T00:00:00Z',
+          ...extra,
         },
         relationships: {
           pod_terminal: { data: { id: 't1', type: 'terminal' } },
@@ -93,20 +101,21 @@ describe('search_container batch', () => {
 
     expect(result.results.map((r) => [r.query, r.match])).toEqual([
       ['PO/26484-1', 'exact'],
-      ['maeu 721767351', 'not_found'],
+      ['maeu 721767351', 'exact'],
       ['SO/7407-5', 'partial'],
       ['CAIU2885402', 'exact'],
       ['TLLU4257441', 'not_found'],
+      ['PO/26484-1', 'exact'],
     ]);
-    expect(result.total_results).toBe(3);
+    expect(result.total_results).toBe(5);
     expect(get).toHaveBeenCalledTimes(2);
     expect(result.results[0].shipments[0]).toEqual({
       id: 's1',
       bill_of_lading: 'MAEU721767351',
       ref_numbers: ['PO/26484-1'],
       shipping_line: 'MAEU',
-      status: 'in_transit',
       container_numbers: ['MSKU1234565'],
+      container_count: 1,
       port_of_discharge: {
         name: 'Philadelphia',
         locode: 'USPHL',
@@ -155,9 +164,9 @@ describe('search_container batch', () => {
     expect(result.results[0].error).toBe(
       'Search failed: 429 Too Many Requests',
     );
-    expect(result.results[1].shipments[0].port_of_discharge.eta).toBe(
-      '2026-11-27T12:00:00Z',
-    );
+    expect(
+      (result.results[1].shipments[0] as BatchShipment).port_of_discharge.eta,
+    ).toBe('2026-11-27T12:00:00Z');
     expect(result.failed).toBe(2);
     expect(result.total_results).toBe(1);
   });
@@ -175,7 +184,12 @@ describe('search_container batch', () => {
       asClient({ search, shipments: { get } }),
     );
     expect(result.results[0].match).toBe('exact');
-    expect(result.results[0].shipments.map((s) => s.id)).toEqual(['s1']);
+    expect(
+      result.results[0].shipments.map((s) => [s.id, 'port_of_discharge' in s]),
+    ).toEqual([
+      ['s1', true],
+      ['s2', false],
+    ]);
     expect(result.results[0].error).toBe(
       'Could not load details for shipment s2: 404 Not Found',
     );
@@ -209,10 +223,89 @@ describe('search_container batch', () => {
     expect(row.containers.map((c) => c.container_number)).toEqual([
       'MSKU1234565',
     ]);
-    expect(row.shipments.map((s) => [s.id, s.port_of_discharge.eta])).toEqual([
-      ['s1', '2026-11-27T12:00:00Z'],
-    ]);
+    expect(
+      row.shipments.map((s) => [
+        s.id,
+        (s as BatchShipment).port_of_discharge.eta,
+      ]),
+    ).toEqual([['s1', '2026-11-27T12:00:00Z']]);
     expect(get).toHaveBeenCalledTimes(1);
+  });
+
+  it('matches a booking or user-provided MBL that is not the shipment number', async () => {
+    const search = vi.fn(async () => ({ data: [shipmentHit('s1', [])] }));
+    const get = vi.fn(async () =>
+      rawShipment('s1', 'MAEU1', [], {
+        booking_number: 'BK777',
+        user_provided_mbl_number: 'HBL-42',
+      }),
+    );
+    const result = await executeSearchContainers(
+      { queries: ['BK777', 'hbl-42'] },
+      asClient({ search, shipments: { get } }),
+    );
+    expect(result.results.map((r) => r.match)).toEqual(['exact', 'exact']);
+    expect(get).toHaveBeenCalledTimes(1);
+  });
+
+  it('searches the identifier without spaces, echoes the input, and keeps one row per input', async () => {
+    const search = vi.fn(async () => ({ data: [shipmentHit('s1', ['PO/1'])] }));
+    const get = vi.fn(async () => rawShipment('s1', 'MAEU721767351', ['PO/1']));
+    const result = await executeSearchContainers(
+      { queries: ['maeu 721767351', 'MAEU721767351', 'maeu 721767351'] },
+      asClient({ search, shipments: { get } }),
+    );
+    expect(search).toHaveBeenCalledTimes(1);
+    expect(search).toHaveBeenCalledWith('MAEU721767351');
+    expect(result.results.map((r) => [r.query, r.match])).toEqual([
+      ['maeu 721767351', 'exact'],
+      ['MAEU721767351', 'exact'],
+      ['maeu 721767351', 'exact'],
+    ]);
+  });
+
+  it('returns partial rows as shipment hits without fetching details for many hits', async () => {
+    const hits = Array.from({ length: 10 }, (_, i) =>
+      shipmentHit(`s${i}`, [`PO/7-${i}0`]),
+    );
+    const search = vi.fn(async () => ({ data: hits }));
+    const get = vi.fn();
+    const result = await executeSearchContainers(
+      { queries: ['PO/7'] },
+      asClient({ search, shipments: { get } }),
+    );
+    expect(result.results[0].match).toBe('partial');
+    expect(result.results[0].shipments[0]).toEqual({
+      id: 's0',
+      ref_numbers: ['PO/7-00'],
+      shipping_line: 'MAEU',
+      container_count: 0,
+    });
+    expect(get).not.toHaveBeenCalled();
+  });
+
+  it(`fetches at most ${MAX_BATCH_DETAIL_FETCHES} shipments and names the ones it skipped`, async () => {
+    // Each input matches two shipments exactly, so half the limit plus one input overflows it.
+    const queries = Array.from(
+      { length: MAX_BATCH_DETAIL_FETCHES / 2 + 1 },
+      (_, i) => `PO/${i}`,
+    );
+    const search = vi.fn(async (q: string) => ({
+      data: [shipmentHit(`a-${q}`, [q]), shipmentHit(`b-${q}`, [q])],
+    }));
+    const get = vi.fn(async (id: string) =>
+      rawShipment(id, 'MAEU1', [id.slice(2)]),
+    );
+    const result = await executeSearchContainers(
+      { queries },
+      asClient({ search, shipments: { get } }),
+    );
+    expect(get).toHaveBeenCalledTimes(MAX_BATCH_DETAIL_FETCHES);
+    const last = result.results.at(-1)!;
+    expect(last.match).toBe('exact');
+    const lastQuery = queries.at(-1)!;
+    expect(last.details_skipped).toEqual([`a-${lastQuery}`, `b-${lastQuery}`]);
+    expect(last.shipments[0]).not.toHaveProperty('port_of_discharge');
   });
 
   it(`rejects more than ${MAX_BATCH_QUERIES} identifiers`, async () => {

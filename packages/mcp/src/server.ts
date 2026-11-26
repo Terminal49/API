@@ -29,6 +29,8 @@ import {
 import {
   executeSearchContainer,
   executeSearchContainers,
+  MAX_BATCH_CONTAINER_NUMBERS,
+  MAX_BATCH_DETAIL_FETCHES,
   MAX_BATCH_QUERIES,
 } from './tools/search-container.js';
 import { httpStatus, ToolInputError } from './tools/soft-results.js';
@@ -1441,7 +1443,7 @@ export function createTerminal49McpServer(
           'Use get_container or get_shipment_details with a returned UUID for a detailed snapshot. ' +
           'Pass one identifier as query, never a user message or conversation history. ' +
           'Examples: CAIU2885402, MAEU123456789, or a customer reference number. The result has containers (id, container_number, status when known, shipping_line, terminals), shipments (id, ref_numbers, shipping_line, container_count), tracking_requests (id, request_number, status of the request, failed_reason, scac), and total_results. A container status is the dashboard label, such as At Terminal; use get_container when it is missing. ' +
-          `For two or more identifiers, pass them all in one call as queries (up to ${MAX_BATCH_QUERIES}) instead of calling once per identifier. A batch returns results: one row per input with match (exact; partial when only a longer identifier starts with it; not_found; error when that input's search failed, with error saying why), and its containers, tracking_requests, and shipments with bill_of_lading, status, container_numbers and port_of_discharge (name, terminal, eta, ata, timezone), so no get_shipment_details call is needed for status, POD or ETA. An exact container match includes the shipment carrying it. A failed lookup never fails the batch: its row has match error, a row whose shipment details failed to load has error naming them, and failed counts error rows.`,
+          `For two or more identifiers, pass them all in one call as queries (up to ${MAX_BATCH_QUERIES}) instead of calling once per identifier. Case and spaces are ignored. A batch returns results: one row per input, in order and including repeats, with match: exact when a result's number equals the input (container, shipment number, BL, booking, user-provided MBL or booking, reference, or tracking request); partial when a result contains the identifier but none equals it; not_found; or error when that input's search failed, with error saying why. Exact rows carry shipments with bill_of_lading, ref_numbers, container_numbers (first ${MAX_BATCH_CONTAINER_NUMBERS}), container_count and port_of_discharge (name, terminal, eta, ata, timezone), so no get_shipment_details call is needed for POD or ETA; an exact container match includes the shipment carrying it. Partial rows list shipment ids and numbers only. A failed lookup never fails the batch: failed counts error rows, a row whose shipment details failed to load names them in error, and details_skipped lists shipments past the per-call limit of ${MAX_BATCH_DETAIL_FETCHES} detail fetches (use get_shipment_details for those).`,
         inputSchema: z.object({
           query: z
             .string()
@@ -1482,6 +1484,7 @@ export function createTerminal49McpServer(
           shipments: z.array(
             z.object({
               id: z.string(),
+              bill_of_lading: z.string().optional(),
               ref_numbers: z.array(z.string()),
               shipping_line: z.string(),
               container_count: z.number(),
@@ -1513,22 +1516,26 @@ export function createTerminal49McpServer(
                 shipments: z.array(
                   z.object({
                     id: z.string(),
-                    bill_of_lading: z.string().nullable(),
+                    bill_of_lading: z.string().nullable().optional(),
                     ref_numbers: z.array(z.string()),
                     shipping_line: z.string(),
-                    status: z.string(),
-                    container_numbers: z.array(z.string()),
-                    port_of_discharge: z.object({
-                      name: z.string().nullable(),
-                      locode: z.string().nullable(),
-                      terminal: z.string().nullable(),
-                      eta: z.string().nullable(),
-                      ata: z.string().nullable(),
-                      timezone: z.string().nullable(),
-                    }),
+                    container_numbers: z.array(z.string()).optional(),
+                    container_count: z.number(),
+                    port_of_discharge: z
+                      .object({
+                        name: z.string().nullable(),
+                        locode: z.string().nullable(),
+                        terminal: z.string().nullable(),
+                        eta: z.string().nullable(),
+                        ata: z.string().nullable(),
+                        timezone: z.string().nullable(),
+                      })
+                      .optional()
+                      .describe('Exact rows with loaded details only.'),
                   }),
                 ),
                 tracking_requests: z.array(z.record(z.string(), z.unknown())),
+                details_skipped: z.array(z.string()).optional(),
               }),
             )
             .optional()
@@ -1537,7 +1544,7 @@ export function createTerminal49McpServer(
       },
       async ({ query, queries }) => {
         if (queries && query) {
-          throw new Error('Pass query or queries, not both');
+          throw new ToolInputError('Pass query or queries, not both.');
         }
         if (queries) {
           const batch = await executeSearchContainers({ queries }, client);
@@ -1549,7 +1556,9 @@ export function createTerminal49McpServer(
           };
         }
         if (!query) {
-          throw new Error('Pass query or queries');
+          throw new ToolInputError(
+            'Pass one identifier as query, or several as queries.',
+          );
         }
         return executeSearchContainer({ query }, client);
       },

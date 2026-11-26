@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `search_container` takes `queries`, up to 50 identifiers resolved in one call, and returns `results` with one row per input. `match` is `exact` (a container, shipment, BL, booking, user-provided MBL or booking, reference, or tracking request number equals the input), `partial` (a result contains it), `not_found`, or `error` (that input's search failed; the other rows still return and `failed` counts them). Exact shipments carry the port of discharge, terminal, ETA, and ATA; an exact container match includes its shipment. Inputs are searched without spaces. A call loads details for at most 50 shipments and lists the rest in `details_skipped`. Single-`query` calls are unchanged, except that shipment hits now include `bill_of_lading` when the search returns it.
+
 ### Fixed
 - Write tools no longer carry `_meta["anthropic/requiresUserInteraction"]`. Claude hid the "Always allow" permission for every tool with that key, so bulk loads (tracking plus custom fields) needed a manual approval on every call. Writes that would lose a value or a party still ask through the preview flow.
 
