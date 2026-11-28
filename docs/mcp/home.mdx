@@ -565,6 +565,24 @@ Counts come from `GET /v2/containers/summary` in one request. `hold_type` counts
 
 ---
 
+### `show_container_dashboard`
+
+Show the user an interactive container dashboard. Clients that support [MCP Apps](https://modelcontextprotocol.io/docs/extensions/apps), such as Claude and ChatGPT, render it in the conversation; other clients get a text summary of the same numbers.
+
+The dashboard has tiles for active, on ship, at terminal, ready for pickup, needs attention, and hold flags; last free day (LFD) and arrival calendars for the next three weeks; breakdowns by status, terminal, carrier, and hold; and a sortable table of containers. Click a tile, bar, or day to filter. Click a row to open its details and event timeline. **Ask** buttons send a question to the conversation, and the model sees each filter you apply and container you open.
+
+**Parameters**
+
+- The filters accepted by `list_containers`, except `include`, `view`, `page`, and `page_size`.
+- `title` *(string, optional)* - Heading for the dashboard.
+
+**Good for**
+
+- "Show me my container dashboard."
+- "Show containers at risk as a dashboard."
+
+---
+
 ### `list_parties`
 
 Find the companies on the account's shipments (customers, shippers, consignees, customs brokers, freight forwarders, dray carriers) by name and return their IDs. Filter a customer with `advanced_filters.customer_id` on `list_containers`, `summarize_containers`, or `list_shipments`. Filter other roles with `advanced_filters.parties` on `list_containers` or `summarize_containers`, keyed by role, such as `{ "pickup_dray_carrier": "<id>" }`. A customer created before party roles is listed under its customer account ID, which `customer_id` accepts and `advanced_filters.parties` does not.

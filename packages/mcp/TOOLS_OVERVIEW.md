@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Terminal49 MCP Server provides **33 tools** and **4 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 30 of them; the three tracking lifecycle tools are opt-in.
+The Terminal49 MCP Server provides **34 tools** and **5 MCP resources** for container tracking, shipment management, and US import market data. The default toolsets serve 31 of them; the three tracking lifecycle tools are opt-in.
 
 `packages/mcp/src/tools/registry.ts` lists every tool with its title, toolset, tier and annotations. The server registers tools from it, and tests derive tool counts from it. `list_documents` and `get_document` are in the `documents` toolset. `set_party_role`, `set_custom_field` and `update_record` are in the `operations` toolset. `stop_shipment_tracking`, `resume_shipment_tracking` and `cancel_tracking_request` are in the `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it. The trade intelligence tools are in `trade`. Every other tool below is in `core`. See [Toolsets](README.md#toolsets) for how a deployment or a request picks toolsets.
 
@@ -268,6 +268,22 @@ Accepts the `list_containers` filters except `sort`, `include`, `view`, `page`, 
 - `applied_filters`
 
 **When to Use**: Counts and breakdowns. Use `list_containers` to list the containers themselves.
+
+---
+
+### 10b. `show_container_dashboard`
+**Purpose**: Show the user an interactive container dashboard (MCP Apps)
+
+**Usage**:
+```typescript
+show_container_dashboard({ requires_attention: true, title: "Containers at risk" })
+```
+
+Takes the `list_containers` filters except `include`, `view`, `page` and `page_size`, plus an optional `title`. It runs the `summarize_containers` breakdowns (status, terminal, carrier, hold type, LFD date, arrival date, attention count) and the first `list_containers` page in parallel.
+
+**Returns**: `summary` (the text the model reads), `totals`, `breakdowns`, `containers`, `page`, `filters`, `app_url`.
+
+**View**: the tool's `_meta.ui.resourceUri` points to `ui://terminal49/container-dashboard.html`. Hosts that support [MCP Apps](https://modelcontextprotocol.io/docs/extensions/apps) render it inline: clickable tiles and bars re-run the tool with a filter, rows open a detail panel through `get_container`, "Load more" calls `list_containers`, and "Ask" buttons send a message to the conversation. Each filter change and opened container is sent to the model with `ui/update-model-context`. Other clients get the text summary.
 
 ---
 
@@ -705,6 +721,9 @@ update_record({ ...sameArguments, confirmation_token: "t49ct1...." })
 
 **When to Use**: Read it once. The list tools name it in `column_catalog_resource` instead of repeating the catalog in every response.
 
+### 5. `ui://terminal49/container-dashboard.html`
+**Purpose**: MCP Apps view (`text/html;profile=mcp-app`) that hosts render for `show_container_dashboard`. Self-contained HTML with no external requests.
+
 ---
 
 ## Tool Selection Guide
@@ -891,7 +910,7 @@ get_container({ id: "abc-123" })
 
 ## Summary
 
-With these 33 tools and 4 resources, the LLM can:
+With these 34 tools and 5 resources, the LLM can:
 
 ✅ Find any container or shipment
 ✅ Get fast status updates

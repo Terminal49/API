@@ -17,9 +17,9 @@
 
 ## 📦 What's Included
 
-### 🛠️ Tools (33 Available)
+### 🛠️ Tools (34 Available)
 
-The default toolsets, `core`, `documents`, `operations` and `trade`, serve these 31:
+The default toolsets, `core`, `documents`, `operations` and `trade`, serve these 32:
 
 | Tool | Description | Key Features |
 |------|-------------|--------------|
@@ -35,6 +35,7 @@ The default toolsets, `core`, `documents`, `operations` and `trade`, serve these
 | **`list_shipments`** | List shipments with filters and pagination | Fleet-level visibility |
 | **`list_containers`** | List containers with filters and pagination | Returns ResourceLinks ✨ |
 | **`summarize_containers`** | Count containers grouped by terminal, status, carrier, port, hold, or date | Same filters as `list_containers` |
+| **`show_container_dashboard`** | Interactive dashboard: status tiles, LFD and arrival calendars, breakdowns, container table with timelines | MCP Apps view ✨ |
 | **`list_parties`** | Find parties by company name, or read one by ID | Feeds `advanced_filters.customer_id` and `advanced_filters.parties` |
 | **`list_custom_field_definitions`** | List the account's custom fields, their types, and enum options | Needs a signed-in user |
 | **`list_tracking_requests`** | List tracking requests and statuses | Audit and monitoring |
