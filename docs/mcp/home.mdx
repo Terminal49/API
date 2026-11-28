@@ -187,8 +187,17 @@ In the default toolsets, every tool is read-only except `track_container` and th
 
 Find containers by container number, BL, booking, or your own reference. This is the fastest way to locate containers.
 
-**Parameters**
-- `query` *(string, required)* – container number, BL, booking, or reference
+**Parameters** (pass one of them)
+- `query` *(string)* – one container number, BL, booking, or reference
+- `queries` *(array of strings, up to 50)* – several identifiers resolved in one call. Case and spaces are ignored.
+
+A `queries` call returns `results`, one row per input in order. Each row has a `match`:
+- `exact` – a container, shipment (number, BL, booking, or user-provided MBL or booking), reference, or tracking request number equals the input. Exact shipments include `port_of_discharge` with the terminal, ETA, and ATA, so no follow-up call is needed. An exact container match includes the shipment that carries it.
+- `partial` – a result contains the identifier, but none equals it. Shipments list only their IDs and numbers.
+- `not_found` – nothing matched.
+- `error` – the search for that input failed. The row's `error` says why, and the other rows still return. `failed` counts these rows.
+
+A row whose shipment details could not load names them in `error`. A call loads details for at most 50 shipments; `details_skipped` lists the rest, which you can look up with `get_shipment_details`.
 
 <Accordion title="Example MCP request">
 ```json

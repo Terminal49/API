@@ -829,6 +829,33 @@ describe('MCP server wiring', () => {
     expect(Object.hasOwn(result, 'structuredContent')).toBe(false);
   });
 
+  it('search_container takes query or queries, and rejects both or neither as input errors', async () => {
+    search.mockResolvedValue({ data: [] });
+    const server = createTerminal49McpServer('token');
+    const searchTool = (server as any)._registeredTools.search_container;
+
+    const single = await searchTool.handler({ query: 'CAIU1234567' });
+    expect(single.isError).toBeFalsy();
+    expect(single.structuredContent.results).toBeUndefined();
+
+    const batch = await searchTool.handler({ queries: ['CAIU1234567', 'X1'] });
+    expect(batch.isError).toBeFalsy();
+    expect(batch.structuredContent.results.map((r: any) => r.match)).toEqual([
+      'not_found',
+      'not_found',
+    ]);
+
+    const both = await searchTool.handler({ query: 'A', queries: ['B'] });
+    expect(both.isError).toBe(true);
+    expect(both.content[0].text).toContain('Pass query or queries, not both.');
+
+    const neither = await searchTool.handler({});
+    expect(neither.isError).toBe(true);
+    expect(neither.content[0].text).toContain(
+      'Pass one identifier as query, or several as queries.',
+    );
+  });
+
   it('captures handled tool errors when Sentry is initialized', async () => {
     const Sentry = await import('@sentry/node');
     vi.mocked(Sentry.isInitialized).mockReturnValue(true);
