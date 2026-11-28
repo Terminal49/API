@@ -37,6 +37,8 @@ type RequestLike = {
 
 type JsonResponse = {
   error: string | { code: number; message: string };
+  /** A fixed refusal code from RESOLVE_REFUSAL_MESSAGES. */
+  code?: string;
   message?: string;
   jsonrpc?: string;
   id?: string | number | null;
@@ -112,6 +114,7 @@ type ConnectedClientResolutionResponse = {
     };
   };
   error?: string;
+  code?: string;
 };
 
 type UnauthorizedReason = 'missing_credentials' | 'invalid_token';
@@ -168,19 +171,48 @@ function resolveEndpointUrl(): string {
 
 type ResolveFailureKind = 'config' | 'invalid_token' | 'forbidden' | 'upstream';
 
+/**
+ * Why Terminal49 refused to resolve a valid grant, keyed by the fixed `code`
+ * the resolve endpoint returns with a 403. The client sees this text, never
+ * the upstream message.
+ */
+const RESOLVE_REFUSAL_MESSAGES = {
+  billing_access_restricted:
+    'Terminal49 access for this account is paused because of a billing issue. An account manager can resolve it at https://app.terminal49.com/settings/billing, then retry.',
+  account_onboarding_incomplete:
+    'This Terminal49 account has not finished setup. Sign in at https://app.terminal49.com to complete account onboarding, then retry.',
+} as const;
+
+type ResolveRefusalCode = keyof typeof RESOLVE_REFUSAL_MESSAGES;
+
+function resolveRefusalCode(
+  code: string | undefined,
+): ResolveRefusalCode | undefined {
+  switch (code) {
+    case 'billing_access_restricted':
+    case 'account_onboarding_incomplete':
+      return code;
+    default:
+      return undefined;
+  }
+}
+
 class ConnectedClientResolveError extends Error {
   readonly kind: ResolveFailureKind;
   readonly upstreamStatus?: number;
+  readonly refusalCode?: ResolveRefusalCode;
 
   constructor(
     message: string,
     kind: ResolveFailureKind,
     upstreamStatus?: number,
+    refusalCode?: ResolveRefusalCode,
   ) {
     super(message);
     this.name = 'ConnectedClientResolveError';
     this.kind = kind;
     this.upstreamStatus = upstreamStatus;
+    this.refusalCode = refusalCode;
   }
 }
 
@@ -283,6 +315,7 @@ async function resolveConnectedClientToken(
         `Terminal49 connected client resolve failed with ${response.status}`,
       kind,
       response.status,
+      kind === 'forbidden' ? resolveRefusalCode(payload.code) : undefined,
     );
   }
 
@@ -608,6 +641,10 @@ export default async function handler(
           err instanceof ConnectedClientResolveError
             ? err.upstreamStatus
             : undefined;
+        const refusalCode =
+          err instanceof ConnectedClientResolveError
+            ? err.refusalCode
+            : undefined;
         setCorsHeaders(res);
         // Keep the detailed reason in the server log (correlated by request_id);
         // return a generic, category-appropriate response so internals never leak.
@@ -615,6 +652,7 @@ export default async function handler(
           reason: 'connected_client_resolve_failed',
           kind,
           upstream_status: upstreamStatus,
+          refusal_code: refusalCode,
           message: err.message,
         });
         if (kind === 'invalid_token') {
@@ -624,10 +662,20 @@ export default async function handler(
             message: 'Invalid or expired token.',
           });
         } else if (kind === 'forbidden') {
-          res.status(403).json({
-            error: 'Forbidden',
-            message: 'Terminal49 access is not enabled for this account.',
-          });
+          // A known refusal says what the account must do; anything else
+          // stays generic so upstream text never reaches the client.
+          res.status(403).json(
+            refusalCode
+              ? {
+                  error: 'Forbidden',
+                  code: refusalCode,
+                  message: RESOLVE_REFUSAL_MESSAGES[refusalCode],
+                }
+              : {
+                  error: 'Forbidden',
+                  message: 'Terminal49 access is not enabled for this account.',
+                },
+          );
         } else if (kind === 'config') {
           res.status(500).json({
             error: 'Server misconfiguration',
