@@ -92,17 +92,44 @@ export const containerStatusSchema = z.object({
     weight_lbs: z.number().nullable(),
   }),
   location: z.object({
-    // Where the container (and so its status) is now, from its milestones.
-    current_place: z.object({
-      kind: z.enum([
-        'before_pod',
-        'pod_terminal',
-        'left_pod_terminal',
-        'on_rail',
-        'inland_destination',
-      ]),
-      name: z.string().nullable(),
-    }),
+    current_place: z
+      .object({
+        kind: z
+          .enum([
+            'before_pod',
+            'at_pod_terminal',
+            'left_pod_terminal',
+            'in_rail_transit',
+            'at_inland_destination',
+            'left_inland_destination',
+            'empty_returned',
+          ])
+          .describe(
+            'Where the container is now, worked out from its latest milestone. The POD fields below describe the port only while kind is before_pod or at_pod_terminal.',
+          ),
+        name: z
+          .string()
+          .nullable()
+          .describe(
+            'The facility or place the container is at now; null when it is between places.',
+          ),
+        destination: z
+          .string()
+          .nullable()
+          .describe(
+            'Where the container is heading, set only while in_rail_transit.',
+          ),
+        since: z
+          .string()
+          .nullable()
+          .describe('When the container reached this place (UTC).'),
+        since_local: z
+          .string()
+          .describe('since, in the local time of that place.'),
+      })
+      .describe(
+        'Where the container is now. When it differs from the POD terminal, POD availability, yard location, holds and fees are null because they describe a terminal the container has left.',
+      ),
     current_location: z.string().nullable(),
     available_for_pickup: z.boolean().nullable(),
     availability_known: z.boolean().nullable(),
@@ -114,7 +141,12 @@ export const containerStatusSchema = z.object({
   }),
   demurrage: z.object({
     pickup_lfd: z.string().nullable(),
-    pickup_lfd_local: z.string(),
+    pickup_lfd_local: z
+      .string()
+      .describe(
+        'pickup_lfd in the local time of the facility it applies to: the inland destination once the container arrived there, otherwise the POD.',
+      ),
+    pickup_lfd_timezone: z.string().nullable(),
     last_free_days: z.object({
       terminal: z.string().nullable(),
       rail: z.string().nullable(),
@@ -134,7 +166,10 @@ export const containerStatusSchema = z.object({
     pod_rail_carrier: z.string().nullable(),
     pod_rail_loaded_at: z.string().nullable(),
     pod_rail_departed_at: z.string().nullable(),
+    pod_rail_departed_at_local: z.string(),
     destination_rail_unloaded_at: z.string().nullable(),
+    destination_rail_unloaded_at_local: z.string(),
+    destination_timezone: z.string().nullable(),
     destination_eta: z.string().nullable(),
     destination_ata: z.string().nullable(),
     access: z.enum(['included', 'not_on_plan']),
@@ -224,10 +259,14 @@ export async function executeGetContainer(
 
   try {
     const includes = resolveIncludes(args.include);
-    const apiIncludes = includes.filter(
-      (inc): inc is ApiContainerInclude =>
-        inc !== 'custom_fields' && inc !== 'party_roles',
-    );
+    const apiIncludes: (ApiContainerInclude | 'pickup_facility')[] = [
+      ...includes.filter(
+        (inc): inc is ApiContainerInclude =>
+          inc !== 'custom_fields' && inc !== 'party_roles',
+      ),
+      // The inland facility, so current_place can name it after a rail move.
+      'pickup_facility',
+    ];
     const [result, customFields, partyRoles] = await Promise.all([
       client.containers.get(args.id, apiIncludes, { format: 'raw' }),
       includes.includes('custom_fields')
@@ -302,16 +341,40 @@ function formatContainerResponse(
     ? formatEventsData(transportEvents, included)
     : undefined;
 
+  const pickupFacilityId = relationships.pickup_facility?.data?.id;
+  const pickupFacility = included.find(
+    (item: any) =>
+      item.id === pickupFacilityId &&
+      (item.type === 'terminal' || item.type === 'rail_terminal'),
+  );
+
   const leftPod = leftPodTerminal(container);
   const podTimezone: string | null = container.pod_timezone ?? null;
+  const destinationTimezone: string | null =
+    container.final_destination_timezone ?? null;
+  // After an inland arrival the LFD is the inland facility's, in its zone.
+  const lfdTimezone =
+    arrivedInland(container) && destinationTimezone
+      ? destinationTimezone
+      : podTimezone;
+  const place = currentPlace(container, {
+    podTerminalName: podTerminal?.attributes?.name ?? null,
+    inlandName:
+      pickupFacility?.attributes?.name ??
+      shipment?.attributes?.destination_name ??
+      null,
+    podTimezone,
+    destinationTimezone,
+  });
   // Compute the LFD countdown in terminal-local days so "N days until LFD" never
   // lands on the wrong calendar day near a UTC midnight boundary, then feed that
   // same count into the urgency classifier — otherwise `urgency` (raw UTC delta)
   // and the displayed `days_until_lfd` (terminal-local) could disagree at a
   // threshold (e.g. 3 vs 4 days).
-  const localDaysUntilLfd = dayDeltaInZone(container.pickup_lfd, podTimezone);
+  const localDaysUntilLfd = dayDeltaInZone(container.pickup_lfd, lfdTimezone);
   const demurrage: DemurrageEvaluation = evaluateDemurrageUrgency({
-    fees_at_pod_terminal: container.fees_at_pod_terminal,
+    // POD fees describe a terminal the container has left.
+    fees_at_pod_terminal: leftPod ? null : container.fees_at_pod_terminal,
     pickup_lfd: container.pickup_lfd ?? null,
     terminal_checked_at: container.terminal_checked_at ?? null,
     // line_tracking_stopped_* lives on the SHIPMENT, not the container, so we
@@ -350,11 +413,7 @@ function formatContainerResponse(
           : null,
     },
     location: {
-      current_place: currentPlace(
-        container,
-        podTerminal?.attributes?.name ?? null,
-        shipment?.attributes?.destination_name ?? null,
-      ),
+      current_place: place,
       // The yard slot at the POD terminal; once the container leaves that
       // terminal (pickup or rail departure) it no longer says where it is.
       current_location: leftPod
@@ -379,7 +438,8 @@ function formatContainerResponse(
     },
     demurrage: {
       pickup_lfd: container.pickup_lfd ?? null,
-      pickup_lfd_local: formatInZone(container.pickup_lfd, podTimezone),
+      pickup_lfd_local: formatInZone(container.pickup_lfd, lfdTimezone),
+      pickup_lfd_timezone: lfdTimezone,
       last_free_days: {
         terminal: importDeadlines.pickup_lfd_terminal ?? null,
         rail: importDeadlines.pickup_lfd_rail ?? null,
@@ -390,7 +450,9 @@ function formatContainerResponse(
       fees_at_pod_terminal: demurrage.fees,
       fees_total_amount: demurrage.total_amount,
       fees_currency_code: demurrage.currency_code,
-      holds_at_pod_terminal: container.holds_at_pod_terminal ?? null,
+      holds_at_pod_terminal: leftPod
+        ? null
+        : (container.holds_at_pod_terminal ?? null),
       urgency: demurrage.urgency,
       urgency_suppressed: demurrage.urgency_suppressed,
       urgency_reason: demurrage.suppression_reason,
@@ -400,10 +462,19 @@ function formatContainerResponse(
       pod_rail_carrier: container.pod_rail_carrier_scac ?? null,
       pod_rail_loaded_at: container.pod_rail_loaded_at ?? null,
       pod_rail_departed_at: container.pod_rail_departed_at ?? null,
+      pod_rail_departed_at_local: formatInZone(
+        container.pod_rail_departed_at,
+        podTimezone,
+      ),
       destination_rail_unloaded_at: container.ind_rail_unloaded_at ?? null,
+      destination_rail_unloaded_at_local: formatInZone(
+        container.ind_rail_unloaded_at,
+        destinationTimezone,
+      ),
+      destination_timezone: destinationTimezone,
       destination_eta: container.ind_eta_at ?? null,
       destination_ata: container.ind_ata_at ?? null,
-      ...railAccess(container),
+      ...railAccess(container, hasInlandLeg(shipment)),
     },
     shipment: shipment
       ? {
@@ -514,22 +585,94 @@ function generateMetadata(
   };
 }
 
+type CurrentPlace = ContainerStatus['location']['current_place'];
+
 function currentPlace(
   container: any,
-  podTerminalName: string | null,
-  destinationName: string | null,
-): ContainerStatus['location']['current_place'] {
-  if (container.ind_rail_unloaded_at || container.ind_ata_at) {
-    return { kind: 'inland_destination', name: destinationName };
+  names: {
+    podTerminalName: string | null;
+    inlandName: string | null;
+    podTimezone: string | null;
+    destinationTimezone: string | null;
+  },
+): CurrentPlace {
+  const at = (
+    kind: CurrentPlace['kind'],
+    name: string | null,
+    since: string | null | undefined,
+    zone: string | null,
+    destination: string | null = null,
+  ): CurrentPlace => ({
+    kind,
+    name,
+    destination,
+    since: since ?? null,
+    since_local: formatInZone(since, zone),
+  });
+  const { podTerminalName, inlandName, podTimezone, destinationTimezone } =
+    names;
+  if (container.empty_terminated_at) {
+    return at(
+      'empty_returned',
+      null,
+      container.empty_terminated_at,
+      container.empty_terminated_timezone ?? null,
+    );
+  }
+  if (container.final_destination_full_out_at) {
+    return at(
+      'left_inland_destination',
+      null,
+      container.final_destination_full_out_at,
+      destinationTimezone,
+    );
+  }
+  if (arrivedInland(container)) {
+    return at(
+      'at_inland_destination',
+      inlandName,
+      container.ind_rail_unloaded_at ?? container.ind_ata_at,
+      destinationTimezone,
+    );
   }
   if (container.pod_rail_departed_at) {
-    return { kind: 'on_rail', name: destinationName };
+    return at(
+      'in_rail_transit',
+      null,
+      container.pod_rail_departed_at,
+      podTimezone,
+      inlandName,
+    );
   }
   if (container.pod_full_out_at) {
-    return { kind: 'left_pod_terminal', name: null };
+    return at(
+      'left_pod_terminal',
+      null,
+      container.pod_full_out_at,
+      podTimezone,
+    );
   }
-  if (!container.pod_arrived_at) return { kind: 'before_pod', name: null };
-  return { kind: 'pod_terminal', name: podTerminalName };
+  if (!container.pod_arrived_at) return at('before_pod', null, null, null);
+  return at(
+    'at_pod_terminal',
+    podTerminalName,
+    container.pod_discharged_at ?? container.pod_arrived_at,
+    podTimezone,
+  );
+}
+
+function arrivedInland(container: any): boolean {
+  return Boolean(container.ind_rail_unloaded_at || container.ind_ata_at);
+}
+
+/** A shipment whose destination is not its POD moves inland after discharge. */
+function hasInlandLeg(shipment: any): boolean {
+  const attrs = shipment?.attributes;
+  if (!attrs?.destination_name) return false;
+  if (attrs.destination_locode && attrs.port_of_discharge_locode) {
+    return attrs.destination_locode !== attrs.port_of_discharge_locode;
+  }
+  return attrs.destination_name !== attrs.port_of_discharge_name;
 }
 
 // The API omits rail milestone keys (not null, absent) when the shipment's
@@ -538,7 +681,10 @@ function currentPlace(
 const RAIL_DATA_URL = 'https://terminal49.com/rail/';
 const RAIL_DEMO_URL = 'https://content.terminal49.com/meetings/t49/rail';
 
-function railAccess(container: any): {
+function railAccess(
+  container: any,
+  inlandLeg: boolean,
+): {
   access: 'included' | 'not_on_plan';
   upgrade: {
     product: string;
@@ -549,6 +695,8 @@ function railAccess(container: any): {
 } {
   if ('pod_rail_departed_at' in container)
     return { access: 'included', upgrade: null };
+  // Rail Data says nothing about a container that stays at the port.
+  if (!inlandLeg) return { access: 'not_on_plan', upgrade: null };
   return {
     access: 'not_on_plan',
     upgrade: {
