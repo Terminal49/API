@@ -94,6 +94,7 @@ export const TOOL_REGISTRY = [
   readTool('list_shipments', 'List Shipments'),
   readTool('list_containers', 'List Containers'),
   readTool('summarize_containers', 'Summarize Containers'),
+  readTool('show_container_dashboard', 'Show Container Dashboard'),
   readTool('list_parties', 'List Parties'),
   // A replace or detach removes the party that held the role, and a set or
   // clear overwrites the field value, so both are marked destructive.

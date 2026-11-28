@@ -460,7 +460,7 @@ describe('MCP protocol compatibility', () => {
 
       expect(tools).toHaveLength(defaultTools().length);
       expect(prompts).toHaveLength(3);
-      expect(resources).toHaveLength(3);
+      expect(resources).toHaveLength(4);
       expect(resourceTemplates).toHaveLength(1);
 
       for (const tool of tools) {

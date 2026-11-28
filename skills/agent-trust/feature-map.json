@@ -50,6 +50,10 @@
       "implementation": "packages/mcp/src/tools/summarize-containers.ts"
     },
     {
+      "name": "show_container_dashboard",
+      "implementation": "packages/mcp/src/tools/container-dashboard.ts"
+    },
+    {
       "name": "list_parties",
       "implementation": "packages/mcp/src/tools/list-parties.ts"
     },

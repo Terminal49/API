@@ -253,7 +253,10 @@ describe('confirming a tier C write', () => {
     // "Always allow", which breaks bulk workflows (DEV-14831). The preview
     // flow is what guards a write that loses data.
     for (const tool of tools) {
-      expect(tool._meta, tool.name).toBeUndefined();
+      expect(
+        tool._meta?.['anthropic/requiresUserInteraction'],
+        tool.name,
+      ).toBeUndefined();
     }
     expect(byName.get('stop_shipment_tracking')?.description).toMatch(
       /On a client that can ask the user \(form elicitation\).*never pass confirmation_token there\. On any other client, the first call returns the preview with a confirmation_token/,

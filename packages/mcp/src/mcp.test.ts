@@ -400,7 +400,8 @@ describe('MCP server wiring', () => {
     expect(prompts).toContain('check-demurrage');
     expect(prompts).toContain('analyze-delays');
 
-    expect(resources).toHaveLength(3);
+    expect(resources).toHaveLength(4);
+    expect(resources).toContain('ui://terminal49/container-dashboard.html');
     expect(resourceTemplates).toHaveLength(1);
     expect(resources).toContain('terminal49://docs/milestone-glossary');
     expect(resources).toContain('terminal49://docs/mcp-query-guidance');

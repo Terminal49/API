@@ -48,6 +48,7 @@
       "search_importers",
       "set_custom_field",
       "set_party_role",
+      "show_container_dashboard",
       "summarize_containers",
       "track_container",
       "update_record",

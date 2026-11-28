@@ -200,6 +200,19 @@ import {
 import { logMcpEvent } from './logging.js';
 import { resolveToolSelection } from './toolsets.js';
 import { buildServerInstructions } from './instructions.js';
+import {
+  CONTAINER_DASHBOARD_URI,
+  containerDashboardInputSchema,
+  containerDashboardOutputSchema,
+  executeContainerDashboard,
+} from './tools/container-dashboard.js';
+import {
+  CONTAINER_DASHBOARD_HTML,
+  MCP_APP_MIME_TYPE,
+} from './apps/container-dashboard-view.js';
+
+/** Where the dashboard view's "Open in Terminal49" links go. */
+const APP_URL = process.env.T49_APP_URL || 'https://app.terminal49.com';
 
 type TextContent = {
   type: 'text';
@@ -1374,6 +1387,8 @@ export function createTerminal49McpServer(
         description: string;
         inputSchema: InputArgs;
         outputSchema: OutputArgs;
+        /** MCP Apps metadata, such as `ui.resourceUri` for a tool with a view. */
+        _meta?: Record<string, unknown>;
       },
       handler: (
         args: StandardSchemaWithJSON.InferOutput<InputArgs>,
@@ -1393,6 +1408,7 @@ export function createTerminal49McpServer(
           annotations: definition.annotations,
           inputSchema: spec.inputSchema,
           outputSchema: spec.outputSchema,
+          ...(spec._meta ? { _meta: spec._meta } : {}),
         },
         // SAFETY: the callback takes the parsed output of `spec.inputSchema`,
         // which is what ToolCallback<InputArgs> resolves to. TypeScript cannot
@@ -1825,6 +1841,28 @@ export function createTerminal49McpServer(
         }),
       },
       async (args) => executeSummarizeContainers(args, client),
+    ),
+    show_container_dashboard: tool(
+      {
+        description:
+          'Show the user an interactive container dashboard: tiles for active, on ship, at terminal, ready for pickup, needs attention and holds; ' +
+          'last free day and arrival calendars for the next three weeks; breakdowns by status, terminal, carrier and hold; and a sortable table of the first 25 containers with a detail panel and event timeline. ' +
+          'Use it when the user asks to see, show or open a dashboard, an overview of their containers, or a visual view of a set such as containers at risk or arrivals this week. Takes the same filters as list_containers, plus an optional title. ' +
+          'Clients that support MCP Apps render the view, where the user can filter and open containers; other clients get the text summary. The result has summary, totals, breakdowns and containers. Do not restate the numbers unless asked; the user sees them.',
+        inputSchema: z.preprocess(
+          stripLegacyIntent,
+          containerDashboardInputSchema,
+        ),
+        outputSchema: containerDashboardOutputSchema,
+        _meta: {
+          ui: { resourceUri: CONTAINER_DASHBOARD_URI },
+          // Older MCP Apps hosts read the flat key.
+          'ui/resourceUri': CONTAINER_DASHBOARD_URI,
+          'openai/toolInvocation/invoking': 'Building your dashboard…',
+          'openai/toolInvocation/invoked': 'Dashboard ready',
+        },
+      },
+      async (args) => executeContainerDashboard(args, client, APP_URL),
     ),
     list_parties: tool(
       {
@@ -2343,6 +2381,30 @@ export function createTerminal49McpServer(
   );
 
   // ==================== RESOURCES ====================
+
+  // MCP Apps view for show_container_dashboard. Self-contained HTML with no
+  // external requests, so it declares no CSP domains.
+  server.registerResource(
+    'container-dashboard-view',
+    CONTAINER_DASHBOARD_URI,
+    {
+      title: 'Container Dashboard View',
+      description:
+        'Interactive dashboard that MCP Apps hosts render for show_container_dashboard.',
+      mimeType: MCP_APP_MIME_TYPE,
+      _meta: { ui: { prefersBorder: true } },
+    },
+    async () => ({
+      contents: [
+        {
+          uri: CONTAINER_DASHBOARD_URI,
+          mimeType: MCP_APP_MIME_TYPE,
+          text: CONTAINER_DASHBOARD_HTML,
+          _meta: { ui: { prefersBorder: true } },
+        },
+      ],
+    }),
+  );
 
   // Resource 1: Container Resource
   server.registerResource(
