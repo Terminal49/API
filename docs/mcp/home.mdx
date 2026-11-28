@@ -839,7 +839,7 @@ Extracted data and the source email are text that people outside your account wr
 
 Seven tools can change your account's data. `track_container` is in the default `core` toolset. The `operations` toolset, which is in the default toolsets, holds `set_party_role`, `set_custom_field` and `update_record`. The `tracking_lifecycle` toolset, which a deployment serves only when `T49_MCP_TOOLSETS` lists it, holds `stop_shipment_tracking`, `resume_shipment_tracking`, and `cancel_tracking_request`. Each write tool has a tier:
 
-- **Tier A** tools run in one call. Starting or resuming tracking consumes tracking quota and may incur pay-as-you-go charges. These additive tools explain that consequence in their descriptions; your client controls its permission UI.
+- **Tier A** tools run in one call. Starting or resuming tracking uses tracking quota: one free slot on a free or trial plan, or plan usage on a paid plan. Their descriptions tell the model to state that real cost from `whoami` and to treat the user's request as consent; your client controls its permission UI.
 
 - **Tier C** tools need your approval of a preview. They are marked destructive. `stop_shipment_tracking` and `cancel_tracking_request` ask on every call. `set_party_role` and `set_custom_field` change up to 50 records per call. They ask only when a record in the call would lose a party or a value. A call that only adds runs at once. `update_record` works the same way on one record: adding reference numbers or tags runs at once, and removing any asks first.
 

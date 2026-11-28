@@ -462,7 +462,7 @@ Each tool belongs to one toolset in `src/tools/registry.ts`: `core`, `documents`
 
 ### Confirming writes
 
-Clients own the permission UI. The server supplies write annotations, consequence descriptions and preview flows so clients and models can distinguish consequential actions even when routine tool calls are auto-approved. Additive does not mean free: `track_container` and `resume_shipment_tracking` consume tracking quota and may incur pay-as-you-go charges. Neither is marked destructive; their descriptions explain the cost consequence before acting.
+Clients own the permission UI. The server supplies write annotations, consequence descriptions and preview flows so clients and models can distinguish consequential actions even when routine tool calls are auto-approved. Additive does not mean free: `track_container` and `resume_shipment_tracking` use tracking quota. Neither is marked destructive; their descriptions tell the model to state the account's real cost from `whoami` (free slots left, or plan usage) and to treat the user's request as consent.
 
 State checks are best-effort reads, not atomic preconditions on the Terminal49 write. A concurrent edit after the check can still be overwritten, including a field classified as empty before another writer fills it. Preventing that race requires backend conditional writes.
 
