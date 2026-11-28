@@ -50,6 +50,10 @@ function buildContainerRaw(containerId = 'container-1') {
         },
         fees_at_pod_terminal: [],
         holds_at_pod_terminal: [],
+        // Present (null) on Rail Data accounts; the API omits them otherwise.
+        pod_rail_loaded_at: null,
+        pod_rail_departed_at: null,
+        ind_rail_unloaded_at: null,
         created_at: '2025-01-01T00:00:00Z',
       },
       relationships: {
@@ -241,7 +245,7 @@ describe('MCP tool contracts', () => {
     // (raw-sourced) summary only — no _mapped bloat.
     expect(getContainer).toHaveBeenCalledWith(
       'container-1',
-      ['shipment', 'pod_terminal', 'transport_events'],
+      ['shipment', 'pod_terminal', 'transport_events', 'pickup_facility'],
       { format: 'raw' },
     );
     expect(result.tracking_request_created).toBe(true);
@@ -283,7 +287,7 @@ describe('MCP tool contracts', () => {
     expect(createFromInfer).not.toHaveBeenCalled();
     expect(getContainer).toHaveBeenCalledWith(
       'container-42',
-      ['shipment', 'pod_terminal', 'transport_events'],
+      ['shipment', 'pod_terminal', 'transport_events', 'pickup_facility'],
       { format: 'raw' },
     );
     expect(result.tracking_request_created).toBe(false);
@@ -419,6 +423,234 @@ describe('MCP tool contracts', () => {
     expect(result._metadata).not.toHaveProperty('derived_lifecycle');
   });
 
+  it('get_container states where a railed container is, and when its shipment sailed', async () => {
+    const rawContainer = buildContainerRaw('container-railed');
+    Object.assign(rawContainer.data.attributes as any, {
+      current_status: 'grounded',
+      location_at_pod_terminal: 'YARD',
+      pod_rail_loaded_at: '2025-01-03T00:00:00Z',
+      pod_rail_departed_at: '2025-01-04T00:00:00Z',
+      ind_rail_unloaded_at: '2025-01-09T00:00:00Z',
+      terminal_checked_at: null,
+    });
+    Object.assign(rawContainer.included[0]!.attributes as any, {
+      pol_atd_at: '2024-11-11T03:00:00Z',
+      pol_timezone: 'Asia/Ho_Chi_Minh',
+      pod_ata_at: '2025-01-01T00:00:00Z',
+      destination_name: 'Chicago',
+    });
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({ raw: rawContainer, mapped: {} }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-railed' },
+      client,
+    );
+
+    // The POD yard slot is not where a container is after it railed out.
+    expect(result.location.current_location).toBeNull();
+    expect(result.location.available_for_pickup).toBeNull();
+    expect(result.location.current_place).toMatchObject({
+      kind: 'at_inland_destination',
+      name: 'Chicago',
+      destination: null,
+      since: '2025-01-09T00:00:00Z',
+    });
+    // POD holds and fees describe a terminal the container left.
+    expect(result.demurrage.holds_at_pod_terminal).toBeNull();
+    expect(result.demurrage.fees_at_pod_terminal).toBeNull();
+    expect(result.rail.pod_rail_departed_at).toBe('2025-01-04T00:00:00Z');
+    expect(result.rail.access).toBe('included');
+    expect(result.rail.upgrade).toBeNull();
+    expect(result.rail.destination_rail_unloaded_at).toBe(
+      '2025-01-09T00:00:00Z',
+    );
+    // An authoritative status comes without a second, heuristic one.
+    expect(result._metadata).not.toHaveProperty('derived_lifecycle');
+    expect(result._metadata).not.toHaveProperty('container_state');
+    expect(result.demurrage.urgency_reason).not.toMatch(/never been checked/);
+    expect(result.shipment?.pol_atd_at).toBe('2024-11-11T03:00:00Z');
+    expect(result.shipment?.pol_atd_at_local).toBe(
+      '11/11/2024, 10:00 AM GMT+7',
+    );
+    expect(result.shipment?.pod_ata_at).toBe('2025-01-01T00:00:00Z');
+  });
+
+  it('get_container says rail data is not on the plan when the API withholds the rail keys', async () => {
+    const rawContainer = buildContainerRaw('container-no-rail');
+    Object.assign(rawContainer.included[0]!.attributes as any, {
+      port_of_discharge_name: 'Vancouver',
+      destination_name: 'Chicago',
+    });
+    const attrs = rawContainer.data.attributes as any;
+    for (const key of [
+      'pod_rail_loaded_at',
+      'pod_rail_departed_at',
+      'ind_rail_unloaded_at',
+    ])
+      delete attrs[key];
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({ raw: rawContainer, mapped: {} }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-no-rail' },
+      client,
+    );
+
+    expect(result.rail.access).toBe('not_on_plan');
+    expect(result.rail.pod_rail_departed_at).toBeNull();
+    expect(result.rail.upgrade?.product).toBe('Rail Data');
+    expect(result.rail.upgrade?.learn_more_url).toMatch(/^https:\/\//);
+    expect(result.rail.upgrade?.book_demo_url).toMatch(/^https:\/\//);
+  });
+
+  it('get_container offers no Rail Data upgrade for a shipment with no inland leg', async () => {
+    const rawContainer = buildContainerRaw('container-port-only');
+    const attrs = rawContainer.data.attributes as any;
+    for (const key of [
+      'pod_rail_loaded_at',
+      'pod_rail_departed_at',
+      'ind_rail_unloaded_at',
+    ])
+      delete attrs[key];
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({ raw: rawContainer, mapped: {} }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-port-only' },
+      client,
+    );
+
+    expect(result.rail.access).toBe('not_on_plan');
+    expect(result.rail.upgrade).toBeNull();
+  });
+
+  it('get_container shows an inland LFD and rail times in the inland and POD zones', async () => {
+    const rawContainer = buildContainerRaw('container-chicago');
+    Object.assign(rawContainer.data.attributes as any, {
+      pod_timezone: 'America/Vancouver',
+      final_destination_timezone: 'America/Chicago',
+      pod_rail_departed_at: '2026-11-04T03:00:00Z',
+      ind_rail_unloaded_at: '2026-11-08T15:00:00Z',
+      pickup_lfd: '2026-11-10T06:00:00Z',
+    });
+    (rawContainer.data.relationships as any).pickup_facility = {
+      data: { id: 'rail-1', type: 'rail_terminal' },
+    };
+    rawContainer.included.push({
+      id: 'rail-1',
+      type: 'rail_terminal',
+      attributes: { name: 'CN Chicago Intermodal' },
+    } as any);
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({ raw: rawContainer, mapped: {} }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-chicago' },
+      client,
+    );
+
+    expect(result.demurrage.pickup_lfd_timezone).toBe('America/Chicago');
+    expect(result.demurrage.pickup_lfd_local).toMatch(/^11\/10\/2026/);
+    expect(result.rail.pod_rail_departed_at_local).toMatch(/^11\/03\/2026/);
+    expect(result.rail.destination_rail_unloaded_at_local).toMatch(
+      /^11\/08\/2026/,
+    );
+    expect(result.location.current_place).toMatchObject({
+      kind: 'at_inland_destination',
+      name: 'CN Chicago Intermodal',
+    });
+  });
+
+  it('get_container says a container is on its way inland while on rail', async () => {
+    const rawContainer = buildContainerRaw('container-on-rail');
+    Object.assign(rawContainer.data.attributes as any, {
+      pod_rail_departed_at: '2026-11-04T03:00:00Z',
+    });
+    Object.assign(rawContainer.included[0]!.attributes as any, {
+      destination_name: 'Chicago',
+    });
+    const client = asClient({
+      containers: {
+        get: vi.fn().mockResolvedValue({ raw: rawContainer, mapped: {} }),
+      },
+    });
+
+    const result = await executeGetContainer(
+      { id: 'container-on-rail' },
+      client,
+    );
+
+    expect(result.location.current_place).toMatchObject({
+      kind: 'in_rail_transit',
+      name: null,
+      destination: 'Chicago',
+    });
+  });
+
+  it('get_container places a container before the POD and after it leaves the POD by truck', async () => {
+    const before = buildContainerRaw('container-before');
+    (before.data.attributes as any).pod_arrived_at = null;
+    const after = buildContainerRaw('container-out');
+    Object.assign(after.data.attributes as any, {
+      pod_full_out_at: '2025-01-05T00:00:00Z',
+      holds_at_pod_terminal: [{ name: 'customs' }],
+    });
+    const get = vi
+      .fn()
+      .mockResolvedValueOnce({ raw: before, mapped: {} })
+      .mockResolvedValueOnce({ raw: after, mapped: {} });
+    const client = asClient({ containers: { get } });
+
+    const b = await executeGetContainer({ id: 'container-before' }, client);
+    const a = await executeGetContainer({ id: 'container-out' }, client);
+
+    expect(b.location.current_place.kind).toBe('before_pod');
+    expect(a.location.current_place).toMatchObject({
+      kind: 'left_pod_terminal',
+      since: '2025-01-05T00:00:00Z',
+    });
+    expect(a.location.available_for_pickup).toBeNull();
+    expect(a.demurrage.holds_at_pod_terminal).toBeNull();
+  });
+
+  it('get_container checks inland pickup and empty return before the inland arrival', async () => {
+    const picked = buildContainerRaw('container-picked');
+    Object.assign(picked.data.attributes as any, {
+      ind_rail_unloaded_at: '2025-01-09T00:00:00Z',
+      final_destination_full_out_at: '2025-01-10T00:00:00Z',
+    });
+    const empty = buildContainerRaw('container-empty');
+    Object.assign(empty.data.attributes as any, {
+      ind_rail_unloaded_at: '2025-01-09T00:00:00Z',
+      final_destination_full_out_at: '2025-01-10T00:00:00Z',
+      empty_terminated_at: '2025-01-12T00:00:00Z',
+    });
+    const get = vi
+      .fn()
+      .mockResolvedValueOnce({ raw: picked, mapped: {} })
+      .mockResolvedValueOnce({ raw: empty, mapped: {} });
+    const client = asClient({ containers: { get } });
+
+    const p = await executeGetContainer({ id: 'container-picked' }, client);
+    const e = await executeGetContainer({ id: 'container-empty' }, client);
+
+    expect(p.location.current_place.kind).toBe('left_inland_destination');
+    expect(e.location.current_place.kind).toBe('empty_returned');
+  });
+
   it('get_container augments the default includes instead of replacing them', async () => {
     const get = vi.fn().mockResolvedValue({
       raw: buildContainerRaw('container-augment'),
@@ -434,7 +666,7 @@ describe('MCP tool contracts', () => {
     // shipment + pod_terminal must survive even when only transport_events is requested.
     expect(get).toHaveBeenCalledWith(
       'container-augment',
-      ['shipment', 'pod_terminal', 'transport_events'],
+      ['shipment', 'pod_terminal', 'transport_events', 'pickup_facility'],
       { format: 'raw' },
     );
     expect(result._metadata.includes_loaded).toEqual([

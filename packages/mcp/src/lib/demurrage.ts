@@ -93,7 +93,9 @@ function isStale(
   if (!terminalCheckedAt) {
     return {
       stale: true,
-      reason: 'terminal availability has never been checked',
+      // Says why urgency is unknown, not whether terminal data exists: holds
+      // and status can be present while this timestamp is empty.
+      reason: 'no LFD urgency: terminal_checked_at is empty',
     };
   }
   const checked = new Date(terminalCheckedAt);
