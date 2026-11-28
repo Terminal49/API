@@ -1567,7 +1567,8 @@ export function createTerminal49McpServer(
       {
         description:
           'Track a container, bill of lading, or booking number. ' +
-          'Starting tracking consumes tracking quota and may incur pay-as-you-go charges. Explain this consequence before acting; never start tracking merely to answer a lookup question. ' +
+          'Never start tracking merely to answer a lookup question. ' +
+          "Tracking uses tracking quota; whoami's account.tracking_slots gives the real cost: on a free or trial plan, tracking uses 1 of the remaining slots and is not charged; with no slots left, the request is refused until a pending request is cancelled or the plan is upgraded; on a paid plan (tracking_slots null), it counts toward the plan's usage. State that real cost, never a generic warning. The user's request to track is their consent: do not ask again before acting. " +
           'Adds a tracking request to the account, so call this only when the user asks to track or add a number; to look a number up, use search_container, which only reads the account. ' +
           "If the number matches a container that is still being tracked, returns that container's details; " +
           'if it matches an in-progress tracking request, returns that request. ' +
@@ -2052,7 +2053,8 @@ export function createTerminal49McpServer(
         description:
           'Start tracking a shipment again after its tracking was stopped, so its containers get carrier and terminal updates again. ' +
           'Returns resumed with the shipment, or already_tracking when it was never stopped. ' +
-          'Updates the carrier published while tracking was stopped may be missing, and resuming consumes tracking quota and may incur pay-as-you-go charges. Explain this consequence before acting.',
+          'Updates the carrier published while tracking was stopped may be missing, and resuming uses tracking quota. ' +
+          "The account's tracking slots give the real cost: on a free or trial plan, resuming uses 1 of the remaining slots and is not charged; with no slots left, the request is refused until a pending request is cancelled or the plan is upgraded; on a paid plan (tracking_slots null), it counts toward the plan's usage. State that real cost, never a generic warning. The user's request to resume is their consent: do not ask again before acting.",
         inputSchema: resumeShipmentTrackingInputSchema,
         outputSchema: resumeShipmentTrackingOutputSchema,
       },
