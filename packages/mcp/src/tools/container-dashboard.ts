@@ -3,7 +3,7 @@
  *
  * One call gathers what the Terminal49 dashboard shows for a set of
  * containers: status, terminal, carrier and hold breakdowns, the next weeks of
- * arrivals and last free days, the attention count, and the first page of
+ * last free days, the last weeks of arrivals, the attention count, and the first page of
  * containers. MCP Apps hosts render the result in the container dashboard view
  * (ui://terminal49/container-dashboard.html); other clients read the summary.
  */
@@ -116,6 +116,8 @@ export async function executeContainerDashboard(
 
   const today = isoDay(now);
   const horizon = isoDay(new Date(now.getTime() + 21 * 86_400_000));
+  // pod_arrival_date groups by actual arrival (ATA), so it only has past days.
+  const arrivalsFrom = isoDay(new Date(now.getTime() - 20 * 86_400_000));
   const withHolds = byCount(holdType.groups)
     .filter((g) => g.key !== null)
     .reduce((sum, g) => sum + g.count, 0);
@@ -131,13 +133,14 @@ export async function executeContainerDashboard(
     },
     breakdowns: {
       status: byCount(status.groups),
-      terminal: byCount(terminal.groups),
+      // Containers not yet at a terminal go last so real terminals lead.
+      terminal: nullLast(byCount(terminal.groups)),
       carrier: byCount(carrier.groups),
       hold_type: byCount(holdType.groups).filter((g) => g.key !== null),
       // Past-due LFDs stay in so the view can show them as overdue.
       lfd_by_day: byDay(lfd.groups).filter((g) => g.key! <= horizon),
       arrivals_by_day: byDay(arrivals.groups).filter(
-        (g) => g.key! >= today && g.key! <= horizon,
+        (g) => g.key! >= arrivalsFrom && g.key! <= today,
       ),
     },
     containers: list.items ?? [],
@@ -156,6 +159,13 @@ function isoDay(date: Date): string {
 
 function byCount(groups: Group[]): Group[] {
   return [...groups].sort((a, b) => b.count - a.count);
+}
+
+function nullLast(groups: Group[]): Group[] {
+  return [
+    ...groups.filter((g) => g.key !== null),
+    ...groups.filter((g) => g.key === null),
+  ];
 }
 
 function byDay(groups: Group[]): Group[] {
@@ -206,12 +216,12 @@ export function summarizeDashboard(
     : 'No filters (all actively tracked containers).';
   return [
     `Showing the "${dashboard.title}" dashboard to the user. ${filterText}`,
-    `${totals.containers} containers; ${totals.needs_attention} need attention; ${totals.with_holds} hold flags.`,
+    `${totals.containers} containers; ${totals.needs_attention} need attention. Hold flags: ${totals.with_holds} (one per hold, so a container with two holds counts twice; this is not a container count).`,
     `By status: ${top(breakdowns.status, 8)}.`,
     `By terminal: ${top(breakdowns.terminal)}.`,
     `By carrier: ${top(breakdowns.carrier)}.`,
     `Holds: ${top(breakdowns.hold_type)}.`,
-    `Last free days: ${overdue} past due, ${upcomingLfd} in the next 3 weeks. Arrivals in the next 3 weeks: ${arriving}.`,
+    `Last free day already passed: ${overdue} containers. Last free day in the next 3 weeks: ${upcomingLfd}. Arrived at port in the last 3 weeks: ${arriving}.`,
     shown.length
       ? `First rows of the table:\n- ${shown.join('\n- ')}`
       : 'No containers match.',

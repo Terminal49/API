@@ -15,6 +15,7 @@ function fakeClient() {
       { key: 'grounded', label: 'grounded', count: 2 },
     ],
     pod_terminal: [
+      { key: null, label: null, count: 20 },
       { key: 't-1', label: 'APM Terminals', count: 4 },
       { key: 't-2', label: 'Fenix Marine', count: 8 },
     ],
@@ -88,7 +89,11 @@ describe('show_container_dashboard', () => {
       'Available',
       'At Terminal',
     ]);
-    expect(result.breakdowns.terminal[0]!.label).toBe('Fenix Marine');
+    expect(result.breakdowns.terminal.map((g) => g.label)).toEqual([
+      'Fenix Marine',
+      'APM Terminals',
+      null,
+    ]);
     expect(result.breakdowns.hold_type.map((g) => g.key)).toEqual([
       'CUSTOMS',
       'FREIGHT',
@@ -98,8 +103,9 @@ describe('show_container_dashboard', () => {
       '2026-11-25',
       '2026-11-30',
     ]);
+    // Arrivals are actual (past) arrivals over the last three weeks.
     expect(result.breakdowns.arrivals_by_day.map((g) => g.key)).toEqual([
-      '2026-12-02',
+      '2026-11-20',
     ]);
     expect(result.containers[0]).toMatchObject({
       number: 'MSCU1234567',
@@ -119,9 +125,9 @@ describe('show_container_dashboard', () => {
       NOW,
     );
     expect(summary).toContain('"Maersk" dashboard');
-    expect(summary).toContain('12 containers; 3 need attention; 3 hold flags.');
+    expect(summary).toContain('12 containers; 3 need attention. Hold flags: 3');
     expect(summary).toContain(
-      'Last free days: 1 past due, 2 in the next 3 weeks.',
+      'Last free day already passed: 1 containers. Last free day in the next 3 weeks: 2.',
     );
     expect(summary).toContain(
       'MSCU1234567 · Available · APM Terminals · LFD 2026-11-30 · holds: CUSTOMS',

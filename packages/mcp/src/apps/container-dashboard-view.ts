@@ -145,6 +145,8 @@ body.drawer-open .drawer-bg { display: block; }
 .timeline li.void { opacity: .45; text-decoration: line-through; }
 .err { color: var(--bad); padding: 10px 0; }
 @media (max-width: 560px) { body { padding: 10px; } .hide-sm { display: none; } }
+@media (max-width: 900px) { .c-eta { display: none; } }
+td.wrap { white-space: normal; min-width: 140px; max-width: 220px; }
 </style>
 </head>
 <body>
@@ -164,7 +166,7 @@ body.drawer-open .drawer-bg { display: block; }
 <section class="tiles" id="tiles"></section>
 <section class="grid2">
   <div class="card"><h2>Last free days &middot; next 3 weeks</h2><div id="lfd"></div></div>
-  <div class="card"><h2>Arrivals at port &middot; next 3 weeks</h2><div id="arrivals"></div></div>
+  <div class="card"><h2>Arrived at port &middot; last 3 weeks</h2><div id="arrivals"></div></div>
 </section>
 <section class="grid3">
   <div class="card"><h2>By status</h2><div class="bars" id="by-status"></div></div>
@@ -439,7 +441,7 @@ body.drawer-open .drawer-bg { display: block; }
     renderChips();
     renderTiles();
     renderDays("lfd", d.breakdowns.lfd_by_day, true);
-    renderDays("arrivals", d.breakdowns.arrivals_by_day, false);
+    renderArrivals(d.breakdowns.arrivals_by_day);
     renderBars("by-status", d.breakdowns.status, function (g) { setFilter("current_status", g.label || g.key); });
     renderBars("by-terminal", d.breakdowns.terminal, function (g) { if (g.key) setFilter("pod_terminal_id", g.key); });
     renderBars("by-carrier", d.breakdowns.carrier, function (g) { if (g.label) setFilter("shipping_line_scac", g.label); });
@@ -551,13 +553,41 @@ body.drawer-open .drawer-bg { display: block; }
     });
   }
 
+  // Actual arrivals (ATA) over the last three weeks, oldest first.
+  function renderArrivals(groups) {
+    var today = todayIso();
+    var counts = {};
+    groups.forEach(function (g) { counts[g.key] = g.count; });
+    var cells = [];
+    for (var i = 20; i >= 0; i--) {
+      var k = addDays(today, -i);
+      cells.push({ key: k, label: shortDate(k), count: counts[k] || 0, today: i === 0 });
+    }
+    var max = cells.reduce(function (m, c) { return Math.max(m, c.count); }, 0) || 1;
+    var html = '<div class="days">' + cells.map(function (c, idx) {
+      var h = Math.max(2, Math.round((c.count / max) * 70));
+      return '<div class="day' + (c.count ? "" : " zero") + (c.today ? " today" : "") + '" data-i="' + idx + '" title="' + esc(c.label + ": " + c.count) + '">' +
+        (c.count ? '<span class="c">' + c.count + "</span>" : "") + '<div class="bar" style="height:' + h + 'px"></div></div>';
+    }).join("") + '</div><div class="axis"><span>' + shortDate(addDays(today, -20)) + "</span><span>" + shortDate(addDays(today, -13)) +
+      "</span><span>" + shortDate(addDays(today, -6)) + "</span><span>Today</span></div>";
+    if (!cells.some(function (c) { return c.count; })) html += '<div class="empty">No arrivals in the last three weeks.</div>';
+    var box = el("arrivals");
+    box.innerHTML = html;
+    Array.prototype.forEach.call(box.querySelectorAll(".day"), function (node) {
+      node.addEventListener("click", function () {
+        var c = cells[Number(node.getAttribute("data-i"))];
+        if (c.count) setFilter("arrival", c.key);
+      });
+    });
+  }
+
   function renderBars(id, groups, onClick, bad) {
     var box = el(id);
     var list = (groups || []).slice(0, 7);
     if (!list.length) { box.innerHTML = '<div class="empty">Nothing to show.</div>'; return; }
     var max = list[0].count || 1;
     box.innerHTML = list.map(function (g, i) {
-      var name = g.label || g.key || "None";
+      var name = g.label || g.key || (id === "by-terminal" ? "No terminal yet" : "None");
       return '<div class="hbar' + (bad ? " bad" : "") + '" data-i="' + i + '" title="Filter to ' + esc(name) + '"><span class="name">' + esc(name) +
         '</span><span class="cnt">' + fmt(g.count) + '</span><div class="track"><div class="fill" style="width:' +
         Math.max(2, Math.round((g.count / max) * 100)) + '%"></div></div></div>';
@@ -570,9 +600,8 @@ body.drawer-open .drawer-bg { display: block; }
   var COLUMNS = [
     { key: "number", label: "Container", get: function (r) { return r.number; } },
     { key: "status", label: "Status", get: function (r) { return r.status; } },
-    { key: "terminal", label: "Terminal", get: function (r) { return r.pod_terminal; } },
-    { key: "carrier", label: "Carrier", get: function (r) { return r.shipment && r.shipment.shipping_line_scac; } },
-    { key: "eta", label: "POD ETA / ATA", get: function (r) { return r.shipment && (r.shipment.pod_ata_at || r.shipment.pod_eta_at); } },
+    { key: "terminal", label: "Terminal · carrier", get: function (r) { return r.pod_terminal; } },
+    { key: "eta", cls: "c-eta", label: "POD ETA / ATA", get: function (r) { return r.shipment && (r.shipment.pod_ata_at || r.shipment.pod_eta_at); } },
     { key: "lfd", label: "LFD", get: function (r) { return r.pickup_lfd; } },
     { key: "holds", label: "Holds & fees", get: function (r) { return (r.holds || []).length + (r.fees || []).length; } }
   ];
@@ -581,7 +610,7 @@ body.drawer-open .drawer-bg { display: block; }
     var head = el("thead");
     head.innerHTML = COLUMNS.map(function (c) {
       var sorted = state.sortKey === c.key;
-      return '<th data-k="' + c.key + '" class="' + (sorted ? "sorted" + (state.sortAsc ? " asc" : "") : "") + '">' + esc(c.label) + "</th>";
+      return '<th data-k="' + c.key + '" class="' + (c.cls || "") + " " + (sorted ? "sorted" + (state.sortAsc ? " asc" : "") : "") + '">' + esc(c.label) + "</th>";
     }).join("");
     Array.prototype.forEach.call(head.querySelectorAll("th"), function (th) {
       th.addEventListener("click", function () {
@@ -625,13 +654,12 @@ body.drawer-open .drawer-bg { display: block; }
       return '<tr data-id="' + esc(r.id) + '"' + (state.selected === r.id ? ' class="sel"' : "") + '>' +
         '<td><span class="num">' + esc(r.number) + '</span>' + (s.bill_of_lading ? '<div class="muted small">' + esc(s.bill_of_lading) + "</div>" : "") + "</td>" +
         '<td><span class="pill ' + statusClass(r.status) + '">' + esc(r.status || "Unknown") + "</span></td>" +
-        "<td>" + esc(r.pod_terminal || "") + "</td>" +
-        "<td>" + esc(s.shipping_line_scac || "") + "</td>" +
-        "<td>" + eta + "</td>" +
+        '<td class="wrap">' + esc(r.pod_terminal || "") + (s.shipping_line_scac ? '<div class="muted small">' + esc(s.shipping_line_scac) + "</div>" : "") + "</td>" +
+        '<td class="c-eta">' + eta + "</td>" +
         "<td>" + (lfd ? shortDate(lfd) + lfdBadge : "") + "</td>" +
         "<td>" + (r.holds || []).map(function (h) { return '<span class="hold">' + esc(h) + "</span>"; }).join("") +
         (feeTotal ? '<span class="badge warn">$' + fmt(Math.round(feeTotal)) + "</span>" : "") + "</td></tr>";
-    }).join("") : '<tr><td colspan="7" class="empty">No containers match.</td></tr>';
+    }).join("") : '<tr><td colspan="6" class="empty">No containers match.</td></tr>';
     Array.prototype.forEach.call(el("rows").querySelectorAll("tr[data-id]"), function (tr) {
       tr.addEventListener("click", function () { openContainer(tr.getAttribute("data-id"), tr); });
     });
@@ -710,20 +738,33 @@ body.drawer-open .drawer-bg { display: block; }
       ["Discharged", loc.pod_discharged_at ? esc(loc.pod_discharged_at_local || dateTime(loc.pod_discharged_at)) : ""],
       ["References", esc((sh.ref_numbers || []).filter(Boolean).join(", "))]
     ]);
-    var events = ((c.events && c.events.timeline) || []).slice().reverse();
+    var events = collapseRepeats(((c.events && c.events.timeline) || []).slice().reverse());
     if (events.length) {
       var now = Date.now();
       html += '<h2 style="font-size:12px;color:var(--fg2);text-transform:uppercase;letter-spacing:.04em;margin:4px 0 10px">Events (' + events.length + ")</h2><ul class=\"timeline\">";
       html += events.slice(0, 40).map(function (e) {
         var future = Date.parse(e.timestamp) > now;
         var where = e.location && (e.location.name || e.location.code);
-        return '<li class="' + (future ? "future" : "") + (e.invalidated_at ? " void" : "") + '"><div>' + esc(humanize(e.event)) + "</div>" +
+        return '<li class="' + (future ? "future" : "") + (e.invalidated_at ? " void" : "") + '"><div>' + esc(humanize(e.event)) +
+          (e.repeats > 1 ? ' <span class="muted small">&times;' + e.repeats + "</span>" : "") + "</div>" +
           '<div class="muted small">' + dateTime(e.timestamp) + (where ? " · " + esc(where) : "") + (e.voyage_number ? " · voy " + esc(e.voyage_number) : "") + "</div></li>";
       }).join("");
       html += "</ul>";
     }
     el("d-body").innerHTML = html || '<div class="empty">No details.</div>';
     el("d-open").hidden = !(sh.id && state.data && state.data.app_url);
+  }
+  // Carriers resend the same event many times; show each run once with a count.
+  function collapseRepeats(events) {
+    var out = [];
+    events.forEach(function (e) {
+      var prev = out[out.length - 1];
+      var where = e.location && (e.location.name || e.location.code);
+      var prevWhere = prev && prev.location && (prev.location.name || prev.location.code);
+      if (prev && prev.event === e.event && prevWhere === where && !e.invalidated_at && !prev.invalidated_at) { prev.repeats += 1; return; }
+      out.push(Object.assign({}, e, { repeats: 1 }));
+    });
+    return out;
   }
   function humanize(name) {
     if (!name) return "Event";

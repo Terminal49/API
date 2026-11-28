@@ -188,11 +188,19 @@ describe('container dashboard view', () => {
           shipment: { id: 's-1', ref_numbers: [] },
           pod_terminal: { id: 't-1', name: 'Fenix Marine' },
           events: {
-            count: 1,
+            count: 3,
             timeline: [
               {
                 event: 'container.transport.vessel_discharged',
                 timestamp: '2026-11-26T10:00:00Z',
+              },
+              {
+                event: 'container.transport.available',
+                timestamp: '2026-11-26T11:00:00Z',
+              },
+              {
+                event: 'container.transport.available',
+                timestamp: '2026-11-26T12:00:00Z',
               },
             ],
           },
@@ -204,6 +212,9 @@ describe('container dashboard view', () => {
     expect(document.getElementById('d-body')!.textContent).toContain(
       'Transport vessel discharged',
     );
+    // Repeated carrier events collapse into one entry with a count.
+    expect(document.querySelectorAll('#d-body .timeline li')).toHaveLength(2);
+    expect(document.getElementById('d-body')!.textContent).toContain('×2');
     expect(
       view.last('ui/update-model-context')!.params.content[0].text,
     ).toContain('opened container MSCU1234567');
